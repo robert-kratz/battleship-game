@@ -27,13 +27,22 @@ jobs:
 
       - name: Starte Server im Hintergrund
         run: |
-          nohup java -cp bin server.Server > server.log 2>&1 &
+          java -cp bin server.Server &
           echo $! > server_pid.txt
+        env:
+          JAVA_HOME: ${{ steps.setup-java.outputs.path }}
 
       - name: Warte auf Server-Start
         run: |
-          sleep 5
-          grep -q "Server gestartet" server.log
+          for i in {1..10}; do
+            if grep -q "Server gestartet" <(tail -n 10 server.log); then
+              echo "Server erfolgreich gestartet."
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Serverstart fehlgeschlagen."
+          exit 1
 
       - name: Führe Client-Tests aus
         run: java -cp bin client.ClientTest
