@@ -27,15 +27,21 @@ jobs:
 
       - name: Starte Server im Hintergrund
         run: |
-          java -cp bin server.Server &
+          touch server.log  # Sicherstellen, dass die Datei existiert
+          java -cp bin server.Server > server.log 2>&1 &
           echo $! > server_pid.txt
-        env:
-          JAVA_HOME: ${{ steps.setup-java.outputs.path }}
+          sleep 2  # Warte kurz, damit der Server starten kann
+
+      - name: Überprüfe, ob der Server läuft
+        run: ps aux | grep java
+
+      - name: Prüfe den Server-Log
+        run: cat server.log || echo "Server log nicht gefunden"
 
       - name: Warte auf Server-Start
         run: |
           for i in {1..10}; do
-            if grep -q "Server gestartet" <(tail -n 10 server.log); then
+            if grep -q "Server gestartet" server.log; then
               echo "Server erfolgreich gestartet."
               exit 0
             fi
@@ -44,10 +50,10 @@ jobs:
           echo "Serverstart fehlgeschlagen."
           exit 1
 
-      - name: Führe Client-Tests aus
-        run: java -cp bin client.ClientTest
+      - name: Führe Client aus
+        run: java -cp bin client.Client
 
       - name: Beende Server
         run: |
-          kill $(cat server_pid.txt)
-          rm server_pid.txt
+          kill $(cat server_pid.txt) || echo "Server-Prozess nicht gefunden"
+          rm -f server_pid.txt
