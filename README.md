@@ -1,3 +1,4 @@
+[![Java Build](https://github.com/robert-kratz/battleship-game/actions/workflows/java-ci.yml/badge.svg)](https://github.com/robert-kratz/battleship-game/actions/workflows/java-ci.yml)
 # Network-Based Battleship
 
 ## Overview
