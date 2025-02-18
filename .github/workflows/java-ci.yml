@@ -1,0 +1,44 @@
+name: Java CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Repository auschecken
+        uses: actions/checkout@v4
+
+      - name: Setze JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Kompiliere Server und Client
+        run: |
+          mkdir -p bin
+          javac -d bin src/server/Server.java src/client/Client.java
+
+      - name: Starte Server im Hintergrund
+        run: |
+          nohup java -cp bin server.Server > server.log 2>&1 &
+          echo $! > server_pid.txt
+
+      - name: Warte auf Server-Start
+        run: |
+          sleep 5
+          grep -q "Server gestartet" server.log
+
+      - name: Führe Client-Tests aus
+        run: java -cp bin client.ClientTest
+
+      - name: Beende Server
+        run: |
+          kill $(cat server_pid.txt)
+          rm server_pid.txt
