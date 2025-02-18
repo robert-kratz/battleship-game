@@ -1,4 +1,4 @@
-name: Java CI
+name: Java Build
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 jobs:
-  build-and-test:
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -20,7 +20,8 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: Kompiliere Server und Client
+      - name: Kompiliere das Projekt
         run: |
           mkdir -p bin
-          javac -d bin src/server/Server.java src/client/Client.java
+          find src -name "*.java" > sources.txt
+          javac -d bin @sources.txt
