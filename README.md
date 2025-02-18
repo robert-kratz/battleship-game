@@ -45,8 +45,5 @@ Network-Based Battleship is an interactive 1v1 multiplayer game inspired by the 
 ## Contributing
 For further development, please refer to the provided coding standards and project guidelines in the documentation.
 
-## License
-[LICENSE.md](Apache License 2.0)
-
 ## Acknowledgements
 This project was developed as part of Programmierpraktikum 2, integrating network programming, multithreading, and interactive game mechanics into a challenging, didactically rich application.
