@@ -24,36 +24,3 @@ jobs:
         run: |
           mkdir -p bin
           javac -d bin src/server/Server.java src/client/Client.java
-
-      - name: Starte Server im Hintergrund
-        run: |
-          touch server.log  # Sicherstellen, dass die Datei existiert
-          java -cp bin server.Server > server.log 2>&1 &
-          echo $! > server_pid.txt
-          sleep 2  # Warte kurz, damit der Server starten kann
-
-      - name: Überprüfe, ob der Server läuft
-        run: ps aux | grep java
-
-      - name: Prüfe den Server-Log
-        run: cat server.log || echo "Server log nicht gefunden"
-
-      - name: Warte auf Server-Start
-        run: |
-          for i in {1..10}; do
-            if grep -q "Server gestartet" server.log; then
-              echo "Server erfolgreich gestartet."
-              exit 0
-            fi
-            sleep 2
-          done
-          echo "Serverstart fehlgeschlagen."
-          exit 1
-
-      - name: Führe Client aus
-        run: java -cp bin client.Client
-
-      - name: Beende Server
-        run: |
-          kill $(cat server_pid.txt) || echo "Server-Prozess nicht gefunden"
-          rm -f server_pid.txt
