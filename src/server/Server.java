@@ -1,14 +1,14 @@
 package server;
 
-import protocol.ErrorMessage;
+import protocol.messages.ErrorMessage;
 import protocol.ErrorType;
-import protocol.PlayerInfo;
 
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class Server {
 
@@ -19,10 +19,15 @@ public class Server {
     private boolean running = false;
     private final List<PlayerInfo> players = new ArrayList<>();
     private final List<Thread> clientThreads = new ArrayList<>();
+
+    private ArrayList<BattleShipGame> games = new ArrayList<>();
+    private ArrayList<PlayerInfo> queue = new ArrayList<>();
+
     private ServerGUI gui;
 
     public Server() {
         this.gui = new ServerGUI(this);
+        instance = this;
     }
 
     public synchronized void startServer() {
@@ -74,9 +79,25 @@ public class Server {
         }
     }
 
+    public synchronized void createGame(BattleShipGame game) {
+        games.add(game);
+    }
+
+    public synchronized void removeGame(UUID id) {
+        games.removeIf(game -> game.getGameState().getId().equals(id));
+    }
+
     public synchronized void removePlayer(PlayerInfo player) {
         players.remove(player);
         updatePlayerList();
+    }
+
+    public synchronized void addToQueue(PlayerInfo player) {
+        queue.add(player);
+    }
+
+    public synchronized void removeFromQueue(UUID id) {
+        queue.removeIf(player -> player.getId().equals(id));
     }
 
     private synchronized void updatePlayerList() {
@@ -87,6 +108,18 @@ public class Server {
         gui.updatePlayerList(sb.toString());
     }
 
+    public synchronized List<PlayerInfo> getPlayers() {
+        return players;
+    }
+
+    public synchronized ArrayList<PlayerInfo> getQueue() {
+        return queue;
+    }
+
+    public synchronized ArrayList<BattleShipGame> getGames() {
+        return games;
+    }
+
     /**
      * Main method to start the server
      * -p <port> to specify the port
@@ -94,15 +127,15 @@ public class Server {
      * @param args command line arguments
      */
     public static void main(String[] args) {
-        if (args.length >= 1 && args[0].contains("--autostart")) {
-            instance.startServer();
-        }
-
         for (int i = 0; i < args.length; i++) {
             if (args[i].equals("--p")) {
                 PORT = Integer.parseInt(args[i + 1]);
             }
         }
         instance = new Server();
+
+        if (args.length >= 1 && args[0].contains("--autostart")) {
+            instance.startServer();
+        }
     }
 }

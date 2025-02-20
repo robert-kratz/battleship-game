@@ -1,5 +1,9 @@
 package protocol;
 
 public enum ErrorType {
-    SERVER_CLOSED
+    SERVER_CLOSED,
+    INVALID_GAME_SIZE,
+    INVALID_SESSION_CODE,
+    INVALID_SECRET,
+    INVALID_PLAYER
 }

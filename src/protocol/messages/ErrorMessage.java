@@ -1,4 +1,6 @@
-package protocol;
+package protocol.messages;
+
+import protocol.ErrorType;
 
 public class ErrorMessage extends Message {
     private final ErrorType error;

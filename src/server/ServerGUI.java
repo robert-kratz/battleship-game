@@ -24,7 +24,7 @@ public class ServerGUI extends JFrame {
         bottomPanel.setLayout(new BorderLayout());
 
         toggleButton = new JButton("Server Starten");
-        toggleButton.setBackground(Color.RED);
+        toggleButton.setBackground(serverRunning ? Color.GREEN : Color.RED);
         toggleButton.setOpaque(true);
         toggleButton.setBorderPainted(false);
 

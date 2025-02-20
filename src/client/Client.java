@@ -7,8 +7,8 @@ public class Client {
 
     /**
      * Main method to start the client
-     * --p PORT: set the port
-     * --h HOST: set the host
+     * --p <port>:  set the port
+     * --h <host>: set the host
      * @param args command line arguments
      */
     public static void main(String[] args) {

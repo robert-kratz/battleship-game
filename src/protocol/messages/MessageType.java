@@ -1,0 +1,30 @@
+package protocol.messages;
+
+public enum MessageType {
+    // SERVER -> CLIENT
+    REGISTER,
+    //CLIENT -> SERVER
+    LOGOUT,
+    //CLIENT -> SERVER
+    JOIN_QUEUE,
+    //CLIENT -> SERVER
+    LEAVE_QUEUE,
+    //CLIENT -> SERVER
+    CREATE_GAME,
+    //CLIENT -> SERVER
+    JOIN_GAME,
+    //SERVER -> CLIENT
+    QUEUE_UPDATE,
+    //SERVER -> CLIENT
+    GAME_STARTING,
+    //CLIENT -> SERVER
+    SUBMIT_PLACEMENT,
+    //SERVER -> CLIENT
+    GAME_STARTED,
+    //SERVER -> CLIENT
+    GAME_STATE_UPDATE,
+    //CLIENT -> SERVER
+    GAME_STATE_REQUEST,
+    //SERVER -> CLIENT
+    ERROR
+}

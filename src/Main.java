@@ -9,11 +9,12 @@ public class Main {
      * @param args
      */
     public static void main(String[] args) {
-        ClientHandler clientHandler1 = new ClientHandler("localhost", 12345);
-        ClientHandler clientHandler2 = new ClientHandler("localhost", 12345);
 
         server = new Server();
         server.startServer();
+
+        ClientHandler clientHandler1 = new ClientHandler("localhost", 12345);
+        ClientHandler clientHandler2 = new ClientHandler("localhost", 12345);
     }
 
     public static Server server;
