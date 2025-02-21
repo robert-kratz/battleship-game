@@ -40,6 +40,7 @@ public class PlayerInfo implements Runnable {
             in = new ObjectInputStream(socket.getInputStream());
 
             sendMessage(new RegisterMessage(username, id, secret, server.getQueue().size()));
+            sendMessage(new QueueUpdateMessage(server.getQueue().size(), false));
             while (socket.isConnected()) {
                 Object received = in.readObject();
 
@@ -47,12 +48,16 @@ public class PlayerInfo implements Runnable {
 
                 switch (received.getClass().getSimpleName()) {
                     case "JoinQueueMessage" -> {
+                        if(server.getQueue().contains(this)) {
+                            sendMessage(new ErrorMessage(ErrorType.ALREADY_IN_QUEUE));
+                            break;
+                        }
                         server.addToQueue(this);
 
                         for (PlayerInfo player : server.getPlayers()) {
-                            if (player.getId().equals(this.getId())) {
-                                player.sendMessage(new QueueUpdateMessage(server.getQueue().size()));
-                            }
+                            boolean isInQueue = server.getQueue().contains(player);
+                            System.out.println("Player " + player.getUsername() + " is in queue: " + server.getQueue().contains(player));
+                            player.sendMessage(new QueueUpdateMessage(server.getQueue().size(), isInQueue));
                         }
 
                         System.out.println("Player " + username + " joined the queue");
@@ -65,10 +70,27 @@ public class PlayerInfo implements Runnable {
                             server.getQueue().remove(playerB);
 
                             BattleShipGame game = new BattleShipGame();
-                            game.createGame(playerA, playerB, 12);
-                            game.run();
+                            game.createGame(12);
+
+                            game.addPlayer(playerA);
+                            game.addPlayer(playerB);
 
                             server.createGame(game);
+
+                            game.run();
+                        }
+                    }
+                    case "QuitQueueMessage" -> {
+                        if(!server.getQueue().contains(this)) {
+                            sendMessage(new ErrorMessage(ErrorType.NOT_IN_QUEUE));
+                            break;
+                        }
+                        server.removeFromQueue(this.getId());
+
+                        for (PlayerInfo player : server.getPlayers()) {
+                            System.out.println("Player " + player.getUsername() + " is in queue: " + server.getQueue().contains(player));
+                            boolean isInQueue = server.getQueue().contains(player);
+                            player.sendMessage(new QueueUpdateMessage(server.getQueue().size(), isInQueue));
                         }
                     }
                     case "GameStateRequestMessage" -> {
@@ -97,15 +119,6 @@ public class PlayerInfo implements Runnable {
                             }
                         }
                     }
-                    case "QuitQueueMessage" -> {
-                        server.removeFromQueue(this.getId());
-
-                        for (PlayerInfo player : server.getPlayers()) {
-                            if (player.getId().equals(this.getId())) {
-                                player.sendMessage(new QueueUpdateMessage(server.getQueue().size()));
-                            }
-                        }
-                    }
                     case "JoinGameMessage" -> {
                         JoinGameMessage joinGameMessage = (JoinGameMessage) received;
 
@@ -122,8 +135,8 @@ public class PlayerInfo implements Runnable {
                             break;
                         }
 
-                        targetGame.joinGame(this, joinGameMessage.getSessionCode());
-                        System.out.println("Player A joined the game");
+                        targetGame.addPlayer(this);
+                        System.out.println("Player B joined the game");
                     }
                     case "CreateGameMessage" -> {
                         CreateGameMessage createGameMessage = (CreateGameMessage) received;
@@ -134,17 +147,19 @@ public class PlayerInfo implements Runnable {
                         }
 
                         BattleShipGame game = new BattleShipGame();
-                        game.createGame(this, createGameMessage.getSize());
-                        game.run();
-
+                        game.createGame(createGameMessage.getSize());
                         server.createGame(game);
                         System.out.println("Player A created a game");
+                        game.addPlayer(this);
+
+                        game.run();
                     }
                 }
             }
         } catch (IOException | ClassNotFoundException e) {
             System.out.println("Verbindung mit " + username + " verloren.");
             server.removePlayer(this);
+            server.removeFromQueue(this.getId());
         }
     }
 

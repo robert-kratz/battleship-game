@@ -36,6 +36,12 @@ public class Ship implements Serializable {
         this.orientation = orientation;
         this.length = length;
         this.width = width;
+        this.x = -1;
+        this.y = -1;
+    }
+
+    public void setOrientation(Orientation orientation) {
+        this.orientation = orientation;
     }
 
     public String[][] drawShip(String[][] ship) {

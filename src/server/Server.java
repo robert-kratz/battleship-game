@@ -94,10 +94,18 @@ public class Server {
 
     public synchronized void addToQueue(PlayerInfo player) {
         queue.add(player);
+        player.sendMessage(new protocol.messages.QueueUpdateMessage(queue.size(), true));
     }
 
     public synchronized void removeFromQueue(UUID id) {
-        queue.removeIf(player -> player.getId().equals(id));
+        queue.removeIf(player -> {
+            if(player.getId().equals(id)) {
+                player.sendMessage(new protocol.messages.QueueUpdateMessage(queue.size(), false));
+                return true;
+            }
+            return false;
+        });
+
     }
 
     private synchronized void updatePlayerList() {

@@ -13,6 +13,8 @@ public enum MessageType {
     CREATE_GAME,
     //CLIENT -> SERVER
     JOIN_GAME,
+    //CLIENT -> SERVER
+    LEAVE_GAME,
     //SERVER -> CLIENT
     QUEUE_UPDATE,
     //SERVER -> CLIENT

@@ -5,43 +5,75 @@ import protocol.Ship;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.List;
 
 public class BattleshipBoard extends JPanel {
+
+    private int width;
     private final int rows;
     private final int cols;
     private final JButton[][] gridButtons;
     private final ImageIcon backgroundImage;
+    private BackgroundPanel backgroundPanel;
     private BattleShipBoardListener listener;
     private boolean showHoverAnimation = true;
-
     private Ship selectedShip;
+    private List<Ship> placedShips;
+    private Integer lastHoveredRow = null;
+    private Integer lastHoveredCol = null;
 
-    public BattleshipBoard(int rows, int cols, String imagePath) {
+    public BattleshipBoard(int rows, int cols, String imagePath, int width, List<Ship> placedShips) {
         this.rows = rows;
         this.cols = cols;
         this.gridButtons = new JButton[rows][cols];
         this.backgroundImage = new ImageIcon(imagePath);
+        this.width = width;
+        this.placedShips = placedShips;
+
+        this.selectedShip = new Ship(0, Ship.Orientation.HORIZONTAL, 3, 2);
 
         setLayout(new BorderLayout());
         setBorder(BorderFactory.createEmptyBorder(10, 12, 10, 12));
 
-        // Background panel with grid and ships
-        BackgroundPanel mainPanel = new BackgroundPanel(backgroundImage.getImage(), rows, cols);
-        mainPanel.setLayout(new GridLayout(rows, cols, 0, 0));
+        backgroundPanel = new BackgroundPanel(backgroundImage.getImage(), rows, cols);
+        backgroundPanel.setLayout(new GridLayout(rows, cols, 0, 0));
 
-        initializeBoard(mainPanel);
-        add(mainPanel, BorderLayout.CENTER);
+        initializeBoard(backgroundPanel);
+        add(backgroundPanel, BorderLayout.CENTER);
 
-        // KeyListener for rotating ships
         setFocusable(true);
         requestFocusInWindow();
+
+        addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                backgroundPanel.reevaluateComponent();
+                repaint();
+            }
+        });
+
+        getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("SPACE"), "rotateShip");
+        getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("R"), "rotateShip");
+        getActionMap().put("rotateShip", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                toggleShipOrientation();
+                reevaluateComponent();
+            }
+        });
+    }
+
+    public void reevaluateComponent() {
+        requestFocusInWindow();
+        backgroundPanel.reevaluateComponent();
+        repaint();
     }
 
     private void initializeBoard(JPanel panel) {
         for (int row = 0; row < rows; row++) {
             for (int col = 0; col < cols; col++) {
                 HoverButton button = new HoverButton(row, col);
-                button.setPreferredSize(new Dimension(804 / cols, 804 / rows));
+                button.setPreferredSize(new Dimension(width / cols, width / rows));
                 button.setMargin(new Insets(0, 0, 0, 0));
                 button.setBorder(BorderFactory.createEmptyBorder());
 
@@ -53,17 +85,49 @@ public class BattleshipBoard extends JPanel {
 
     public void setSelectedShip(Ship ship) {
         this.selectedShip = ship;
+        repaint();
     }
 
-    public void setShowHoverAnimation(boolean showHoverAnimation) {
-        this.showHoverAnimation = showHoverAnimation;
+    private void toggleShipOrientation() {
+        if (selectedShip != null) {
+            selectedShip.setOrientation(selectedShip.getOrientation() == Ship.Orientation.HORIZONTAL ?
+                    Ship.Orientation.VERTICAL : Ship.Orientation.HORIZONTAL);
+            if (lastHoveredRow != null && lastHoveredCol != null) {
+                repaint();
+            }
+        }
     }
 
-    public void setListener(BattleShipBoardListener listener) {
-        this.listener = listener;
+    private boolean checkCollision(int startRow, int startCol) {
+        int length = selectedShip.getLength();
+        int width = selectedShip.getWidth();
+        boolean isHorizontal = selectedShip.getOrientation() == Ship.Orientation.HORIZONTAL;
+
+        for (int i = 0; i < length; i++) {
+            for (int j = 0; j < width; j++) {
+                int targetRow = startRow + (isHorizontal ? j : i);
+                int targetCol = startCol + (isHorizontal ? i : j);
+
+                if (targetRow < 0 || targetRow >= rows || targetCol < 0 || targetCol >= cols) {
+                    return true;
+                }
+
+                for (Ship ship : placedShips) {
+                    for (int x = 0; x < ship.getLength(); x++) {
+                        for (int y = 0; y < ship.getWidth(); y++) {
+                            int shipRow = ship.getY() + (ship.getOrientation() == Ship.Orientation.HORIZONTAL ? y : x);
+                            int shipCol = ship.getX() + (ship.getOrientation() == Ship.Orientation.HORIZONTAL ? x : y);
+                            if (shipRow == targetRow && shipCol == targetCol) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return false;
     }
 
-    // **Panel to draw background, grid, and ships**
     private class BackgroundPanel extends JPanel {
         private final Image backgroundImage;
         private final int rows, cols;
@@ -77,31 +141,57 @@ public class BattleshipBoard extends JPanel {
         @Override
         protected void paintComponent(Graphics g) {
             super.paintComponent(g);
-
             int panelWidth = getWidth();
             int panelHeight = getHeight();
+            int minSize = Math.min(panelWidth, panelHeight);
+            setSize(minSize, minSize);
+            g.drawImage(backgroundImage, 0, 0, minSize, minSize, this);
 
-            g.drawImage(backgroundImage, 0, 0, panelWidth, panelHeight, this);
-
-            // Draw Grid
             g.setColor(Color.WHITE);
             for (int i = 0; i <= cols; i++) {
-                int x = i * panelWidth / cols;
-                g.drawLine(x, 0, x, panelHeight);
+                int x = i * minSize / cols;
+                g.drawLine(x, 0, x, minSize);
             }
             for (int i = 0; i <= rows; i++) {
-                int y = i * panelHeight / rows;
-                g.drawLine(0, y, panelWidth, y);
+                int y = i * minSize / rows;
+                g.drawLine(0, y, minSize, y);
+            }
+
+            if (selectedShip != null && lastHoveredRow != null && lastHoveredCol != null) {
+                drawShip(g, lastHoveredRow, lastHoveredCol, minSize);
+            }
+        }
+
+        public void reevaluateComponent() {
+            repaint();
+        }
+
+        private void drawShip(Graphics g, int startRow, int startCol, int minSize) {
+            int length = selectedShip.getLength();
+            int width = selectedShip.getWidth();
+            boolean isHorizontal = selectedShip.getOrientation() == Ship.Orientation.HORIZONTAL;
+
+            boolean collision = checkCollision(startRow, startCol);
+            g.setColor(collision ? new Color(255, 0, 0, 150) : new Color(0, 0, 0, 150));
+
+            int cellWidth = minSize / cols;
+            int cellHeight = minSize / rows;
+
+            for (int i = 0; i < length; i++) {
+                for (int j = 0; j < width; j++) {
+                    int targetRow = startRow + (isHorizontal ? j : i);
+                    int targetCol = startCol + (isHorizontal ? i : j);
+
+                    if (targetRow >= 0 && targetRow < rows && targetCol >= 0 && targetCol < cols) {
+                        g.fillRect(targetCol * cellWidth, targetRow * cellHeight, cellWidth, cellHeight);
+                    }
+                }
             }
         }
     }
 
-    // **Custom Button for Hover Interaction**
     private class HoverButton extends JButton {
         private final int row, col;
-
-        private float opacity = 0f; // Initial transparent
-        private Timer fadeInTimer, fadeOutTimer;
 
         public HoverButton(int row, int col) {
             this.row = row;
@@ -116,37 +206,22 @@ public class BattleshipBoard extends JPanel {
             addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseEntered(MouseEvent e) {
-                    if (listener != null) {
-                        listener.onCellHover(row, col);
-                    }
-
-                    if(!showHoverAnimation) return;
-
-                    if (fadeOutTimer != null && fadeOutTimer.isRunning()) fadeOutTimer.stop();
-                    fadeInTimer = new Timer(20, evt -> {
-                        opacity = Math.min(0.18f, opacity + 0.05f);
+                    if (selectedShip != null) {
+                        lastHoveredRow = row;
+                        lastHoveredCol = col;
+                        reevaluateComponent();
                         repaint();
-                        if (opacity >= 0.18f) ((Timer) evt.getSource()).stop();
-                    });
-                    fadeInTimer.start();
+                    }
                 }
 
                 @Override
                 public void mouseExited(MouseEvent e) {
-                    if (listener != null) {
-                        listener.onCellHover(-1, -1);
-                    }
-
-                    if(!showHoverAnimation) return;
-
-                    if (fadeInTimer != null && fadeInTimer.isRunning()) fadeInTimer.stop();
-                    fadeOutTimer = new Timer(20, evt -> {
-                        opacity = Math.max(0f, opacity - 0.05f);
-                        repaint();
-                        if (opacity <= 0f) ((Timer) evt.getSource()).stop();
-                    });
-                    fadeOutTimer.start();
+                    lastHoveredRow = null;
+                    lastHoveredCol = null;
+                    reevaluateComponent();
+                    repaint();
                 }
+
                 @Override
                 public void mouseClicked(MouseEvent e) {
                     if (listener != null) {
@@ -154,16 +229,6 @@ public class BattleshipBoard extends JPanel {
                     }
                 }
             });
-        }
-
-        @Override
-        protected void paintComponent(Graphics g) {
-            Graphics2D g2 = (Graphics2D) g.create();
-            g2.setComposite(AlphaComposite.SrcOver.derive(opacity));
-            g2.setColor(Color.BLACK);
-            g2.fillRect(0, 0, getWidth(), getHeight());
-            g2.dispose();
-            super.paintComponent(g);
         }
     }
 

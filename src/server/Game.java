@@ -4,11 +4,9 @@ import java.util.UUID;
 
 public interface Game {
 
-    GameState createGame(PlayerInfo playerA, int size);
+    GameState createGame(int size);
 
-    GameState createGame(PlayerInfo playerA, PlayerInfo playerB, int size);
-
-    UUID joinGame(PlayerInfo playerB, int sessionCode);
+    GameState addPlayer(PlayerInfo player);
 
     GameState leaveGame(PlayerInfo player);
 

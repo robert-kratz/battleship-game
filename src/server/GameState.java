@@ -39,19 +39,36 @@ public class GameState implements Serializable  {
 
     private Board boardA, boardB;
     private ArrayList<Ship> shipsA, shipsB;
+
+    private int size;
+
     private GameStatus status = GameStatus.LOBBY_WAITING;
 
-    public GameState(int x, int y){
-        this.boardA = new Board(y, x);
+    public GameState(GameState gameState) {
+        this.playerA = gameState.playerA;
+        this.playerB = gameState.playerB;
+        this.secret = gameState.secret;
+        this.sessionCode = gameState.sessionCode;
+        this.created = gameState.created;
+        this.lastUpdated = gameState.lastUpdated;
+        this.buildGameBoardStarted = gameState.buildGameBoardStarted;
+        this.buildGameBoardFinished = gameState.buildGameBoardFinished;
+        this.playersTurnStart = gameState.playersTurnStart;
+        this.playersTurnEnd = gameState.playersTurnEnd;
+        this.playersTurn = gameState.playersTurn;
+        this.boardA = gameState.boardA;
+        this.boardB = gameState.boardB;
+        this.shipsA = gameState.shipsA;
+        this.shipsB = gameState.shipsB;
+        this.size = gameState.size;
+        this.status = gameState.status;
     }
 
-    public GameState(UUID playerA, int size, ArrayList<Ship> ships) {
-        this.playerA = playerA;
+    public GameState(int size, ArrayList<Ship> ships) {
         this.boardA = new Board(size, size);
 
-        this.playerB = null;
-        this.boardB = null;
-        this.shipsB = null;
+        this.size = size;
+        this.sessionCode = generateSessionCode();
 
         setShips(ships);
     }
@@ -66,24 +83,12 @@ public class GameState implements Serializable  {
         setShips(ships);
     }
 
-    public GameState(UUID playerA, UUID playerB, Board boardA, Board boardB, ArrayList<Ship> shipsA, ArrayList<Ship> shipsB) {
-        this.playerA = playerA;
-        this.playerB = playerB;
-        this.boardA = boardA;
-        this.boardB = boardB;
-        this.shipsA = shipsA;
-        this.shipsB = shipsB;
-    }
-
     public GameState addPlayer(UUID player) {
         if(playerA == null) {
             playerA = player;
-            boardA = new Board(12, 12);
-            shipsA = new ArrayList<>();
+
         } else if(playerB == null) {
             playerB = player;
-            boardB = new Board(12, 12);
-            shipsB = new ArrayList<>();
         }
         return this;
     }
@@ -180,6 +185,10 @@ public class GameState implements Serializable  {
         return playersTurnStart;
     }
 
+    public int getBoardSize() {
+        return size;
+    }
+
     public UUID getPlayerA() {
         return playerA;
     }
@@ -218,5 +227,9 @@ public class GameState implements Serializable  {
 
     public boolean isPlayerATurn() {
         return playerA.equals(playersTurn);
+    }
+
+    private int generateSessionCode() {
+        return (int) (Math.random() * 900000) + 100000;
     }
 }

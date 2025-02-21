@@ -1,6 +1,8 @@
 package client.gui;
 
 import client.ClientHandler;
+import client.GameHandler;
+import client.Scene;
 import protocol.Board;
 import protocol.Ship;
 import protocol.messages.GameStateRequestMessage;
@@ -10,24 +12,34 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
 
-public class MapBuilder extends JPanel {
+public class MapBuilder extends JPanel implements Scene {
 
     private final JLabel infoLabel;
     private final JPanel leftPanel;
     private final JPanel rightPanel;
 
-    private final BattleshipBoard battleshipBoard;
+    //private final BattleshipBoard battleshipBoard;
     private GameState gameState;
 
     private Ship selectedShip;
 
-    private ClientHandler clientHandler;
+    private GameHandler gameHandler;
 
     private Thread timerThread;
 
-    public MapBuilder(ClientHandler clientHandler, int rows, int cols) {
+    @Override
+    public String getTitle() {
+        return "Prepare your board";
+    }
 
-        this.clientHandler = clientHandler;
+    @Override
+    public Dimension getPreferredSize() {
+        return new Dimension(1204, 816);
+    }
+
+    public MapBuilder(GameHandler gameHandler, int rows, int cols) {
+
+        this.gameHandler = gameHandler;
 
         setLayout(new BorderLayout());
 
@@ -35,7 +47,7 @@ public class MapBuilder extends JPanel {
 
         // Linke Seitenleiste (200px breit)
         leftPanel = new JPanel();
-        leftPanel.setPreferredSize(new Dimension(200, 804));
+        leftPanel.setPreferredSize(new Dimension(200, getHeight()));
         leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.Y_AXIS));
         leftPanel.setBackground(Color.DARK_GRAY);
         leftPanel.add(new JLabel("Shiffe"));
@@ -43,15 +55,14 @@ public class MapBuilder extends JPanel {
 
         // Rechte Seitenleiste (200px breit)
         rightPanel = new JPanel();
-        rightPanel.setPreferredSize(new Dimension(200, 804));
+        rightPanel.setPreferredSize(new Dimension(200, getHeight()));
         rightPanel.setBackground(Color.LIGHT_GRAY);
         rightPanel.add(new JLabel("Test-Items"));
         rightPanel.add(infoLabel);
 
         // Spielfeld (BattleshipBoard in der Mitte)
-        battleshipBoard = new BattleshipBoard(rows, cols, "resource/background.png");
-        battleshipBoard.setPreferredSize(new Dimension(804, 804)); // Spielfeld ist immer quadratisch
-        battleshipBoard.setListener(new BattleshipBoard.BattleShipBoardListener() {
+        //battleshipBoard = new BattleshipBoard(rows, cols, "resource/background.png", this.gameHandler.getStageManager().getWindowsWidth());
+       /* battleshipBoard.setListener(new BattleshipBoard.BattleShipBoardListener() {
             @Override
             public void onCellHover(int row, int col) {
                 System.out.println("Hover: " + row + ", " + col);
@@ -63,17 +74,18 @@ public class MapBuilder extends JPanel {
                 System.out.println("Click: " + row + ", " + col);
                 Ship ship = new Ship(1, row, col, Ship.Orientation.HORIZONTAL, 3, 1, "resource/ship.png");
 
-                if(gameState.playerA.equals(clientHandler.getUserId())) {
+                if(gameState.playerA.equals(gameHandler.getUserId())) {
                     gameState.getBoardA().addShip(ship);
                 } else {
                     gameState.getBoardB().addShip(ship);
                 }
                 battleshipBoard.repaint();
             }
-        });
+        });*/
         add(leftPanel, BorderLayout.WEST);
-        add(battleshipBoard, BorderLayout.CENTER);
+        //add(battleshipBoard, BorderLayout.CENTER);
         add(rightPanel, BorderLayout.EAST);
+
     }
 
     public void setGameState(GameState gameState) {
@@ -81,7 +93,7 @@ public class MapBuilder extends JPanel {
 
         ArrayList<Ship> ships = new ArrayList<>();
 
-        if(gameState.playerA.equals(clientHandler.getUserId())) {
+        if(gameState.playerA.equals(gameHandler.getUserId())) {
             ships = gameState.getBoardA().getShips();
         } else {
             ships = gameState.getBoardB().getShips();
@@ -99,7 +111,7 @@ public class MapBuilder extends JPanel {
             leftPanel.add(shipButton);
         }
 
-        this.battleshipBoard.repaint();
+        //this.battleshipBoard.repaint();
 
         if (gameState.getStatus() == GameState.GameStatus.BUILD_GAME_BOARD) {
             this.timerThread = new Thread(() -> {
@@ -110,7 +122,7 @@ public class MapBuilder extends JPanel {
                         if (this.gameState.getBuildGameBoardFinished().getTime() < System.currentTimeMillis()) {
                             //stop this thread
                             System.out.println("Time is up!");
-                            this.clientHandler.sendMessage(new GameStateRequestMessage(this.clientHandler.getGameId(), this.clientHandler.getSecret(), this.clientHandler.getUserId()));
+                            this.gameHandler.getClientHandler().sendMessage(new GameStateRequestMessage(this.gameHandler.getGameId(), this.gameHandler.getSecret(), this.gameHandler.getUserId()));
                             this.timerThread.interrupt();
                             this.timerThread = null;
                             return;
