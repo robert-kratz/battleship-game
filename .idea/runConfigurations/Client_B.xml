@@ -1,0 +1,9 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Client B" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="client.Client" />
+    <module name="battleship-game" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
