@@ -21,6 +21,8 @@ public class PlayerInfo implements Runnable {
     private String username;
     private String ip;
 
+    private boolean isInGame = false;
+
     public PlayerInfo(Socket socket, Server server) {
         this.socket = socket;
         this.id = UUID.randomUUID();
@@ -69,15 +71,7 @@ public class PlayerInfo implements Runnable {
                             server.getQueue().remove(playerA);
                             server.getQueue().remove(playerB);
 
-                            BattleShipGame game = new BattleShipGame();
-                            game.createGame(12);
-
-                            game.addPlayer(playerA);
-                            game.addPlayer(playerB);
-
-                            server.createGame(game);
-
-                            game.run();
+                            createGame(10, playerA, playerB);
                         }
                     }
                     case "QuitQueueMessage" -> {
@@ -93,34 +87,10 @@ public class PlayerInfo implements Runnable {
                             player.sendMessage(new QueueUpdateMessage(server.getQueue().size(), isInQueue));
                         }
                     }
-                    case "GameStateRequestMessage" -> {
-                        GameStateRequestMessage gameStateRequestMessage = (GameStateRequestMessage) received;
-
-                        for (BattleShipGame game : server.getGames()) {
-                            if (game.getGameState().getId().equals(gameStateRequestMessage.getGameId())) {
-
-                                //check if the secret is correct
-                                /*if(!game.getGameState().getSecret().equals(gameStateRequestMessage.getSecret())) {
-                                    sendMessage(new ErrorMessage(ErrorType.INVALID_SECRET));
-                                    break;
-                                }*/
-
-                                System.out.println("Gamestate: " + game.getGameState().getStatus());
-
-                                if(game.getGameState().getPlayerA().equals(this.getId())) {
-                                    sendMessage(new GameStateUpdateMessage(game.getGameState()));
-                                } else if(game.getGameState().getPlayerB().equals(this.getId())) {
-                                    sendMessage(new GameStateUpdateMessage(game.getGameState()));
-                                } else {
-                                    sendMessage(new ErrorMessage(ErrorType.INVALID_PLAYER));
-                                }
-
-                                sendMessage(new GameStateUpdateMessage(game.getGameState()));
-                            }
-                        }
-                    }
                     case "JoinGameMessage" -> {
                         JoinGameMessage joinGameMessage = (JoinGameMessage) received;
+
+                        this.isInGame = true;
 
                         BattleShipGame targetGame = null;
 
@@ -141,26 +111,65 @@ public class PlayerInfo implements Runnable {
                     case "CreateGameMessage" -> {
                         CreateGameMessage createGameMessage = (CreateGameMessage) received;
 
+                        this.isInGame = true;
+
                         if(createGameMessage.getSize() < 5 || createGameMessage.getSize() > 20) {
                             sendMessage(new ErrorMessage(ErrorType.INVALID_GAME_SIZE));
                             break;
                         }
 
-                        BattleShipGame game = new BattleShipGame();
-                        game.createGame(createGameMessage.getSize());
-                        server.createGame(game);
-                        System.out.println("Player A created a game");
-                        game.addPlayer(this);
+                        this.createGame(createGameMessage.getSize());
 
-                        game.run();
+                        System.out.println("Player A created a game");
+                    }
+                    case "SubmitPlacementMessage" -> {
+                        SubmitPlacementMessage submitPlacementMessage = (SubmitPlacementMessage) received;
+
+                        BattleShipGame game = server.getGame(this);
+
+                        if(game == null) {
+                            sendMessage(new ErrorMessage(ErrorType.NO_GAME_IN_PROGRESS));
+                            break;
+                        }
+
+                        System.out.println("Player " + username + " submitted placement");
                     }
                 }
             }
         } catch (IOException | ClassNotFoundException e) {
-            System.out.println("Verbindung mit " + username + " verloren.");
+            System.out.println("Lost connection to player " + username);
             server.removePlayer(this);
             server.removeFromQueue(this.getId());
         }
+    }
+
+    /**
+     * Create a new game with the given size for the current player
+     * @param size size of the game board
+     */
+    private void createGame(int size) {
+        BattleShipGame game = new BattleShipGame(this.server, size);
+        Thread gameThread = new Thread(game);
+
+        game.addPlayer(this);
+
+        server.registerGame(game, gameThread);
+    }
+
+    /**
+     * Create a new game with the given size for the two given players
+     * @param size size of the game board
+     * @param playerA playerA
+     * @param playerB playerB
+     */
+    private void createGame(int size, PlayerInfo playerA, PlayerInfo playerB) {
+        BattleShipGame game = new BattleShipGame(this.server, size);
+        Thread gameThread = new Thread(game);
+
+        game.addPlayer(playerA);
+        game.addPlayer(playerB);
+
+        server.registerGame(game, gameThread);
     }
 
     public void sendMessage(Message message) {

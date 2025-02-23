@@ -1,6 +1,9 @@
 package client;
 
+import protocol.Ship;
 import protocol.messages.*;
+
+import java.util.ArrayList;
 
 public interface GameClient {
 
@@ -16,7 +19,7 @@ public interface GameClient {
 
     void onGameStateUpdate(GameStateUpdateMessage message);
 
-    void logout();
+    void placeShips(ArrayList<Ship> ships);
 
     void joinQueue();
 

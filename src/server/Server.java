@@ -21,6 +21,8 @@ public class Server {
     private final List<Thread> clientThreads = new ArrayList<>();
 
     private ArrayList<BattleShipGame> games = new ArrayList<>();
+    private ArrayList<Thread> gameThreads = new ArrayList<>();
+
     private ArrayList<PlayerInfo> queue = new ArrayList<>();
 
     private ServerGUI gui;
@@ -79,12 +81,51 @@ public class Server {
         }
     }
 
-    public synchronized void createGame(BattleShipGame game) {
+    /**
+     * Registers a new game and starts the game thread
+     * @param game game to register
+     * @param thread thread to start
+     */
+    public synchronized void registerGame(BattleShipGame game, Thread thread) {
         games.add(game);
+        gameThreads.add(thread);
+
+        thread.start();
     }
 
-    public synchronized void removeGame(UUID id) {
-        games.removeIf(game -> game.getGameState().getId().equals(id));
+    /**
+     * Removes a game from the list of active games
+     * @param id id of the game to remove
+     */
+    public synchronized void unregisterGame(UUID id) {
+        BattleShipGame targetGame = null;
+        Thread targetThread = null;
+        for (BattleShipGame game : games) {
+            if (game.getGameState().getId().equals(id)) {
+                targetGame = game;
+                targetThread = gameThreads.get(games.indexOf(game));
+            }
+        }
+
+        if (targetGame != null) {
+            //Stop the game thread
+            targetThread.interrupt();
+            games.remove(targetGame);
+        }
+    }
+
+    /**
+     * Returns the game the player is currently in
+     * @param player player to get the game for
+     * @return game the player is in
+     */
+    public synchronized BattleShipGame getGame(PlayerInfo player) {
+        for (BattleShipGame game : games) {
+            if (game.getPlayerA().getId().equals(player.getId()) || game.getPlayerB().getId().equals(player.getId())) {
+                return game;
+            }
+        }
+        return null;
     }
 
     public synchronized void removePlayer(PlayerInfo player) {

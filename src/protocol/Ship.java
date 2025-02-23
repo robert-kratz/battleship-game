@@ -30,6 +30,7 @@ public class Ship implements Serializable {
         this.icon = icon;
     }
 
+    // Default-Konstruktor: Noch nicht platziert, daher x und y = -1.
     public Ship(int id, Orientation orientation, int length, int width) {
         this.id = id;
         this.isPlaced = false;
@@ -45,7 +46,6 @@ public class Ship implements Serializable {
     }
 
     public String[][] drawShip(String[][] ship) {
-        //use the orientation to draw the ship on the board
         for (int i = 0; i < length; i++) {
             if (orientation == Orientation.HORIZONTAL) {
                 ship[y][x + i] = "S";
@@ -54,6 +54,16 @@ public class Ship implements Serializable {
             }
         }
         return ship;
+    }
+
+    public void setX(int x) {
+        this.x = x;
+        this.isPlaced = true;
+    }
+
+    public void setY(int y) {
+        this.y = y;
+        this.isPlaced = true;
     }
 
     public int getId() {
@@ -105,7 +115,7 @@ public class Ship implements Serializable {
                 "id=" + id +
                 ", x=" + x +
                 ", y=" + y +
-                ", orientation='" + orientation + '\'' +
+                ", orientation=" + orientation +
                 ", length=" + length +
                 ", width=" + width +
                 ", isSunk=" + isSunk +

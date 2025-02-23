@@ -1,9 +1,6 @@
 package client.gui;
 
-import client.ClientHandler;
-import client.GameHandler;
-import client.Scene;
-import client.StageManager;
+import client.*;
 
 import javax.swing.*;
 import java.awt.*;
@@ -93,7 +90,7 @@ public class CreateGameScene extends JPanel implements Scene {
 
         // Listener für Back-Button
         backButton.addActionListener(e -> {
-            this.gameHandler.getStageManager().switchScene(StageManager.Stages.LOBBY_SCENE);
+            this.gameHandler.getStageManager().switchScene(Stage.LOBBY_SCENE);
             sizeGroup.clearSelection();
         });
 

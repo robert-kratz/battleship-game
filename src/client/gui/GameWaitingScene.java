@@ -1,6 +1,7 @@
 package client.gui;
 
 import client.GameHandler;
+import client.Stage;
 import client.StageManager;
 
 import javax.swing.*;
@@ -53,7 +54,7 @@ public class GameWaitingScene extends JPanel {
 
         backButton.addActionListener(e -> {
             animationTimer.stop();
-            gameHandler.getStageManager().switchScene(StageManager.Stages.LOBBY_SCENE);
+            gameHandler.getStageManager().switchScene(Stage.LOBBY_SCENE);
             gameHandler.leaveGame();
         });
 

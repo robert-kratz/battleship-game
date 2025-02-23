@@ -1,10 +1,12 @@
 package client;
 
 import protocol.ErrorType;
+import protocol.Ship;
 import protocol.messages.*;
 import server.GameState;
 
 import javax.swing.*;
+import java.util.ArrayList;
 import java.util.UUID;
 
 public class GameHandler implements GameClient {
@@ -34,50 +36,16 @@ public class GameHandler implements GameClient {
         this.stageManager.lobbyScene.setUsername(username);
     }
 
+    /**
+     * Queue logic
+     */
+
     @Override
     public void queueUpdate(QueueUpdateMessage queueUpdateMessage) {
-        System.out.println("Queue length: " + queueLength);
         this.queueLength = queueUpdateMessage.getQueueSize();
         this.isInQueue = queueUpdateMessage.isPlayerInQueue();
 
         this.stageManager.lobbyScene.setQueueLength(queueLength);
-    }
-
-    @Override
-    public void onErrorMessage(ErrorMessage errorMessage) {
-        if(errorMessage.getError().equals(ErrorType.SERVER_CLOSED)) {
-            showError("Server closed.");
-            System.exit(1);
-        }
-
-        showError("Error: " + errorMessage.getError().toString());
-    }
-
-    @Override
-    public void onGameStateUpdate(GameStateUpdateMessage message) {
-        this.gameState = message.getGameState();
-
-        if(message.getGameState().getStatus().equals(GameState.GameStatus.LOBBY_WAITING)) {
-            this.stageManager.initGameScene(message.getGameState().getBoardSize());
-        }
-    }
-
-    @Override
-    public void createGameMessage(int size) {
-        clientHandler.sendMessage(new CreateGameMessage(size));
-    }
-
-    @Override
-    public void gameStarted(GameStartingMessage gameStartingMessage) {
-        this.gameId = gameStartingMessage.getGameState().getId();
-        this.gameState = gameStartingMessage.getGameState();
-
-        this.stageManager.gameGUI.startGame();
-    }
-
-    @Override
-    public void logout() {
-
     }
 
     @Override
@@ -100,6 +68,59 @@ public class GameHandler implements GameClient {
         clientHandler.sendMessage(new QuitQueueMessage());
     }
 
+    /**
+     * Game logic
+     */
+
+    @Override
+    public void onGameStateUpdate(GameStateUpdateMessage message) {
+        this.gameState = message.getGameState();
+
+        System.out.println("Game state updated: " + gameState.getStatus());
+
+        switch (gameState.getStatus()) {
+            case LOBBY_WAITING -> {
+                this.stageManager.startWaitingLobbyScene();
+            }
+            case BUILD_GAME_BOARD -> {
+                this.stageManager.startBuildScene();
+            }
+            case IN_GAME -> {
+                this.stageManager.startInGameScene();
+            }
+            case GAME_OVER -> {}
+        }
+    }
+
+    @Override
+    public void placeShips(ArrayList<Ship> ships) {
+        if(gameState == null) return;
+
+        if(gameState.getStatus() != GameState.GameStatus.BUILD_GAME_BOARD) {
+            showError("Game is not in build phase.");
+            return;
+        }
+
+        clientHandler.sendMessage(new SubmitPlacementMessage(ships));
+    }
+
+    /**
+     * Creates a new game with the given size. Trigger CLIENT -> SERVER
+     * @param size size of the game board
+     */
+    @Override
+    public void createGameMessage(int size) {
+        clientHandler.sendMessage(new CreateGameMessage(size));
+    }
+
+    @Override
+    public void gameStarted(GameStartingMessage gameStartingMessage) {
+        this.gameId = gameStartingMessage.getGameState().getId();
+        this.gameState = gameStartingMessage.getGameState();
+
+        this.stageManager.startBuildScene();
+    }
+
     @Override
     public void joinGame(int sessionCode) {
         System.out.println("Joining game with session code: " + sessionCode);
@@ -109,8 +130,17 @@ public class GameHandler implements GameClient {
     @Override
     public void leaveGame() {
         clientHandler.sendMessage(new LeaveGameMessage());
-        this.stageManager.removeGameScene();
-        this.stageManager.switchScene(StageManager.Stages.LOBBY_SCENE);
+        this.stageManager.switchScene(Stage.LOBBY_SCENE);
+    }
+
+    @Override
+    public void onErrorMessage(ErrorMessage errorMessage) {
+        if(errorMessage.getError().equals(ErrorType.SERVER_CLOSED)) {
+            showError("Server closed.");
+            System.exit(1);
+        }
+
+        showError("Error: " + errorMessage.getError().toString());
     }
 
     private void showError(String message) {

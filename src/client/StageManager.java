@@ -1,6 +1,7 @@
 package client;
 
 import client.gui.*;
+import server.GameState;
 
 import javax.swing.*;
 import java.awt.*;
@@ -15,120 +16,154 @@ public class StageManager extends JFrame {
     public LobbyScene lobbyScene;
     public CreateGameScene createGameScene;
 
-    public GameGUI gameGUI; //This is dynamic for the current Game
+    public GameWaitingScene gameWaitingScene;
+
+    public GameBuildScene gameBuildScene;
+    public Thread gameBuildSceneThread;
+
+    public GameInGameScene gameIngameScene;
+    public Thread gameIngameSceneThread;
+
+    public GameOverScene gameOverScene;
 
     private final CardLayout cardLayout;
     private final JPanel mainPanel;
-    private final Map<Stages, JPanel> scenes;
-
+    private final Map<Stage, JPanel> scenes = new HashMap<>();
     private final GameHandler gameHandler;
 
-    public enum Stages {
-        LOBBY_SCENE,
-        CREATE_GAME_SCENE,
-        GAME_SCENE
-    }
+    private Stage currentStage = Stage.LOBBY_SCENE;
+    private boolean isGameRunning = false;
+
+    private final Dimension BIG_DIMENSION = new Dimension(900, 530);
+    private final Dimension SMALL_DIMENSION = new Dimension(430, 270);
 
     public StageManager(GameHandler gameHandler) {
         this.gameHandler = gameHandler;
-        this.scenes = new HashMap<>();
+
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setMinimumSize(new Dimension(430, 270));
-        setSize(430, 270);
         setResizable(true);
-        setLocationRelativeTo(null);
 
         cardLayout = new CardLayout();
         mainPanel = new JPanel(cardLayout);
         add(mainPanel);
+
+        lobbyScene = new LobbyScene(gameHandler);
+        lobbyScene.setUsername(gameHandler.getUsername());
+        addScene(Stage.LOBBY_SCENE, lobbyScene);
+
+        createGameScene = new CreateGameScene(this.gameHandler);
+        addScene(Stage.CREATE_GAME_SCENE, createGameScene);
+
+        switchScene(Stage.LOBBY_SCENE);
 
         addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
                 super.componentResized(e);
 
-                System.out.println("StageManager: Resized: " + getWidth() + "x" + getHeight());
+                //force repaint for the build
+                if (gameBuildScene != null) {
+                    gameBuildScene.updateDimensions(getWidth(), getHeight());
+                }
+
+                System.out.println("GameGui: Resized: " + getWidth() + "x" + getHeight());
             }
         });
 
-        initScenes();
         setVisible(true);
     }
 
-    public void initScenes() {
-        //LobbyScene
-        lobbyScene = new LobbyScene(gameHandler);
-        lobbyScene.setUsername(gameHandler.getUsername());
+    public void startWaitingLobbyScene() {
+        if(!this.gameHandler.getGameState().getStatus().equals(GameState.GameStatus.LOBBY_WAITING)) return;
 
-        addScene(Stages.LOBBY_SCENE, lobbyScene);
+        if(this.gameWaitingScene != null) return;
 
-        //CreateGameScene
-        createGameScene = new CreateGameScene(this.gameHandler);
-        addScene(Stages.CREATE_GAME_SCENE, createGameScene);
+        this.isGameRunning = true;
+        this.gameWaitingScene = new GameWaitingScene(gameHandler);
 
-        switchScene(Stages.LOBBY_SCENE);
+        addScene(Stage.GAME_WAITING_SCENE, gameWaitingScene);
+        switchScene(Stage.GAME_WAITING_SCENE);
     }
 
-    /**
-     * ONLY BE CALLED WHEN THE USER STARTS A GAME
-     * @param size The size of the game board
-     */
-    public void initGameScene(int size) {
-        gameGUI = new GameGUI(this.gameHandler, size);
-        addScene(Stages.GAME_SCENE, gameGUI);
-        switchScene(Stages.GAME_SCENE);
+    public void startBuildScene() {
+        if(!this.gameHandler.getGameState().getStatus().equals(GameState.GameStatus.BUILD_GAME_BOARD)) return;
 
-        setMinimumSize(new Dimension(900, 530));
+        if(this.gameBuildScene != null) return; //Allow only one build scene being initialized
 
-        System.out.println("GameScene initialized");
+        this.gameBuildScene = new GameBuildScene(gameHandler);
+        this.gameBuildSceneThread = new Thread(gameBuildScene);
+
+        addScene(Stage.GAME_BUILD_SCENE, gameBuildScene);
+        switchScene(Stage.GAME_BUILD_SCENE);
+        this.gameBuildSceneThread.start();
     }
 
-    public void destroyGameScene() {
-        if(gameGUI != null) {
-            mainPanel.remove(gameGUI);
-            gameGUI = null;
-        }
+    public void startInGameScene() {
+        if(!this.gameHandler.getGameState().getStatus().equals(GameState.GameStatus.IN_GAME)) return;
+
+        if(this.gameIngameScene != null) return;
+
+        this.gameBuildSceneThread.interrupt();
+
+        this.gameIngameScene = new GameInGameScene(gameHandler);
+        this.gameIngameSceneThread = new Thread(gameIngameScene);
+
+        addScene(Stage.GAME_IN_GAME_SCENE, gameIngameScene);
+        switchScene(Stage.GAME_IN_GAME_SCENE);
+
+        this.gameIngameSceneThread.start();
     }
 
-    /**
-     * ONLY BE CALLED WHEN THE USER LEAVES THE GAME
-     */
-    public void removeGameScene() {
-        if(gameGUI != null) {
-            mainPanel.remove(gameGUI);
-            gameGUI = null;
-        }
-    }
-
-    private void addScene(Stages stage, JPanel panel) {
+    private void addScene(Stage stage, JPanel panel) {
         scenes.put(stage, panel);
         mainPanel.add(panel, stage.toString());
+    }
 
-        //Set the size of the panel depending on the stage
-        if(stage.equals(Stages.LOBBY_SCENE) || stage.equals(Stages.CREATE_GAME_SCENE)) {
-            panel.setSize(430, 270);
-            panel.setMinimumSize(new Dimension(430, 270));
-            setLocationRelativeTo(null);
-        } else {
-            panel.setSize(900, 530);
-            setMinimumSize(new Dimension(900, 530));
-            setLocationRelativeTo(null);
+    private void removeScene(Stage stage) {
+        scenes.remove(stage);
+        mainPanel.remove(scenes.get(stage));
+    }
+
+    /**
+     * Call This method to adapt the screen size depending on the current stage
+     */
+    public void adaptScreenSize() {
+
+        System.out.println("Adapting screen size for stage: " + currentStage);
+
+        switch (currentStage) {
+            case LOBBY_SCENE:
+            case CREATE_GAME_SCENE:
+                setSize(SMALL_DIMENSION);
+                setMinimumSize(SMALL_DIMENSION);
+                setResizable(true);
+                break;
+            case GAME_WAITING_SCENE:
+            case GAME_BUILD_SCENE:
+            case GAME_IN_GAME_SCENE:
+            case GAME_END_SCENE:
+                setSize(BIG_DIMENSION);
+                setMinimumSize(BIG_DIMENSION);
+                setResizable(false);
+                break;
         }
     }
 
-    public void switchScene(Stages stage) {
+    public void switchScene(Stage stage) {
         if (scenes.containsKey(stage)) {
             cardLayout.show(mainPanel, stage.toString());
 
+            this.currentStage = stage;
+
             setTitle(stage.toString());
+            adaptScreenSize();
         } else {
             System.err.println("Szene nicht gefunden: " + stage.toString());
         }
     }
 
-    public void setDimensions(int width, int height) {
-        setSize(width, height);
-        setLocationRelativeTo(null);
+    public boolean isGameRunning() {
+        return isGameRunning;
     }
 
     public int getWindowsWidth() {

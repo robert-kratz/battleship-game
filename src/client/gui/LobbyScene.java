@@ -1,6 +1,7 @@
 package client.gui;
 
 import client.GameHandler;
+import client.Stage;
 import client.StageManager;
 import javax.swing.*;
 import java.awt.*;
@@ -46,7 +47,7 @@ public class LobbyScene extends JPanel {
         joinButton.setPreferredSize(buttonSize);
 
         createButton.addActionListener(e -> {
-            gameHandler.getStageManager().switchScene(StageManager.Stages.CREATE_GAME_SCENE);
+            gameHandler.getStageManager().switchScene(Stage.CREATE_GAME_SCENE);
         });
 
         joinButton.addActionListener(e -> {

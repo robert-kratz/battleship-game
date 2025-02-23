@@ -1,10 +1,8 @@
 package client.gui;
 
-import client.ClientHandler;
 import client.GameHandler;
 
 import javax.swing.*;
-import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 
@@ -18,7 +16,7 @@ public class GameGUI extends JPanel {
 
     private GameGuiState state = GameGuiState.GAME_WAITING_SCENE;
     private GameBuildScene gameBuildScene;
-    private GameIngameScene gameIngameScene;
+    private GameInGameScene gameIngameScene;
     private GameHandler gameHandler;
     private final int size;
 
@@ -66,7 +64,7 @@ public class GameGUI extends JPanel {
             case GAME_BUILD_SCENE:
                 gameBuildScene = new GameBuildScene(gameHandler);
                 add(gameBuildScene);
-                this.gameHandler.getStageManager().setDimensions(1204, 816);
+                //this.gameHandler.getStageManager().setDimensions(1204, 816);
                 break;
             case GAME_IN_GAME_SCENE:
                 //gameIngameScene = new GameIngameScene(gameHandler, size);
