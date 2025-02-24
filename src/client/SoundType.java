@@ -2,7 +2,9 @@ package client;
 
 public enum SoundType {
     CLICK("sounds/mouse-click.wav"),
-    ERROR("sounds/error.wav");
+    ERROR("sounds/error.wav"),
+    CLOCK_TICK("sounds/clock-tick.wav"),
+    TIME_UP("sounds/time-up.wav");
 
     private final String filePath;
 

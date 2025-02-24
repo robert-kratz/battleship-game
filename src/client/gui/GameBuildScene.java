@@ -1,6 +1,8 @@
 package client.gui;
 
 import client.GameHandler;
+import client.MediaPlayer;
+import client.SoundType;
 import protocol.Ship;
 
 import javax.swing.*;
@@ -34,6 +36,8 @@ public class GameBuildScene extends JPanel implements Runnable {
     // New status indicator labels for the player and opponent
     private JLabel playerStatusLabel;
     private JLabel opponentStatusLabel;
+
+    private final MediaPlayer mediaPlayer = new MediaPlayer();
 
     public GameBuildScene(GameHandler gameHandler) {
         setLayout(new BorderLayout());
@@ -171,23 +175,20 @@ public class GameBuildScene extends JPanel implements Runnable {
         leftPanel.add(readyButton);
         leftPanel.add(Box.createVerticalStrut(10));
 
+        // Timer – centered horizontally in the right panel
+        timerLabel = new JLabel("00:45");
+        timerLabel.setForeground(Color.WHITE);
+        timerLabel.setFont(new Font("Arial", Font.BOLD, 18));
+        timerLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        timerLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        leftPanel.add(timerLabel);
+
         // Right panel: Contains timer, player info and opponent info
         rightPanel = new JPanel();
         rightPanel.setPreferredSize(new Dimension(200, 804));
         rightPanel.setBackground(Color.DARK_GRAY);
         rightPanel.setLayout(new BoxLayout(rightPanel, BoxLayout.Y_AXIS));
         rightPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
-
-        // Timer – centered horizontally in the right panel
-        timerLabel = new JLabel("00:30");
-        timerLabel.setForeground(Color.WHITE);
-        timerLabel.setFont(new Font("Arial", Font.BOLD, 18));
-        timerLabel.setHorizontalAlignment(SwingConstants.LEFT);
-        rightPanel.add(timerLabel);
-
-        rightPanel.add(Box.createVerticalStrut(10));
-        rightPanel.add(new JSeparator(SwingConstants.HORIZONTAL));
-        rightPanel.add(Box.createVerticalStrut(10));
 
         // "Your:" and Username (left aligned)
         JLabel yourLabel = new JLabel("You:");
@@ -302,12 +303,20 @@ public class GameBuildScene extends JPanel implements Runnable {
             if (start != null && end != null) {
                 long currentTime = System.currentTimeMillis();
                 long remainingMillis = end.getTime() - currentTime;
+
+                long minutes = (remainingMillis / (60 * 1000)) % 60;
+                long seconds = (remainingMillis / 1000) % 60;
+
+                //play sound at 30, 15, 10, 5, 3 seconds
+                if (seconds == 30 || seconds == 15 || seconds == 10 || seconds == 5 || seconds == 3) {
+                    mediaPlayer.playSound(SoundType.CLOCK_TICK);
+                }
+
                 if (remainingMillis <= 0) {
+                    mediaPlayer.playSound(SoundType.TIME_UP);
                     SwingUtilities.invokeLater(() -> timerLabel.setText("Time over"));
                     break;
                 } else {
-                    long minutes = (remainingMillis / (60 * 1000)) % 60;
-                    long seconds = (remainingMillis / 1000) % 60;
                     String timeStr = String.format("%02d:%02d", minutes, seconds);
                     SwingUtilities.invokeLater(() -> timerLabel.setText(timeStr));
                 }
