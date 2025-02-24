@@ -1,5 +1,6 @@
 package server;
 
+import protocol.ShipPlacementValidator;
 import protocol.messages.GameStateUpdateMessage;
 import protocol.Ship;
 import protocol.messages.GameStartingMessage;
@@ -16,7 +17,7 @@ public class BattleShipGame implements Game, Runnable {
     private GameState gameState = null;
     private final int size;
 
-    private ArrayList<Ship> ships = new ArrayList<>();
+    private final ArrayList<Ship> availableShips = new ArrayList<>();
 
     public BattleShipGame(Server server, int size) {
         this.server = server;
@@ -24,7 +25,7 @@ public class BattleShipGame implements Game, Runnable {
 
         initShips();
 
-        this.gameState = new GameState(size, ships);
+        this.gameState = new GameState(size, availableShips);
     }
 
     @Override
@@ -36,7 +37,9 @@ public class BattleShipGame implements Game, Runnable {
 
                 System.out.println("Build Game Board Finished");
 
-                //CHECK IF EVERY USER HAS PLACED SHIPS, IF NOT, RANDOMLY PLACE SHIPS
+                if(!gameState.hasPlayerASubmittedPlacement()) {
+                    gameState.setPlayerShips(playerA.getId(), ShipPlacementValidator.createRandomizedGameBoard(size, availableShips));
+                }
 
                 this.gameState.setStatus(GameState.GameStatus.IN_GAME);
 
@@ -59,12 +62,12 @@ public class BattleShipGame implements Game, Runnable {
     }
 
     private void initShips() {
-        ships.add(new Ship(0, Ship.Orientation.NORTH, 5, 1));
-        ships.add(new Ship(1, Ship.Orientation.NORTH, 4, 1));
-        ships.add(new Ship(2, Ship.Orientation.NORTH, 3, 1));
-        ships.add(new Ship(3, Ship.Orientation.NORTH, 2, 2));
-        ships.add(new Ship(4, Ship.Orientation.NORTH, 2, 1));
-        ships.add(new Ship(5, Ship.Orientation.NORTH, 6, 1));
+        availableShips.add(new Ship(0, Ship.Orientation.NORTH, 5, 1));
+        availableShips.add(new Ship(1, Ship.Orientation.NORTH, 4, 1));
+        availableShips.add(new Ship(2, Ship.Orientation.NORTH, 3, 1));
+        availableShips.add(new Ship(3, Ship.Orientation.NORTH, 2, 2));
+        availableShips.add(new Ship(4, Ship.Orientation.NORTH, 2, 1));
+        availableShips.add(new Ship(5, Ship.Orientation.NORTH, 6, 1));
     }
 
     @Override
@@ -102,24 +105,12 @@ public class BattleShipGame implements Game, Runnable {
         GameState gameState = new GameState(this.getGameState());
 
         gameState.setBuildGameBoardStarted(date);
-        gameState.setBuildGameBoardFinished(new Date(date.getTime() + Parameters.SHOOT_TIME_IN_SECONDS * 1000));
+        gameState.setBuildGameBoardFinished(new Date(date.getTime() + (Parameters.SHOOT_TIME_IN_SECONDS * 1000)));
 
         this.gameState = gameState;
 
         playerA.sendMessage(new GameStartingMessage(gameState));
         playerB.sendMessage(new GameStartingMessage(gameState));
-    }
-
-    private synchronized void startGamePhase() {
-        if(!gameState.getStatus().equals(GameState.GameStatus.BUILD_GAME_BOARD)) return;
-
-        gameState.setStatus(GameState.GameStatus.IN_GAME);
-
-        Date date = new Date();
-
-        GameState gameState = new GameState(this.getGameState());
-
-        //start game logic
     }
 
     private synchronized void endGamePhase() {

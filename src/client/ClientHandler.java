@@ -10,6 +10,8 @@ public class ClientHandler {
 
     private GameHandler gameHandler = new GameHandler(this);
 
+    public static final MediaPlayer mediaPlayer = new MediaPlayer();
+
     private Socket socket;
     private ObjectOutputStream out;
     private ObjectInputStream in;

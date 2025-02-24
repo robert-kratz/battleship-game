@@ -1,9 +1,14 @@
 package client.gui;
 
+import client.ClientHandler;
 import client.GameHandler;
 import client.MediaPlayer;
 import client.SoundType;
+import client.gui.board.BuildBattleshipBoard;
+import client.gui.painter.BoardPainter;
+import client.gui.painter.BuildBoardPainter;
 import protocol.Ship;
+import protocol.ShipPlacementValidator;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -16,104 +21,88 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class GameBuildScene extends JPanel implements Runnable {
-
     private int height, width;
     private GameHandler gameHandler;
 
-    private final BattleshipBoard battleshipBoard;
-    private final JPanel leftPanel;
-    private final JPanel rightPanel;
+    private BuildBattleshipBoard buildBoard;
+    private JPanel leftPanel;
+    private JPanel rightPanel;
     private JLabel timerLabel;
     private JButton readyButton;
 
-    // Lists of ships
-    private ArrayList<Ship> availableShips = new ArrayList<>();
-    private ArrayList<Ship> placedShips = new ArrayList<>();
-
-    // Mapping from ships to their buttons in the left panel
+    private ArrayList<Ship> availableShips;
+    private ArrayList<Ship> placedShips;
     private Map<Ship, JButton> shipButtonMap = new HashMap<>();
 
-    // New status indicator labels for the player and opponent
     private JLabel playerStatusLabel;
     private JLabel opponentStatusLabel;
-
-    private final MediaPlayer mediaPlayer = new MediaPlayer();
 
     public GameBuildScene(GameHandler gameHandler) {
         setLayout(new BorderLayout());
         this.gameHandler = gameHandler;
 
-        // Load available ships from the GameState
+        // Verfügbare Schiffe aus dem GameState laden
         this.availableShips = new ArrayList<>(gameHandler.getGameState().getAvailableShips());
         this.placedShips = new ArrayList<>();
 
-        // Create the BattleshipBoard – it receives the list of placed ships
-        battleshipBoard = new BattleshipBoard(gameHandler,
-                this.gameHandler.getStageManager().getWindowsWidth(),
-                placedShips,
-                new BattleshipBoard.BattleShipBoardListener() {
-                    @Override
-                    public void onCellClick(int row, int col, Ship currentSelectedShip) {
-                        Ship placed = battleshipBoard.getPlacedShipAt(row, col);
-                        if (placed != null) {
-                            // A placed ship is freed for repositioning:
-                            placedShips.remove(placed);
-                            if (!availableShips.contains(placed)) {
-                                availableShips.add(placed);
-                            }
-                            JButton btn = shipButtonMap.get(placed);
-                            if (btn != null) {
-                                btn.setText("Ship (" + placed.getWidth() + "x" + placed.getLength() + ")");
-                                btn.setBackground(Color.WHITE);
-                            }
-                            battleshipBoard.setSelectedShip(placed);
-                        } else {
-                            if (battleshipBoard.isCollisionAt(row, col)) {
-                                System.out.println("Cannot place ship here due to collision with border or another ship.");
-                                return;
-                            }
-                            if (currentSelectedShip != null) {
-                                currentSelectedShip.setX(col);
-                                currentSelectedShip.setY(row);
-                                if (!placedShips.contains(currentSelectedShip)) {
-                                    placedShips.add(currentSelectedShip);
-                                    JButton btn = shipButtonMap.get(currentSelectedShip);
-                                    if (btn != null) {
-                                        btn.setText("Ship (" + currentSelectedShip.getWidth() + "x" + currentSelectedShip.getLength() + ") placed");
-                                        // Placed ship gets a gray background
-                                        btn.setBackground(Color.LIGHT_GRAY);
-                                    }
-                                    availableShips.remove(currentSelectedShip);
-                                    if (!availableShips.isEmpty()) {
-                                        battleshipBoard.setSelectedShip(availableShips.get(0));
-                                    } else {
-                                        battleshipBoard.setSelectedShip(null);
-                                    }
+        // Board-Painter für die Build-Phase
+        Image buildBackgroundImage = new ImageIcon("resource/background-2.png").getImage();
+        BoardPainter buildPainter = new BuildBoardPainter(buildBackgroundImage);
+
+        // ShipPlacementValidator initialisieren (nutzt den GameState)
+        ShipPlacementValidator validator = new ShipPlacementValidator(gameHandler.getGameState());
+
+        buildBoard = new BuildBattleshipBoard(gameHandler.getGameState().getBoardSize(), placedShips, buildPainter, validator,
+                (row, col, selectedShip) -> {
+                    Ship placed = buildBoard.getPlacedShipAt(row, col);
+                    if (placed != null) {
+                        // Falls bereits ein Schiff platziert wurde, wird es wieder freigegeben
+                        placedShips.remove(placed);
+                        if (!availableShips.contains(placed)) {
+                            availableShips.add(placed);
+                        }
+                        JButton btn = shipButtonMap.get(placed);
+                        if (btn != null) {
+                            btn.setText("Ship (" + placed.getWidth() + "x" + placed.getLength() + ")");
+                            btn.setBackground(Color.WHITE);
+                        }
+                        buildBoard.setSelectedShip(placed);
+                    } else {
+                        if (validator.isCollision(selectedShip, row, col, placedShips)) {
+                            System.out.println("Cannot place ship here due to collision.");
+                            return;
+                        }
+                        if (selectedShip != null) {
+                            selectedShip.setX(col);
+                            selectedShip.setY(row);
+                            if (!placedShips.contains(selectedShip)) {
+                                placedShips.add(selectedShip);
+                                JButton btn = shipButtonMap.get(selectedShip);
+                                if (btn != null) {
+                                    btn.setText("Ship (" + selectedShip.getWidth() + "x" + selectedShip.getLength() + ") placed");
+                                    btn.setBackground(Color.LIGHT_GRAY);
+                                }
+                                availableShips.remove(selectedShip);
+                                if (!availableShips.isEmpty()) {
+                                    buildBoard.setSelectedShip(availableShips.get(0));
+                                } else {
+                                    buildBoard.setSelectedShip(null);
                                 }
                             }
                         }
-                        updateReadyButton();
-                        battleshipBoard.reevaluateComponent();
                     }
-                    @Override
-                    public void onShipPlace(Ship placedShip) {
-                        System.out.println("Ship placed: " + placedShip.getId());
-                    }
-                    @Override
-                    public void onShipDelete(Ship deletedShip) {
-                        System.out.println("Ship deleted: " + deletedShip.getId());
-                    }
+                    updateReadyButton();
+                    buildBoard.repaint();
                 });
 
-        // Left panel: Title, separators, ship buttons, ready button, etc.
+        // Linke Panel (Titel, Schiff-Buttons, Ready-Button, Timer)
         leftPanel = new JPanel();
         leftPanel.setPreferredSize(new Dimension(200, 804));
         leftPanel.setBackground(Color.DARK_GRAY);
         leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.Y_AXIS));
         leftPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
 
-        // Title
-        JLabel title = new JLabel("BattleShipps");
+        JLabel title = new JLabel("Battleships");
         title.setAlignmentX(Component.CENTER_ALIGNMENT);
         title.setForeground(Color.WHITE);
         title.setFont(new Font("Arial", Font.BOLD, 24));
@@ -122,16 +111,12 @@ public class GameBuildScene extends JPanel implements Runnable {
         leftPanel.add(new JSeparator(SwingConstants.HORIZONTAL));
         leftPanel.add(Box.createVerticalStrut(10));
 
-        // Ship buttons
         for (Ship ship : new ArrayList<>(availableShips)) {
             JButton shipButton = new JButton("Ship (" + ship.getWidth() + "x" + ship.getLength() + ")");
             shipButton.setAlignmentX(Component.CENTER_ALIGNMENT);
             shipButton.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
-            shipButton.setMargin(new Insets(5, 5, 5, 5));
-            // Default background: white (not yet placed)
             shipButton.setBackground(Color.WHITE);
             shipButton.addActionListener(e -> {
-                System.out.println("Ship (" + ship.getWidth() + "x" + ship.getLength() + ") clicked (left panel)");
                 if (placedShips.contains(ship)) {
                     placedShips.remove(ship);
                     if (!availableShips.contains(ship)) {
@@ -141,7 +126,7 @@ public class GameBuildScene extends JPanel implements Runnable {
                     shipButton.setBackground(Color.WHITE);
                     readyButton.setEnabled(false);
                 }
-                battleshipBoard.setSelectedShip(ship);
+                buildBoard.setSelectedShip(ship);
             });
             shipButtonMap.put(ship, shipButton);
             leftPanel.add(shipButton);
@@ -151,31 +136,26 @@ public class GameBuildScene extends JPanel implements Runnable {
         leftPanel.add(new JSeparator(SwingConstants.HORIZONTAL));
         leftPanel.add(Box.createVerticalStrut(10));
 
-        // Ready button
         readyButton = new JButton("Ready");
         readyButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         readyButton.setMaximumSize(new Dimension(Integer.MAX_VALUE, 60));
-        readyButton.setMargin(new Insets(5, 5, 5, 5));
-        // Disabled state: yellow; enabled state: green
         readyButton.setBackground(Color.YELLOW);
         readyButton.setOpaque(true);
         readyButton.setEnabled(false);
         readyButton.addActionListener(e -> {
             System.out.println("Ready button clicked");
             gameHandler.placeShips(placedShips);
-            battleshipBoard.lockBoard();
+            buildBoard.lockBoard();
             for (JButton btn : shipButtonMap.values()) {
                 btn.setEnabled(false);
             }
             readyButton.setEnabled(false);
-            // Update player's status indicator to "Ready" (green)
             playerStatusLabel.setText("Ready");
             playerStatusLabel.setForeground(Color.GREEN);
         });
         leftPanel.add(readyButton);
         leftPanel.add(Box.createVerticalStrut(10));
 
-        // Timer – centered horizontally in the right panel
         timerLabel = new JLabel("00:45");
         timerLabel.setForeground(Color.WHITE);
         timerLabel.setFont(new Font("Arial", Font.BOLD, 18));
@@ -183,14 +163,13 @@ public class GameBuildScene extends JPanel implements Runnable {
         timerLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         leftPanel.add(timerLabel);
 
-        // Right panel: Contains timer, player info and opponent info
+        // Rechtes Panel (Spieler- und Gegnerinfos)
         rightPanel = new JPanel();
         rightPanel.setPreferredSize(new Dimension(200, 804));
         rightPanel.setBackground(Color.DARK_GRAY);
         rightPanel.setLayout(new BoxLayout(rightPanel, BoxLayout.Y_AXIS));
         rightPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
 
-        // "Your:" and Username (left aligned)
         JLabel yourLabel = new JLabel("You:");
         yourLabel.setForeground(Color.WHITE);
         yourLabel.setFont(new Font("Arial", Font.PLAIN, 14));
@@ -203,7 +182,6 @@ public class GameBuildScene extends JPanel implements Runnable {
         usernameLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         rightPanel.add(usernameLabel);
 
-        // Player status indicator (shows "Builds Board" or "Ready")
         playerStatusLabel = new JLabel("Builds Board");
         playerStatusLabel.setForeground(Color.YELLOW);
         playerStatusLabel.setFont(new Font("Arial", Font.BOLD, 12));
@@ -214,7 +192,6 @@ public class GameBuildScene extends JPanel implements Runnable {
         rightPanel.add(new JSeparator(SwingConstants.HORIZONTAL));
         rightPanel.add(Box.createVerticalStrut(10));
 
-        // "Your Opponent:" and placeholder for opponent name (left aligned)
         JLabel opponentLabel = new JLabel("Your Opponent:");
         opponentLabel.setForeground(Color.WHITE);
         opponentLabel.setFont(new Font("Arial", Font.PLAIN, 14));
@@ -227,8 +204,7 @@ public class GameBuildScene extends JPanel implements Runnable {
         opponentNameLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         rightPanel.add(opponentNameLabel);
 
-        // Opponent status indicator
-        opponentStatusLabel = new JLabel("Builds Board");
+        opponentStatusLabel = new JLabel("Build Board");
         opponentStatusLabel.setForeground(Color.YELLOW);
         opponentStatusLabel.setFont(new Font("Arial", Font.BOLD, 12));
         opponentStatusLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -238,7 +214,6 @@ public class GameBuildScene extends JPanel implements Runnable {
         rightPanel.add(new JSeparator(SwingConstants.HORIZONTAL));
         rightPanel.add(Box.createVerticalStrut(10));
 
-        // Tip text: "Press R to Rotate" (left aligned)
         JLabel tipLabel = new JLabel("Press R to Rotate");
         tipLabel.setForeground(Color.WHITE);
         tipLabel.setFont(new Font("Arial", Font.PLAIN, 14));
@@ -246,7 +221,7 @@ public class GameBuildScene extends JPanel implements Runnable {
         rightPanel.add(tipLabel);
 
         add(leftPanel, BorderLayout.WEST);
-        add(battleshipBoard, BorderLayout.CENTER);
+        add(buildBoard, BorderLayout.CENTER);
         add(rightPanel, BorderLayout.EAST);
 
         addComponentListener(new ComponentAdapter() {
@@ -270,16 +245,13 @@ public class GameBuildScene extends JPanel implements Runnable {
     public void updateDimensions(int width, int height) {
         this.width = width;
         this.height = height;
-        System.out.println("GameBuildScene: Updated dimensions: " + width + "x" + height);
-        battleshipBoard.setPreferredSize(new Dimension(width - 400, height));
+        buildBoard.setPreferredSize(new Dimension(width - 400, height));
         leftPanel.setPreferredSize(new Dimension(200, height));
         rightPanel.setPreferredSize(new Dimension(200, height));
         revalidate();
         repaint();
     }
 
-    // Setter method to update the opponent state indicator.
-    // Pass true if the opponent is ready, false if still building.
     public void setOpponentState(boolean ready) {
         if (ready) {
             opponentStatusLabel.setText("Ready");
@@ -296,7 +268,7 @@ public class GameBuildScene extends JPanel implements Runnable {
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
-                // Ignore
+                // Ignorieren
             }
             Date start = gameHandler.getGameState().getBuildGameBoardStarted();
             Date end = gameHandler.getGameState().getBuildGameBoardFinished();
@@ -307,14 +279,19 @@ public class GameBuildScene extends JPanel implements Runnable {
                 long minutes = (remainingMillis / (60 * 1000)) % 60;
                 long seconds = (remainingMillis / 1000) % 60;
 
-                //play sound at 30, 15, 10, 5, 3 seconds
                 if (seconds == 30 || seconds == 15 || seconds == 10 || seconds == 5 || seconds == 3) {
-                    mediaPlayer.playSound(SoundType.CLOCK_TICK);
+                    ClientHandler.mediaPlayer.playSound(SoundType.CLOCK_TICK);
                 }
 
                 if (remainingMillis <= 0) {
-                    mediaPlayer.playSound(SoundType.TIME_UP);
+                    ClientHandler.mediaPlayer.playSound(SoundType.TIME_UP);
                     SwingUtilities.invokeLater(() -> timerLabel.setText("Time over"));
+
+                    SwingUtilities.invokeLater(() -> {
+                        readyButton.setEnabled(false);
+                        readyButton.setBackground(Color.GREEN);
+                        buildBoard.lockBoard();
+                    });
                     break;
                 } else {
                     String timeStr = String.format("%02d:%02d", minutes, seconds);
