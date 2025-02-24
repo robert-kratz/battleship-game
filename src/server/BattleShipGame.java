@@ -59,12 +59,12 @@ public class BattleShipGame implements Game, Runnable {
     }
 
     private void initShips() {
-        ships.add(new Ship(0, Ship.Orientation.HORIZONTAL, 5, 1));
-        ships.add(new Ship(1, Ship.Orientation.HORIZONTAL, 4, 1));
-        ships.add(new Ship(2, Ship.Orientation.HORIZONTAL, 3, 1));
-        ships.add(new Ship(3, Ship.Orientation.HORIZONTAL, 2, 2));
-        ships.add(new Ship(4, Ship.Orientation.HORIZONTAL, 2, 1));
-        ships.add(new Ship(5, Ship.Orientation.HORIZONTAL, 6, 1));
+        ships.add(new Ship(0, Ship.Orientation.NORTH, 5, 1));
+        ships.add(new Ship(1, Ship.Orientation.NORTH, 4, 1));
+        ships.add(new Ship(2, Ship.Orientation.NORTH, 3, 1));
+        ships.add(new Ship(3, Ship.Orientation.NORTH, 2, 2));
+        ships.add(new Ship(4, Ship.Orientation.NORTH, 2, 1));
+        ships.add(new Ship(5, Ship.Orientation.NORTH, 6, 1));
     }
 
     @Override

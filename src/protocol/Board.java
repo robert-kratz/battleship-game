@@ -32,20 +32,11 @@ public class Board implements Serializable {
     }
 
     private void initShips() {
-        ships.add(new Ship(1, Ship.Orientation.HORIZONTAL, 2, 1));
-        ships.add(new Ship(2, Ship.Orientation.HORIZONTAL, 2, 2));
-        ships.add(new Ship(3, Ship.Orientation.HORIZONTAL, 3, 1));
-        ships.add(new Ship(4, Ship.Orientation.HORIZONTAL, 4, 1));
-        ships.add(new Ship(5, Ship.Orientation.HORIZONTAL, 5, 1));
-    }
-
-    public void validatePlacement(Ship ship, int x, int y) {
-        //check orientation, then check if ship fits on board, then check if ship collides with other ships,
-        //then check if ship is placed on water
-
-
-        //place ship on board
-        board = ship.drawShip(board);
+        ships.add(new Ship(1, Ship.Orientation.NORTH, 2, 1));
+        ships.add(new Ship(2, Ship.Orientation.NORTH, 2, 2));
+        ships.add(new Ship(3, Ship.Orientation.NORTH, 3, 1));
+        ships.add(new Ship(4, Ship.Orientation.NORTH, 4, 1));
+        ships.add(new Ship(5, Ship.Orientation.NORTH, 5, 1));
     }
 
     public ArrayList<Ship> getShips() {
@@ -54,9 +45,5 @@ public class Board implements Serializable {
 
     public String[][] getBoard() {
         return board;
-    }
-
-    public void addShip(Ship ship) {
-        board = ship.drawShip(board);
     }
 }

@@ -1,17 +1,30 @@
 package protocol;
 
+import java.awt.Point;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Ship implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     public enum Orientation {
-        HORIZONTAL, VERTICAL
+        NORTH, EAST, SOUTH, WEST;
+
+        public Orientation next() {
+            switch (this) {
+                case NORTH: return EAST;
+                case EAST: return SOUTH;
+                case SOUTH: return WEST;
+                case WEST: return NORTH;
+            }
+            return NORTH;
+        }
     }
 
     private int id;
-    private int x, y;
+    private int x, y; // Anchor point (interpreted according to orientation)
     private boolean isPlaced;
     private Orientation orientation;
     private int length, width;
@@ -30,7 +43,7 @@ public class Ship implements Serializable {
         this.icon = icon;
     }
 
-    // Default-Konstruktor: Noch nicht platziert, daher x und y = -1.
+    // Default constructor: not placed, therefore x and y are -1.
     public Ship(int id, Orientation orientation, int length, int width) {
         this.id = id;
         this.isPlaced = false;
@@ -45,15 +58,8 @@ public class Ship implements Serializable {
         this.orientation = orientation;
     }
 
-    public String[][] drawShip(String[][] ship) {
-        for (int i = 0; i < length; i++) {
-            if (orientation == Orientation.HORIZONTAL) {
-                ship[y][x + i] = "S";
-            } else {
-                ship[y + i][x] = "S";
-            }
-        }
-        return ship;
+    public Orientation getOrientation() {
+        return orientation;
     }
 
     public void setX(int x) {
@@ -66,10 +72,6 @@ public class Ship implements Serializable {
         this.isPlaced = true;
     }
 
-    public int getId() {
-        return id;
-    }
-
     public int getX() {
         return x;
     }
@@ -78,8 +80,8 @@ public class Ship implements Serializable {
         return y;
     }
 
-    public Orientation getOrientation() {
-        return orientation;
+    public int getId() {
+        return id;
     }
 
     public int getLength() {
@@ -100,13 +102,63 @@ public class Ship implements Serializable {
 
     public void hit() {
         hits++;
-        if (hits == length) {
+        if (hits >= length) {
             isSunk = true;
         }
     }
 
     public String getIcon() {
         return icon;
+    }
+
+    /**
+     * Returns the list of grid cells occupied by this ship (using the current anchor x,y).
+     * The ship’s cells are computed based on its orientation:
+     * - EAST: extends rightwards: cells (x, y) to (x+length-1, y+width-1)
+     * - WEST: extends leftwards: cells (x, y) to (x-length+1, y+width-1)
+     * - SOUTH: extends downwards: cells (x, y) to (x+width-1, y+length-1)
+     * - NORTH: extends upwards: cells (x, y) to (x+width-1, y-length+1)
+     */
+    public List<Point> getOccupiedCells() {
+        return getOccupiedCellsAt(this.x, this.y);
+    }
+
+    /**
+     * Returns the list of grid cells that would be occupied if the ship were placed with its anchor at (anchorX, anchorY).
+     */
+    public List<Point> getOccupiedCellsAt(int anchorX, int anchorY) {
+        List<Point> cells = new ArrayList<>();
+        switch (orientation) {
+            case EAST:
+                for (int i = 0; i < length; i++) {
+                    for (int j = 0; j < width; j++) {
+                        cells.add(new Point(anchorX + i, anchorY + j));
+                    }
+                }
+                break;
+            case WEST:
+                for (int i = 0; i < length; i++) {
+                    for (int j = 0; j < width; j++) {
+                        cells.add(new Point(anchorX - i, anchorY + j));
+                    }
+                }
+                break;
+            case SOUTH:
+                for (int i = 0; i < length; i++) {
+                    for (int j = 0; j < width; j++) {
+                        cells.add(new Point(anchorX + j, anchorY + i));
+                    }
+                }
+                break;
+            case NORTH:
+                for (int i = 0; i < length; i++) {
+                    for (int j = 0; j < width; j++) {
+                        cells.add(new Point(anchorX + j, anchorY - i));
+                    }
+                }
+                break;
+        }
+        return cells;
     }
 
     @Override

@@ -2,13 +2,13 @@ package client.gui;
 
 import client.GameHandler;
 import client.MediaPlayer;
-import client.SoundType;
 import protocol.Ship;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.List;
+import java.util.ArrayList;
 
 public class BattleshipBoard extends JPanel {
 
@@ -20,7 +20,7 @@ public class BattleshipBoard extends JPanel {
     private final BackgroundPanel backgroundPanel;
     private BattleShipBoardListener listener;
     private Ship selectedShip;
-    // Liste der bereits platzierten Schiffe (von GameBuildScene übergeben)
+    // List of placed ships (passed from GameBuildScene)
     private List<Ship> placedShips;
     private Integer lastHoveredRow = null;
     private Integer lastHoveredCol = null;
@@ -28,12 +28,13 @@ public class BattleshipBoard extends JPanel {
     private GameHandler gameHandler;
     private final MediaPlayer mediaPlayer = new MediaPlayer();
 
-    // Farben für Hover bzw. Collision
+    // Colors for hover, collision, ship fill, and outline
     private final Color HOVER_COLOR = new Color(25, 130, 196, 150);
     private final Color COLLISION_COLOR = new Color(255, 89, 94, 150);
     private final Color SHIP_COLOR = new Color(25, 130, 196);
+    private final Color OUTLINE_COLOR = Color.BLACK;
 
-    // Flag, ob das Board gesperrt ist (nach Ready-Klick)
+    // Flag indicating if the board is locked (after ready is clicked)
     private boolean locked = false;
 
     public BattleshipBoard(GameHandler gameHandler, int width, List<Ship> placedShips, BattleShipBoardListener listener) {
@@ -43,11 +44,10 @@ public class BattleshipBoard extends JPanel {
         this.rows = boardSize;
         this.cols = boardSize;
         this.gridButtons = new JButton[boardSize][boardSize];
-        this.backgroundImage = new ImageIcon("resource/background.png");
+        // Use the new background image for each cell
+        this.backgroundImage = new ImageIcon("resource/background-2.png");
         this.width = width;
         this.placedShips = placedShips;
-        // Erstelle ein Ghost‑Schiff; dessen Position ist standardmäßig ungültig (-1, -1).
-        this.selectedShip = new Ship(0, Ship.Orientation.HORIZONTAL, 3, 2);
 
         setLayout(new BorderLayout());
         setBorder(BorderFactory.createEmptyBorder(10, 12, 10, 12));
@@ -68,6 +68,7 @@ public class BattleshipBoard extends JPanel {
             }
         });
 
+        // Bind keys to rotate the ship (rotate 90° clockwise through NORTH, EAST, SOUTH, WEST)
         getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
                 .put(KeyStroke.getKeyStroke("SPACE"), "rotateShip");
         getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
@@ -75,8 +76,8 @@ public class BattleshipBoard extends JPanel {
         getActionMap().put("rotateShip", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (!locked) {
-                    toggleShipOrientation();
+                if (!locked && selectedShip != null) {
+                    selectedShip.setOrientation(selectedShip.getOrientation().next());
                     reevaluateComponent();
                 }
             }
@@ -112,68 +113,40 @@ public class BattleshipBoard extends JPanel {
         repaint();
     }
 
-    private void toggleShipOrientation() {
-        if (selectedShip != null) {
-            selectedShip.setOrientation(
-                    selectedShip.getOrientation() == Ship.Orientation.HORIZONTAL ?
-                            Ship.Orientation.VERTICAL : Ship.Orientation.HORIZONTAL);
-            if (lastHoveredRow != null && lastHoveredCol != null) {
-                repaint();
-            }
-        }
-    }
-
     /**
-     * Liefert das Schiff, das an der Zelle (row, col) platziert ist, oder null.
+     * Returns the ship placed at cell (row, col), or null if none.
      */
     public Ship getPlacedShipAt(int row, int col) {
         for (Ship ship : placedShips) {
-            boolean isHorizontal = ship.getOrientation() == Ship.Orientation.HORIZONTAL;
-            int startRow = ship.getY();
-            int startCol = ship.getX();
-            int endRow = isHorizontal ? startRow + ship.getWidth() - 1 : startRow + ship.getLength() - 1;
-            int endCol = isHorizontal ? startCol + ship.getLength() - 1 : startCol + ship.getWidth() - 1;
-            if (row >= startRow && row <= endRow && col >= startCol && col <= endCol) {
-                return ship;
+            for (Point p : ship.getOccupiedCells()) {
+                if (p.x == col && p.y == row) {
+                    return ship;
+                }
             }
         }
         return null;
     }
 
     /**
-     * Public wrapper, damit von außen geprüft werden kann, ob beim Platzieren eines Schiffes
-     * an (row, col) eine Kollision auftritt.
+     * Public wrapper to check if placing a ship at (startRow, startCol) would cause a collision.
      */
     public boolean isCollisionAt(int startRow, int startCol) {
         return checkCollision(startRow, startCol);
     }
 
     private boolean checkCollision(int startRow, int startCol) {
-        if (selectedShip == null) {
-            return false;
-        }
-        int length = selectedShip.getLength();
-        int shipWidth = selectedShip.getWidth();
-        boolean isHorizontal = selectedShip.getOrientation() == Ship.Orientation.HORIZONTAL;
-
-        for (int i = 0; i < length; i++) {
-            for (int j = 0; j < shipWidth; j++) {
-                int targetRow = startRow + (isHorizontal ? j : i);
-                int targetCol = startCol + (isHorizontal ? i : j);
-
-                if (targetRow < 0 || targetRow >= rows || targetCol < 0 || targetCol >= cols) {
-                    return true;
-                }
-
-                for (Ship ship : placedShips) {
-                    for (int x = 0; x < ship.getLength(); x++) {
-                        for (int y = 0; y < ship.getWidth(); y++) {
-                            int shipRow = ship.getY() + (ship.getOrientation() == Ship.Orientation.HORIZONTAL ? y : x);
-                            int shipCol = ship.getX() + (ship.getOrientation() == Ship.Orientation.HORIZONTAL ? x : y);
-                            if (shipRow == targetRow && shipCol == targetCol) {
-                                return true;
-                            }
-                        }
+        if (selectedShip == null) return false;
+        // Get candidate cells if the selected ship were placed at (startCol, startRow)
+        List<Point> candidateCells = selectedShip.getOccupiedCellsAt(startCol, startRow);
+        for (Point p : candidateCells) {
+            if (p.x < 0 || p.x >= cols || p.y < 0 || p.y >= rows) {
+                return true;
+            }
+            for (Ship ship : placedShips) {
+                if (ship == selectedShip) continue;
+                for (Point sp : ship.getOccupiedCells()) {
+                    if (p.x == sp.x && p.y == sp.y) {
+                        return true;
                     }
                 }
             }
@@ -208,15 +181,20 @@ public class BattleshipBoard extends JPanel {
             int panelHeight = getHeight();
             int boardSize = Math.min(panelWidth, panelHeight);
 
-            // Hintergrundbild zeichnen
-            g.drawImage(backgroundImage, 0, 0, boardSize, boardSize, this);
-
+            // Calculate cell dimensions
             double cellWidth = (double) boardSize / cols;
             double cellHeight = (double) boardSize / rows;
 
-            Graphics2D g2d = (Graphics2D) g;
-            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
+            // Draw the background image in each cell
+            for (int row = 0; row < rows; row++) {
+                for (int col = 0; col < cols; col++) {
+                    int x = (int) Math.round(col * cellWidth);
+                    int y = (int) Math.round(row * cellHeight);
+                    g.drawImage(backgroundImage, x, y, (int) cellWidth, (int) cellHeight, this);
+                }
+            }
 
+            // Draw grid lines
             g.setColor(Color.WHITE);
             for (int i = 0; i <= cols; i++) {
                 int x = (int) Math.round(i * cellWidth);
@@ -227,24 +205,48 @@ public class BattleshipBoard extends JPanel {
                 g.drawLine(0, y, boardSize, y);
             }
 
-            // Zeichne alle platzierten Schiffe
+            // Draw all placed ships
             for (Ship ship : placedShips) {
                 drawPlacedShip(g, ship, boardSize, cellWidth, cellHeight);
             }
 
-            // Zeichne Ghost-Schiff, falls vorhanden
+            // Draw ghost ship if one is selected and the mouse is hovering a cell
             if (selectedShip != null && lastHoveredRow != null && lastHoveredCol != null) {
                 drawGhostShip(g, lastHoveredRow, lastHoveredCol, boardSize, cellWidth, cellHeight);
             }
 
-            // Falls das Board gesperrt ist, overlay-Text anzeigen
+            // Draw row labels (numbers) on the left
+            g.setFont(new Font("Arial", Font.BOLD, 11));
+            g.setColor(Color.WHITE);
+            FontMetrics fm = g.getFontMetrics();
+            for (int row = 0; row < rows; row++) {
+                String label = String.valueOf(row + 1);
+                int textWidth = fm.stringWidth(label);
+                int textHeight = fm.getAscent();
+                int x = 2;
+                int y = (int) (row * cellHeight + cellHeight / 2 + textHeight / 2);
+                g.drawString(label, x, y);
+            }
+
+            // Draw column labels (letters) at the top
+            for (int col = 0; col < cols; col++) {
+                char letter = (char) ('A' + col);
+                String label = String.valueOf(letter);
+                int textWidth = fm.stringWidth(label);
+                int textHeight = fm.getAscent();
+                int x = (int) (col * cellWidth + cellWidth / 2 - textWidth / 2);
+                int y = textHeight;
+                g.drawString(label, x, y);
+            }
+
+            // If the board is locked, draw an overlay
             if (locked) {
                 g.setColor(new Color(0, 0, 0, 170));
                 g.fillRect(0, 0, boardSize, boardSize);
                 g.setColor(Color.WHITE);
                 g.setFont(new Font("Arial", Font.BOLD, 24));
-                FontMetrics fm = g.getFontMetrics();
-                String text = "Waiting for other players...";
+                fm = g.getFontMetrics();
+                String text = "Waiting for opponent...";
                 int textWidth = fm.stringWidth(text);
                 int textHeight = fm.getHeight();
                 g.drawString(text, (boardSize - textWidth) / 2, (boardSize + textHeight) / 2);
@@ -253,45 +255,42 @@ public class BattleshipBoard extends JPanel {
 
         private void drawPlacedShip(Graphics g, Ship ship, int boardSize, double cellWidth, double cellHeight) {
             g.setColor(SHIP_COLOR);
-            int length = ship.getLength();
-            int shipWidth = ship.getWidth();
-            boolean isHorizontal = ship.getOrientation() == Ship.Orientation.HORIZONTAL;
-
-            for (int i = 0; i < length; i++) {
-                for (int j = 0; j < shipWidth; j++) {
-                    int targetRow = ship.getY() + (isHorizontal ? j : i);
-                    int targetCol = ship.getX() + (isHorizontal ? i : j);
-                    if (targetRow >= 0 && targetRow < rows && targetCol >= 0 && targetCol < cols) {
-                        int x = (int) Math.round(targetCol * cellWidth);
-                        int y = (int) Math.round(targetRow * cellHeight);
-                        int w = (int) Math.round(cellWidth);
-                        int h = (int) Math.round(cellHeight);
-                        g.fillRect(x, y, w, h);
-                    }
-                }
+            List<Point> cells = ship.getOccupiedCells();
+            // Fill each occupied cell using ceil values so it covers grid lines
+            int fillWidth = (int) Math.ceil(cellWidth);
+            int fillHeight = (int) Math.ceil(cellHeight);
+            for (Point p : cells) {
+                int x = (int) Math.round(p.x * cellWidth);
+                int y = (int) Math.round(p.y * cellHeight);
+                g.fillRect(x, y, fillWidth, fillHeight);
             }
+            // Draw outline: compute bounding box of occupied cells
+            int minX = Integer.MAX_VALUE, minY = Integer.MAX_VALUE;
+            int maxX = Integer.MIN_VALUE, maxY = Integer.MIN_VALUE;
+            for (Point p : cells) {
+                if (p.x < minX) minX = p.x;
+                if (p.y < minY) minY = p.y;
+                if (p.x > maxX) maxX = p.x;
+                if (p.y > maxY) maxY = p.y;
+            }
+            int outlineX = (int) Math.round(minX * cellWidth);
+            int outlineY = (int) Math.round(minY * cellHeight);
+            int outlineWidth = (int) Math.round((maxX - minX + 1) * cellWidth);
+            int outlineHeight = (int) Math.round((maxY - minY + 1) * cellHeight);
+            g.setColor(OUTLINE_COLOR);
+            g.drawRect(outlineX, outlineY, outlineWidth, outlineHeight);
         }
 
         private void drawGhostShip(Graphics g, int startRow, int startCol, int boardSize, double cellWidth, double cellHeight) {
-            int length = selectedShip.getLength();
-            int shipWidth = selectedShip.getWidth();
-            boolean isHorizontal = selectedShip.getOrientation() == Ship.Orientation.HORIZONTAL;
-
-            boolean collision = checkCollision(startRow, startCol);
+            List<Point> cells = selectedShip.getOccupiedCellsAt(lastHoveredCol, lastHoveredRow);
+            boolean collision = checkCollision(lastHoveredRow, lastHoveredCol);
             g.setColor(collision ? COLLISION_COLOR : HOVER_COLOR);
-
-            for (int i = 0; i < length; i++) {
-                for (int j = 0; j < shipWidth; j++) {
-                    int targetRow = startRow + (isHorizontal ? j : i);
-                    int targetCol = startCol + (isHorizontal ? i : j);
-                    if (targetRow >= 0 && targetRow < rows && targetCol >= 0 && targetCol < cols) {
-                        int x = (int) Math.round(targetCol * cellWidth);
-                        int y = (int) Math.round(targetRow * cellHeight);
-                        int w = (int) Math.round(cellWidth);
-                        int h = (int) Math.round(cellHeight);
-                        g.fillRect(x, y, w, h);
-                    }
-                }
+            int fillWidth = (int) Math.ceil(cellWidth);
+            int fillHeight = (int) Math.ceil(cellHeight);
+            for (Point p : cells) {
+                int x = (int) Math.round(p.x * cellWidth);
+                int y = (int) Math.round(p.y * cellHeight);
+                g.fillRect(x, y, fillWidth, fillHeight);
             }
         }
 
@@ -312,11 +311,10 @@ public class BattleshipBoard extends JPanel {
             setMargin(new Insets(0, 0, 0, 0));
             setBorder(BorderFactory.createEmptyBorder());
             setCursor(new Cursor(Cursor.HAND_CURSOR));
-
             addMouseListener(new MouseAdapter() {
                 @Override
                 public void mousePressed(MouseEvent e) {
-                    if (locked) return;  // Keine Events, wenn gesperrt
+                    if (locked) return;
                     lastHoveredRow = row;
                     lastHoveredCol = col;
                     if (listener != null) {
@@ -325,7 +323,6 @@ public class BattleshipBoard extends JPanel {
                     reevaluateComponent();
                     repaint();
                 }
-
                 @Override
                 public void mouseEntered(MouseEvent e) {
                     if (locked) return;
@@ -334,7 +331,6 @@ public class BattleshipBoard extends JPanel {
                     reevaluateComponent();
                     repaint();
                 }
-
                 @Override
                 public void mouseExited(MouseEvent e) {
                     if (locked) return;
