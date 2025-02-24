@@ -16,13 +16,13 @@ public class GameState implements Serializable  {
         LOBBY_WAITING,
         BUILD_GAME_BOARD,
         IN_GAME,
-        GAME_OVER
+        GAME_OVER,
     }
 
     private final UUID id = UUID.randomUUID();
 
     public UUID playerA, playerB;
-    private UUID secret = UUID.randomUUID();;
+    public String playerAName, playerBName;
 
     private int sessionCode;
 
@@ -37,17 +37,18 @@ public class GameState implements Serializable  {
 
     private UUID playersTurn = null;
 
-    private Board boardA, boardB;
     private ArrayList<Ship> shipsA, shipsB;
+    private final ArrayList<Ship> availableShips;
 
-    private int size;
+    private final int size;
 
     private GameStatus status = GameStatus.LOBBY_WAITING;
 
     public GameState(GameState gameState) {
         this.playerA = gameState.playerA;
         this.playerB = gameState.playerB;
-        this.secret = gameState.secret;
+        this.playerAName = gameState.playerAName;
+        this.playerBName = gameState.playerBName;
         this.sessionCode = gameState.sessionCode;
         this.created = gameState.created;
         this.lastUpdated = gameState.lastUpdated;
@@ -56,59 +57,49 @@ public class GameState implements Serializable  {
         this.playersTurnStart = gameState.playersTurnStart;
         this.playersTurnEnd = gameState.playersTurnEnd;
         this.playersTurn = gameState.playersTurn;
-        this.boardA = gameState.boardA;
-        this.boardB = gameState.boardB;
         this.shipsA = gameState.shipsA;
         this.shipsB = gameState.shipsB;
         this.size = gameState.size;
         this.status = gameState.status;
+        this.availableShips = gameState.availableShips;
     }
 
     public GameState(int size, ArrayList<Ship> ships) {
-        this.boardA = new Board(size, size);
-
         this.size = size;
         this.sessionCode = generateSessionCode();
 
-        setShips(ships);
+        this.availableShips = ships;
     }
 
-    public GameState(UUID playerA, UUID playerB, int size, ArrayList<Ship> ships) {
+    public void setPlayerA(UUID playerA, String name) {
         this.playerA = playerA;
-        this.boardA = new Board(size, size);
-
-        this.playerB = playerB;
-        this.boardB = new Board(size, size);
-
-        setShips(ships);
+        this.playerAName = name;
     }
 
-    public GameState addPlayer(UUID player) {
-        if(playerA == null) {
-            playerA = player;
-
-        } else if(playerB == null) {
-            playerB = player;
-        }
-        return this;
+    public void setPlayerB(UUID playerB, String name) {
+        this.playerB = playerB;
+        this.playerBName = name;
     }
 
     public GameState removePlayer(UUID player) {
         if(playerA.equals(player)) {
             playerA = null;
-            boardA = null;
+            playerAName = null;
             shipsA = null;
         } else if(playerB.equals(player)) {
             playerB = null;
-            boardB = null;
+            playerBName = null;
             shipsB = null;
         }
         return this;
     }
 
-    public GameState setShips(ArrayList<Ship> ships) {
-        shipsA = ships;
-        shipsB = ships;
+    public GameState setPlayerShips(UUID player, ArrayList<Ship> ships) {
+        if(playerA.equals(player)) {
+            shipsA = ships;
+        } else if(playerB.equals(player)) {
+            shipsB = ships;
+        }
         return this;
     }
 
@@ -116,8 +107,20 @@ public class GameState implements Serializable  {
         return (playerA != null ? 1 : 0) + (playerB != null ? 1 : 0);
     }
 
+    public ArrayList<Ship> getAvailableShips() {
+        return availableShips;
+    }
+
     public void setStatus(GameStatus status) {
         this.status = status;
+    }
+
+    public boolean hasPlayerASubmittedPlacement() {
+        return shipsA != null;
+    }
+
+    public boolean hasPlayerBSubmittedPlacement() {
+        return shipsB != null;
     }
 
     public GameStatus getStatus() {
@@ -126,10 +129,6 @@ public class GameState implements Serializable  {
 
     public UUID getId() {
         return id;
-    }
-
-    public UUID getSecret() {
-        return secret;
     }
 
     public int getSessionCode() {
@@ -141,24 +140,12 @@ public class GameState implements Serializable  {
         return this;
     }
 
-    public void setSecret(UUID secret) {
-        this.secret = secret;
-    }
-
     public ArrayList<Ship> getShipsA() {
         return shipsA;
     }
 
     public ArrayList<Ship> getShipsB() {
         return shipsB;
-    }
-
-    public Board getBoardA() {
-        return boardA;
-    }
-
-    public Board getBoardB() {
-        return boardB;
     }
 
     public Date getBuildGameBoardFinished() {

@@ -44,7 +44,7 @@ public class GameBuildScene extends JPanel implements Runnable {
         this.gameHandler = gameHandler;
 
         // Load available ships from the GameState
-        this.availableShips = new ArrayList<>(gameHandler.getGameState().getShipsA());
+        this.availableShips = new ArrayList<>(gameHandler.getGameState().getAvailableShips());
         this.placedShips = new ArrayList<>();
 
         // Create the BattleshipBoard – it receives the list of placed ships

@@ -74,13 +74,21 @@ public class BattleShipGame implements Game, Runnable {
 
         if (playerA == null) {
             playerA = player;
+            GameState gameState = new GameState(this.getGameState());
+            gameState.setPlayerA(playerA.getId(), playerA.getUsername());
             playerA.sendMessage(new GameStateUpdateMessage(gameState));
+
+            this.gameState = gameState;
         } else if (playerB == null) {
             playerB = player;
+            GameState gameState = new GameState(this.getGameState());
+            gameState.setPlayerB(playerB.getId(), playerB.getUsername());
             playerB.sendMessage(new GameStateUpdateMessage(gameState));
+
+            this.gameState = gameState;
         }
 
-        if(playerA != null && playerB != null) startBuildPhase();
+        if(playerA != null && playerB != null) startBuildPhase(); //START BUILD PHASE
         return this.gameState;
     }
 
