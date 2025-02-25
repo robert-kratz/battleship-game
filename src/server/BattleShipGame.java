@@ -1,5 +1,6 @@
 package server;
 
+import protocol.GameState;
 import protocol.ShipPlacementValidator;
 import protocol.messages.GameStateUpdateMessage;
 import protocol.Ship;
@@ -7,7 +8,6 @@ import protocol.messages.GameStartingMessage;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.UUID;
 
 public class BattleShipGame implements Game, Runnable {
 
@@ -37,8 +37,15 @@ public class BattleShipGame implements Game, Runnable {
 
                 System.out.println("Build Game Board Finished");
 
+                System.out.println("Player A: " + gameState.hasPlayerASubmittedPlacement());
+                System.out.println("Player B: " + gameState.hasPlayerBSubmittedPlacement());
+
                 if(!gameState.hasPlayerASubmittedPlacement()) {
                     gameState.setPlayerShips(playerA.getId(), ShipPlacementValidator.createRandomizedGameBoard(size, availableShips));
+                }
+
+                if(!gameState.hasPlayerBSubmittedPlacement()) {
+                    gameState.setPlayerShips(playerB.getId(), ShipPlacementValidator.createRandomizedGameBoard(size, availableShips));
                 }
 
                 this.gameState.setStatus(GameState.GameStatus.IN_GAME);

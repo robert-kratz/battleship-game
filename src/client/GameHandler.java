@@ -3,7 +3,7 @@ package client;
 import protocol.ErrorType;
 import protocol.Ship;
 import protocol.messages.*;
-import server.GameState;
+import protocol.GameState;
 
 import javax.swing.*;
 import java.util.ArrayList;

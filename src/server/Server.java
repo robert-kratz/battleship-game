@@ -16,7 +16,9 @@ public class Server {
 
     private static int PORT = 12345;
     private ServerSocket serverSocket;
+
     private boolean running = false;
+
     private final List<PlayerInfo> players = new ArrayList<>();
     private final List<Thread> clientThreads = new ArrayList<>();
 

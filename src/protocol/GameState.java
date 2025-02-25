@@ -1,7 +1,4 @@
-package server;
-
-import protocol.Board;
-import protocol.Ship;
+package protocol;
 
 import java.io.Serializable;
 import java.util.ArrayList;

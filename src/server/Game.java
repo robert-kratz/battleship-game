@@ -1,6 +1,6 @@
 package server;
 
-import java.util.UUID;
+import protocol.GameState;
 
 public interface Game {
 

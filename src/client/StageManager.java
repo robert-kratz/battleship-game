@@ -1,7 +1,7 @@
 package client;
 
 import client.gui.*;
-import server.GameState;
+import protocol.GameState;
 
 import javax.swing.*;
 import java.awt.*;

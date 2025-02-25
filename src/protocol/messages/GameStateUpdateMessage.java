@@ -1,6 +1,6 @@
 package protocol.messages;
 
-import server.GameState;
+import protocol.GameState;
 
 public class GameStateUpdateMessage extends Message {
 

@@ -279,7 +279,7 @@ public class GameBuildScene extends JPanel implements Runnable {
                 long minutes = (remainingMillis / (60 * 1000)) % 60;
                 long seconds = (remainingMillis / 1000) % 60;
 
-                if (seconds == 30 || seconds == 15 || seconds == 10 || seconds == 5 || seconds == 3) {
+                if (seconds == 30 || seconds == 15 || seconds == 10 || seconds == 5 || seconds == 3 || seconds == 2 || seconds == 1) {
                     ClientHandler.mediaPlayer.playSound(SoundType.CLOCK_TICK);
                 }
 

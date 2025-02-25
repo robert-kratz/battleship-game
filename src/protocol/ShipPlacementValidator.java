@@ -1,6 +1,5 @@
 package protocol;
 
-import server.GameState;
 import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;

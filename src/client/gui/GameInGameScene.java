@@ -5,7 +5,6 @@ import client.gui.board.InGameBattleshipBoard;
 import client.gui.painter.BoardPainter;
 import client.gui.painter.InGameBoardPainter;
 import protocol.Ship;
-import server.GameState;
 
 import javax.swing.*;
 import java.awt.*;
