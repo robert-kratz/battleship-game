@@ -88,6 +88,7 @@ public class GameBuildScene extends JPanel implements Runnable {
                                     buildBoard.setSelectedShip(availableShips.get(0));
                                 } else {
                                     buildBoard.setSelectedShip(null);
+                                    this.gameHandler.sendSubmitPlacementEvent(placedShips);
                                 }
                             }
                         }
