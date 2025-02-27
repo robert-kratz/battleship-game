@@ -65,7 +65,7 @@ public class GameHandler implements GameClient {
                     }
                 }
                 case IN_GAME -> {
-                    this.clientHandler.getStageManager().startInGameScene();
+
                 }
                 case GAME_OVER -> {}
             }
@@ -117,6 +117,13 @@ public class GameHandler implements GameClient {
     @Override
     public void onGameUpdate(GameState gameState, ArrayList<Ship> yourShips) {
         //TODO: Implement in game logic
+
+        System.out.println("a");
+
+        if(this.clientHandler.getStageManager().gameIngameScene == null) {
+            System.out.println("b");
+            this.clientHandler.getStageManager().startInGameScene(yourShips);
+        }
     }
 
     /**

@@ -5,6 +5,7 @@ import protocol.ShipPlacementValidator;
 import protocol.messages.GameStateUpdateMessage;
 import protocol.Ship;
 import protocol.messages.GameStartingMessage;
+import protocol.messages.GameUpdateMessage;
 import protocol.messages.JoinGameMessage;
 
 import java.util.ArrayList;
@@ -45,22 +46,32 @@ public class BattleShipGame implements Game, Runnable {
                 System.out.println("Player A: " + gameState.hasPlayerASubmittedPlacement());
                 System.out.println("Player B: " + gameState.hasPlayerBSubmittedPlacement());
 
+                GameState gameState = new GameState(this.getGameState());
+
                 if(!this.gameState.hasPlayerASubmittedPlacement()) {
+                    System.out.println("Player A did not submit placement");
                     this.shipsPlayerA = ShipPlacementValidator.createRandomizedGameBoard(size, availableShips);
                     this.gameState.playerSubmitPlacement(playerA.getId());
                 }
 
                 if(!this.gameState.hasPlayerBSubmittedPlacement()) {
+                    System.out.println("Player B did not submit placement");
                     this.shipsPlayerB = ShipPlacementValidator.createRandomizedGameBoard(size, availableShips);
                     this.gameState.playerSubmitPlacement(playerB.getId());
                 }
 
                 this.gameState.setStatus(GameState.GameStatus.IN_GAME);
 
-                GameState gameState = new GameState(this.getGameState());
+                for(Ship ship : shipsPlayerA) {
+                    System.out.println("Player A Ship: " + ship.getId() + " " + ship.getOrientation() + " " + ship.getLength() + " X:" + ship.getX() + " Y:" + ship.getY());
+                }
 
-                this.playerA.sendMessage(new GameStateUpdateMessage(gameState));
-                this.playerB.sendMessage(new GameStateUpdateMessage(gameState));
+                for(Ship ship : shipsPlayerB) {
+                    System.out.println("Player B Ship: " + ship.getId() + " " + ship.getOrientation() + " " + ship.getLength() + " X:" + ship.getX() + " Y:" + ship.getY());
+                }
+
+                this.playerA.sendMessage(new GameUpdateMessage(gameState, this.shipsPlayerA));
+                this.playerB.sendMessage(new GameUpdateMessage(gameState, this.shipsPlayerB));
             }
         }
 

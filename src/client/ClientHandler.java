@@ -2,6 +2,7 @@ package client;
 
 import protocol.ErrorType;
 import protocol.GameState;
+import protocol.Ship;
 import protocol.messages.*;
 
 import javax.swing.*;
@@ -111,6 +112,19 @@ public class ClientHandler {
                             System.out.println("Player B: " + gameStateUpdateMessage.getGameState().getPlayerBName());
 
                             gameHandler.onGameStateUpdate(gameStateUpdateMessage);
+                        }
+                        case MessageType.GAME_UPDATE -> {
+                            GameUpdateMessage gameUpdateMessage = (GameUpdateMessage) received;
+
+                            if(this.gameHandler == null) return;
+
+                            System.out.println("Game update received");
+
+                            for (Ship ship : gameUpdateMessage.getShips()) {
+                                System.out.println("Ship: " + ship);
+                            }
+
+                            gameHandler.onGameUpdate(gameUpdateMessage.getGameState(), gameUpdateMessage.getShips());
                         }
                     }
                 }

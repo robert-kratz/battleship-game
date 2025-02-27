@@ -1,6 +1,5 @@
 package protocol;
 
-import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -11,36 +10,24 @@ import java.util.Random;
 public class ShipPlacementValidator {
     private final int boardSize;
 
-    // Bestehender Konstruktor, der den GameState verwendet
-    public ShipPlacementValidator(GameState gameState) {
-        this.boardSize = gameState.getBoardSize();
-    }
-
-    // Neuer Überladener Konstruktor, der direkt die Board-Größe verwendet
+    // Konstruktor, der direkt die Board-Größe verwendet
     public ShipPlacementValidator(int boardSize) {
         this.boardSize = boardSize;
     }
 
     /**
-     * Prüft, ob beim Platzieren des übergebenen Schiffs an (startRow, startCol) eine Kollision (mit Rand oder
-     * einem bereits platzierten Schiff) entsteht.
-     *
-     * @param ship        Das zu platzierende Schiff
-     * @param startRow    Zielzeile
-     * @param startCol    Zielspalte
-     * @param placedShips Liste bereits platzierter Schiffe
-     * @return true, wenn eine Kollision vorliegt, sonst false.
+     * Prüft, ob beim Platzieren des übergebenen Schiffs an (startRow, startCol) eine Kollision entsteht.
      */
     public boolean isCollision(Ship ship, int startRow, int startCol, List<Ship> placedShips) {
         if (ship == null) return false;
-        List<Point> candidateCells = ship.getOccupiedCellsAt(startCol, startRow);
-        for (Point p : candidateCells) {
+        List<java.awt.Point> candidateCells = ship.getOccupiedCellsAt(startCol, startRow);
+        for (java.awt.Point p : candidateCells) {
             if (p.x < 0 || p.x >= boardSize || p.y < 0 || p.y >= boardSize) {
                 return true;
             }
             for (Ship other : placedShips) {
                 if (other == ship) continue;
-                for (Point sp : other.getOccupiedCells()) {
+                for (java.awt.Point sp : other.getOccupiedCells()) {
                     if (p.x == sp.x && p.y == sp.y) return true;
                 }
             }
@@ -49,12 +36,11 @@ public class ShipPlacementValidator {
     }
 
     /**
-     * Erzeugt ein zufällig generiertes Spielbrett, indem die übergebenen Schiffe so platziert werden, dass
-     * keine Überlappungen oder Out-of-Bounds auftreten. Diese Methode wird genutzt, wenn ein Spieler seine
-     * Schiffe nicht submitted.
+     * Erzeugt ein zufällig generiertes Spielbrett, indem die übergebenen Schiffe deep copied und so platziert werden, dass
+     * keine Überlappungen oder Out-of-Bounds auftreten.
      *
      * @param boardSize      Die Größe des Spielbretts (Anzahl der Zellen pro Seite)
-     * @param availableShips Liste der zu platzierenden Schiffe
+     * @param availableShips Liste der zu platzierenden Schiffe (Prototypen)
      * @return Liste der zufällig platzierten Schiffe
      */
     public static ArrayList<Ship> createRandomizedGameBoard(int boardSize, ArrayList<Ship> availableShips) {
@@ -62,18 +48,20 @@ public class ShipPlacementValidator {
         ShipPlacementValidator validator = new ShipPlacementValidator(boardSize);
         Random random = new Random();
 
-        // Für jedes Schiff aus der übergebenen Liste
-        for (Ship ship : new ArrayList<>(availableShips)) {
+        // Für jedes Schiff in der Prototyp-Liste
+        for (Ship originalShip : availableShips) {
+            // Erzeuge eine deep copy des Schiffes
+            Ship ship = new Ship(originalShip);
             boolean placed = false;
             int attempts = 0;
             // Versuche, das Schiff in maximal 1000 Durchläufen zu platzieren
             while (!placed && attempts < 1000) {
-                // Wähle zufällig eine Orientierung (angenommen, Orientation ist ein Enum in deiner Ship-Klasse)
+                // Wähle zufällig eine Orientierung
                 Ship.Orientation[] orientations = Ship.Orientation.values();
                 int orientIndex = random.nextInt(orientations.length);
                 ship.setOrientation(orientations[orientIndex]);
 
-                // Wähle zufällige Startkoordinaten (x,y) innerhalb des Spielfeldes
+                // Wähle zufällige Startkoordinaten innerhalb des Spielfeldes
                 int x = random.nextInt(boardSize);
                 int y = random.nextInt(boardSize);
                 ship.setX(x);

@@ -1,6 +1,7 @@
 package server;
 
 import protocol.GameState;
+import protocol.Ship;
 import protocol.messages.ErrorMessage;
 import protocol.ErrorType;
 import protocol.messages.*;
@@ -140,12 +141,23 @@ public class PlayerInfo implements Runnable {
                             break;
                         }
 
+                        System.out.println("Received placement from player " + username);
+
+                        for (Ship ship : submitPlacementMessage.getShips()) {
+                            System.out.println("Ship: " + ship);
+                        }
+
                         //TODO: VALIDATE PLACEMENT
 
                         if(game.getPlayerA().getId().equals(this.getId())) {
                             game.setPlayerShips(this.getId(), submitPlacementMessage.getShips());
                         } else if(game.getPlayerB().getId().equals(this.getId())) {
                             game.setPlayerShips(this.getId(), submitPlacementMessage.getShips());
+                        }
+
+                        System.out.println("Submitted placement");
+                        for (Ship ship : submitPlacementMessage.getShips()) {
+                            System.out.println("Ship: " + ship);
                         }
 
                         GameState gameState = new GameState(game.getGameState());

@@ -15,6 +15,8 @@ public enum MessageType {
     JOIN_GAME_WITH_CODE,
     //SERVER -> CLIENT (player moved to game)
     JOIN_GAME,
+    //SERVER -> CLIENT
+    GAME_UPDATE,
     //CLIENT -> SERVER
     LEAVE_GAME,
     //SERVER -> CLIENT

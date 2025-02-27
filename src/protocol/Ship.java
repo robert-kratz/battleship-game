@@ -24,7 +24,7 @@ public class Ship implements Serializable {
     }
 
     private int id;
-    private int x, y; // Anchor point (interpreted according to orientation)
+    private int x, y; // Ankerpunkt (abhängig von der Orientierung)
     private boolean isPlaced;
     private Orientation orientation;
     private int length, width;
@@ -32,6 +32,18 @@ public class Ship implements Serializable {
     private int hits;
     private String icon;
 
+    // Bestehender Konstruktor (nicht platziert)
+    public Ship(int id, Orientation orientation, int length, int width) {
+        this.id = id;
+        this.isPlaced = false;
+        this.orientation = orientation;
+        this.length = length;
+        this.width = width;
+        this.x = -1;
+        this.y = -1;
+    }
+
+    // Anderer Konstruktor
     public Ship(int id, int x, int y, Orientation orientation, int length, int width, String icon) {
         this.id = id;
         this.x = x;
@@ -43,17 +55,21 @@ public class Ship implements Serializable {
         this.icon = icon;
     }
 
-    // Default constructor: not placed, therefore x and y are -1.
-    public Ship(int id, Orientation orientation, int length, int width) {
-        this.id = id;
-        this.isPlaced = false;
-        this.orientation = orientation;
-        this.length = length;
-        this.width = width;
-        this.x = -1;
-        this.y = -1;
+    // Neuer Copy-Konstruktor für Deep Copy
+    public Ship(Ship other) {
+        this.id = other.id;
+        this.x = other.x;
+        this.y = other.y;
+        this.isPlaced = other.isPlaced;
+        this.orientation = other.orientation;
+        this.length = other.length;
+        this.width = other.width;
+        this.isSunk = other.isSunk;
+        this.hits = other.hits;
+        this.icon = other.icon;
     }
 
+    // Getter und Setter
     public void setOrientation(Orientation orientation) {
         this.orientation = orientation;
     }
@@ -112,19 +128,14 @@ public class Ship implements Serializable {
     }
 
     /**
-     * Returns the list of grid cells occupied by this ship (using the current anchor x,y).
-     * The ship’s cells are computed based on its orientation:
-     * - EAST: extends rightwards: cells (x, y) to (x+length-1, y+width-1)
-     * - WEST: extends leftwards: cells (x, y) to (x-length+1, y+width-1)
-     * - SOUTH: extends downwards: cells (x, y) to (x+width-1, y+length-1)
-     * - NORTH: extends upwards: cells (x, y) to (x+width-1, y-length+1)
+     * Gibt die Liste der Zellen zurück, die von diesem Schiff belegt werden.
      */
     public List<Point> getOccupiedCells() {
         return getOccupiedCellsAt(this.x, this.y);
     }
 
     /**
-     * Returns the list of grid cells that would be occupied if the ship were placed with its anchor at (anchorX, anchorY).
+     * Gibt die Liste der Zellen zurück, die belegt würden, wenn das Schiff am Ankerpunkt (anchorX, anchorY) platziert wird.
      */
     public List<Point> getOccupiedCellsAt(int anchorX, int anchorY) {
         List<Point> cells = new ArrayList<>();

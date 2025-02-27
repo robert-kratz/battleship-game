@@ -25,14 +25,17 @@ public class GameInGameScene extends JPanel implements Runnable {
 
     private UUID playersTurn;
 
-    public GameInGameScene(GameHandler gameHandler) {
+    public GameInGameScene(GameHandler gameHandler, ArrayList<Ship> placedShips) {
         this.gameHandler = gameHandler;
 
         // Board-Painter für InGame-Phase (verwende hier ggf. ein anderes Bild)
         Image inGameBackgroundImage = new ImageIcon("resource/background-2.png").getImage();
         BoardPainter inGamePainter = new InGameBoardPainter(inGameBackgroundImage);
 
-        List<Ship> placedShips = gameHandler.getPlayersShips();
+        System.out.println("GameInGameScene created");
+        for (Ship ship : placedShips) {
+            System.out.println("Ship: " + ship);
+        }
 
         inGameBoard = new InGameBattleshipBoard(gameHandler.getGameState().getBoardSize(), placedShips, inGamePainter,
                 (row, col) -> {

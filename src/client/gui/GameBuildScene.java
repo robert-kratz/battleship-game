@@ -2,7 +2,6 @@ package client.gui;
 
 import client.ClientHandler;
 import client.GameHandler;
-import client.MediaPlayer;
 import client.SoundType;
 import client.gui.board.BuildBattleshipBoard;
 import client.gui.painter.BoardPainter;
@@ -52,7 +51,7 @@ public class GameBuildScene extends JPanel implements Runnable {
         BoardPainter buildPainter = new BuildBoardPainter(buildBackgroundImage);
 
         // ShipPlacementValidator initialisieren (nutzt den GameState)
-        ShipPlacementValidator validator = new ShipPlacementValidator(gameHandler.getGameState());
+        ShipPlacementValidator validator = new ShipPlacementValidator(gameHandler.getGameState().getBoardSize());
 
         buildBoard = new BuildBattleshipBoard(gameHandler.getGameState().getBoardSize(), placedShips, buildPainter, validator,
                 (row, col, selectedShip) -> {

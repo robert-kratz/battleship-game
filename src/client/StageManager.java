@@ -2,11 +2,13 @@ package client;
 
 import client.gui.*;
 import protocol.GameState;
+import protocol.Ship;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -83,14 +85,18 @@ public class StageManager extends JFrame {
         this.gameBuildSceneThread.start();
     }
 
-    public void startInGameScene() {
-        if(!this.clientHandler.getGameHandler().getGameState().getStatus().equals(GameState.GameStatus.IN_GAME)) return;
+    public void startInGameScene(ArrayList<Ship> playerShips) {
+        if(!this.clientHandler.getGameHandler().getGameState().getStatus().equals(GameState.GameStatus.BUILD_GAME_BOARD)) return;
+
+        System.out.println("c");
 
         if(this.gameIngameScene != null) return;
 
+        System.out.println("d");
+
         this.gameBuildSceneThread.interrupt();
 
-        this.gameIngameScene = new GameInGameScene(this.clientHandler.getGameHandler());
+        this.gameIngameScene = new GameInGameScene(this.clientHandler.getGameHandler(), playerShips);
         this.gameIngameSceneThread = new Thread(gameIngameScene);
 
         addScene(Stage.GAME_IN_GAME_SCENE, gameIngameScene);
