@@ -29,16 +29,16 @@ public class StageManager extends JFrame {
     private final CardLayout cardLayout;
     private final JPanel mainPanel;
     private final Map<Stage, JPanel> scenes = new HashMap<>();
-    private final GameHandler gameHandler;
+
+    private final ClientHandler clientHandler;
 
     private Stage currentStage = Stage.LOBBY_SCENE;
-    private boolean isGameRunning = false;
 
     private final Dimension BIG_DIMENSION = new Dimension(900, 530);
     private final Dimension SMALL_DIMENSION = new Dimension(430, 270);
 
-    public StageManager(GameHandler gameHandler) {
-        this.gameHandler = gameHandler;
+    public StageManager(ClientHandler clientHandler) {
+        this.clientHandler = clientHandler;
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setResizable(true);
@@ -47,50 +47,35 @@ public class StageManager extends JFrame {
         mainPanel = new JPanel(cardLayout);
         add(mainPanel);
 
-        lobbyScene = new LobbyScene(gameHandler);
-        lobbyScene.setUsername(gameHandler.getUsername());
+        lobbyScene = new LobbyScene(clientHandler);
+        lobbyScene.setUsername(clientHandler.getUsername());
         addScene(Stage.LOBBY_SCENE, lobbyScene);
 
-        createGameScene = new CreateGameScene(this.gameHandler);
+        createGameScene = new CreateGameScene(clientHandler);
         addScene(Stage.CREATE_GAME_SCENE, createGameScene);
 
         switchScene(Stage.LOBBY_SCENE);
-
-        addComponentListener(new ComponentAdapter() {
-            @Override
-            public void componentResized(ComponentEvent e) {
-                super.componentResized(e);
-
-                //force repaint for the build
-                if (gameBuildScene != null) {
-                    gameBuildScene.updateDimensions(getWidth(), getHeight());
-                }
-
-                System.out.println("GameGui: Resized: " + getWidth() + "x" + getHeight());
-            }
-        });
 
         setVisible(true);
     }
 
     public void startWaitingLobbyScene() {
-        if(!this.gameHandler.getGameState().getStatus().equals(GameState.GameStatus.LOBBY_WAITING)) return;
+        if(!this.clientHandler.getGameHandler().getGameState().getStatus().equals(GameState.GameStatus.LOBBY_WAITING)) return;
 
         if(this.gameWaitingScene != null) return;
 
-        this.isGameRunning = true;
-        this.gameWaitingScene = new GameWaitingScene(gameHandler);
+        this.gameWaitingScene = new GameWaitingScene(this.clientHandler.getGameHandler());
 
         addScene(Stage.GAME_WAITING_SCENE, gameWaitingScene);
         switchScene(Stage.GAME_WAITING_SCENE);
     }
 
     public void startBuildScene() {
-        if(!this.gameHandler.getGameState().getStatus().equals(GameState.GameStatus.BUILD_GAME_BOARD)) return;
+        if(!this.clientHandler.getGameHandler().getGameState().getStatus().equals(GameState.GameStatus.BUILD_GAME_BOARD)) return;
 
         if(this.gameBuildScene != null) return; //Allow only one build scene being initialized
 
-        this.gameBuildScene = new GameBuildScene(gameHandler);
+        this.gameBuildScene = new GameBuildScene(this.clientHandler.getGameHandler());
         this.gameBuildSceneThread = new Thread(gameBuildScene);
 
         addScene(Stage.GAME_BUILD_SCENE, gameBuildScene);
@@ -99,19 +84,43 @@ public class StageManager extends JFrame {
     }
 
     public void startInGameScene() {
-        if(!this.gameHandler.getGameState().getStatus().equals(GameState.GameStatus.IN_GAME)) return;
+        if(!this.clientHandler.getGameHandler().getGameState().getStatus().equals(GameState.GameStatus.IN_GAME)) return;
 
         if(this.gameIngameScene != null) return;
 
         this.gameBuildSceneThread.interrupt();
 
-        this.gameIngameScene = new GameInGameScene(gameHandler);
+        this.gameIngameScene = new GameInGameScene(this.clientHandler.getGameHandler());
         this.gameIngameSceneThread = new Thread(gameIngameScene);
 
         addScene(Stage.GAME_IN_GAME_SCENE, gameIngameScene);
         switchScene(Stage.GAME_IN_GAME_SCENE);
 
         this.gameIngameSceneThread.start();
+    }
+
+    /**
+     * Call this method to exit the game scene and return to the lobby, assuming the
+     */
+    public void exitGameScene() {
+        if(this.gameWaitingScene != null) {
+            removeScene(Stage.GAME_WAITING_SCENE);
+            this.gameWaitingScene = null;
+        }
+
+        if(this.gameBuildScene != null) {
+            this.gameBuildSceneThread.interrupt();
+            removeScene(Stage.GAME_BUILD_SCENE);
+            this.gameBuildScene = null;
+        }
+
+        if(this.gameIngameScene != null) {
+            this.gameIngameSceneThread.interrupt();
+            removeScene(Stage.GAME_IN_GAME_SCENE);
+            this.gameIngameScene = null;
+        }
+
+        switchScene(Stage.LOBBY_SCENE);
     }
 
     private void addScene(Stage stage, JPanel panel) {
@@ -158,12 +167,8 @@ public class StageManager extends JFrame {
             setTitle(stage.toString());
             adaptScreenSize();
         } else {
-            System.err.println("Szene nicht gefunden: " + stage.toString());
+            System.err.println("Unable to switch to scene: " + stage);
         }
-    }
-
-    public boolean isGameRunning() {
-        return isGameRunning;
     }
 
     public int getWindowsWidth() {
@@ -172,9 +177,5 @@ public class StageManager extends JFrame {
 
     public int getWindowsHeight() {
         return getHeight();
-    }
-
-    public GameHandler getGameHandler() {
-        return gameHandler;
     }
 }

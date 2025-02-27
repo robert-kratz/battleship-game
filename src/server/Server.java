@@ -27,14 +27,14 @@ public class Server {
 
     private ArrayList<PlayerInfo> queue = new ArrayList<>();
 
-    private ServerGUI gui;
+    private final ServerGUI gui;
 
     public Server() {
         this.gui = new ServerGUI(this);
         instance = this;
     }
 
-    public synchronized void startServer() {
+    public void startServer() {
         if (running) return;
 
         new Thread(() -> {
@@ -62,7 +62,24 @@ public class Server {
         }).start();
     }
 
-    public synchronized void stopServer() {
+    /**
+     * Returns the instance of the server
+     * @return instance of the server
+     */
+    public ArrayList<PlayerInfo> getPlayersInLobby() {
+        ArrayList<PlayerInfo> playersInLobby = new ArrayList<>();
+        for (PlayerInfo player : players) {
+            if (!player.isInGame()) {
+                playersInLobby.add(player);
+            }
+        }
+        return playersInLobby;
+    }
+
+    /**
+     * Stops the server and closes all connections
+     */
+    public void stopServer() {
         running = false;
         try {
             for (PlayerInfo p : players) {
@@ -88,7 +105,7 @@ public class Server {
      * @param game game to register
      * @param thread thread to start
      */
-    public synchronized void registerGame(BattleShipGame game, Thread thread) {
+    public void registerGame(BattleShipGame game, Thread thread) {
         games.add(game);
         gameThreads.add(thread);
 
@@ -99,7 +116,7 @@ public class Server {
      * Removes a game from the list of active games
      * @param id id of the game to remove
      */
-    public synchronized void unregisterGame(UUID id) {
+    public void unregisterGame(UUID id) {
         BattleShipGame targetGame = null;
         Thread targetThread = null;
         for (BattleShipGame game : games) {
@@ -130,17 +147,17 @@ public class Server {
         return null;
     }
 
-    public synchronized void removePlayer(PlayerInfo player) {
+    public void removePlayer(PlayerInfo player) {
         players.remove(player);
         updatePlayerList();
     }
 
-    public synchronized void addToQueue(PlayerInfo player) {
+    public void addToQueue(PlayerInfo player) {
         queue.add(player);
         player.sendMessage(new protocol.messages.QueueUpdateMessage(queue.size(), true));
     }
 
-    public synchronized void removeFromQueue(UUID id) {
+    public void removeFromQueue(UUID id) {
         queue.removeIf(player -> {
             if(player.getId().equals(id)) {
                 player.sendMessage(new protocol.messages.QueueUpdateMessage(queue.size(), false));
@@ -151,7 +168,7 @@ public class Server {
 
     }
 
-    private synchronized void updatePlayerList() {
+    private void updatePlayerList() {
         StringBuilder sb = new StringBuilder();
         for (PlayerInfo p : players) {
             sb.append(p.getUsername()).append(" (").append(p.getIp()).append(")\n");
@@ -159,15 +176,15 @@ public class Server {
         gui.updatePlayerList(sb.toString());
     }
 
-    public synchronized List<PlayerInfo> getPlayers() {
+    public List<PlayerInfo> getPlayers() {
         return players;
     }
 
-    public synchronized ArrayList<PlayerInfo> getQueue() {
+    public ArrayList<PlayerInfo> getQueue() {
         return queue;
     }
 
-    public synchronized ArrayList<BattleShipGame> getGames() {
+    public ArrayList<BattleShipGame> getGames() {
         return games;
     }
 

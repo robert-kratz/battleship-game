@@ -1,17 +1,20 @@
 package protocol.messages;
 
+import protocol.GameState;
+
 public class JoinGameMessage extends Message {
 
-    private int sessionCode;
+    private static final long serialVersionUID = 1L;
 
-    public JoinGameMessage(int sessionCode) {
+    private final GameState gameState;
+
+    public JoinGameMessage(GameState gameState) {
         super(MessageType.JOIN_GAME);
 
-        this.sessionCode = sessionCode;
-
+        this.gameState = gameState;
     }
 
-    public int getSessionCode() {
-        return sessionCode;
+    public GameState getGameState() {
+        return gameState;
     }
 }

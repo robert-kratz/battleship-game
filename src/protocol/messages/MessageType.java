@@ -12,6 +12,8 @@ public enum MessageType {
     //CLIENT -> SERVER
     CREATE_GAME,
     //CLIENT -> SERVER
+    JOIN_GAME_WITH_CODE,
+    //SERVER -> CLIENT (player moved to game)
     JOIN_GAME,
     //CLIENT -> SERVER
     LEAVE_GAME,
@@ -28,5 +30,10 @@ public enum MessageType {
     //CLIENT -> SERVER
     GAME_STATE_REQUEST,
     //SERVER -> CLIENT
-    ERROR
+    ERROR,
+    //CLIENT -> SERVER
+    PLAYER_MOVE,
+
+    //SERVER -> CLIENT, CLIENT -> SERVER
+    PLAYER_HOVER,
 }

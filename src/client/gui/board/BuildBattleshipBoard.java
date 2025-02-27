@@ -1,5 +1,6 @@
 package client.gui.board;
 
+import client.GameHandler;
 import client.gui.painter.BoardPainter;
 import protocol.Ship;
 import protocol.ShipPlacementValidator;
@@ -99,6 +100,7 @@ public class BuildBattleshipBoard extends AbstractBattleshipBoard {
 
     public void setSelectedShip(Ship ship) {
         this.selectedShip = ship;
+
         repaint();
     }
 

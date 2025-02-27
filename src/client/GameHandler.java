@@ -1,71 +1,32 @@
 package client;
 
-import protocol.ErrorType;
 import protocol.Ship;
+import protocol.game.Hit;
 import protocol.messages.*;
 import protocol.GameState;
 
-import javax.swing.*;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.UUID;
 
 public class GameHandler implements GameClient {
 
     private GameState gameState;
-
-    private String username;
-    private UUID userId, secret, gameId;
-    private int queueLength = 0;
-
-    private boolean isInQueue = false;
-
     private final ClientHandler clientHandler;
-    private final StageManager stageManager;
 
-    public GameHandler(ClientHandler clientHandler) {
-        this.clientHandler = clientHandler;
-        this.stageManager = new StageManager(this);
-    }
+    private ArrayList<Ship> playersShips;
 
-    @Override
-    public void register(RegisterMessage registerMessage) {
-        this.userId = registerMessage.getUserId();
-        this.secret = registerMessage.getSecret();
-        this.username = registerMessage.getUsername();
-
-        this.stageManager.lobbyScene.setUsername(username);
-    }
+    private boolean isInGame = false;
 
     /**
-     * Queue logic
+     * Initializes the GameHandler
+     * @param clientHandler the client handler
+     * @param gameState the game state from the GameStateUpdateMessage received from the server
      */
+    public GameHandler(ClientHandler clientHandler, GameState gameState) {
+        this.clientHandler = clientHandler;
 
-    @Override
-    public void queueUpdate(QueueUpdateMessage queueUpdateMessage) {
-        this.queueLength = queueUpdateMessage.getQueueSize();
-        this.isInQueue = queueUpdateMessage.isPlayerInQueue();
-
-        this.stageManager.lobbyScene.setQueueLength(queueLength);
-    }
-
-    @Override
-    public void joinQueue() {
-        if(isInQueue) {
-            showError("Already in queue.");
-            return;
-        }
-
-        clientHandler.sendMessage(new JoinQueueMessage());
-    }
-
-    @Override
-    public void leaveQueue() {
-        if(!isInQueue) {
-            showError("Not in queue.");
-            return;
-        }
-
-        clientHandler.sendMessage(new QuitQueueMessage());
+        this.gameState = gameState;
     }
 
     /**
@@ -73,31 +34,123 @@ public class GameHandler implements GameClient {
      */
 
     @Override
-    public void onGameStateUpdate(GameStateUpdateMessage message) {
-        this.gameState = message.getGameState();
+    public void onGameStateUpdate(GameStateUpdateMessage gameStateUpdateMessage) {
+
+        boolean gameStateUpdated = gameStateUpdateMessage.getGameState().getStatus() != gameState.getStatus();
+
+        this.gameState = gameStateUpdateMessage.getGameState();
 
         System.out.println("Game state updated: " + gameState.getStatus());
 
+        System.out.println("Player A ready: " + gameState.hasPlayerASubmittedPlacement());
+        System.out.println("Player B ready: " + gameState.hasPlayerBSubmittedPlacement());
+
+        //ONLY EXECUTE IF GAME STATE HAS CHANGED
+        if(gameStateUpdated) {
+            switch (gameState.getStatus()) {
+                //Trigger when someone joins the lobby
+                case LOBBY_WAITING -> { }
+                //Trigger when game build phase starts
+                case BUILD_GAME_BOARD -> {
+
+                    if(!isInGame) {
+                        if(this.gameState.getPlayerCount() == 2) {
+                            UUID userId = this.clientHandler.getUserId();
+                            String opponentName = this.gameState.getOpponentName(userId);
+
+                            this.clientHandler.getStageManager().gameWaitingScene.setOpponentName(opponentName);
+                        }
+
+                        this.clientHandler.getStageManager().gameWaitingScene.setGameStartTime(this.gameState.getBuildGameBoardStarted());
+                    }
+                }
+                case IN_GAME -> {
+                    this.clientHandler.getStageManager().startInGameScene();
+                }
+                case GAME_OVER -> {}
+            }
+        }
+
+        //ALWAYS EXECUTE
+
+        System.out.println("User ID: " + this.clientHandler.getUserId());
+        System.out.println("Opponent ID: " + this.gameState.hasOpponentSubmittedPlacement(this.clientHandler.getUserId()));
+
         switch (gameState.getStatus()) {
             case LOBBY_WAITING -> {
-                this.stageManager.startWaitingLobbyScene();
             }
             case BUILD_GAME_BOARD -> {
-                this.stageManager.startBuildScene();
+                if(this.clientHandler.getStageManager().gameBuildScene != null) {
+                    boolean isOpponentReady = this.gameState.hasOpponentSubmittedPlacement(this.clientHandler.getUserId());
+
+                    this.clientHandler.getStageManager().gameBuildScene.setOpponentState(isOpponentReady);
+                }
             }
-            case IN_GAME -> {
-                this.stageManager.startInGameScene();
-            }
-            case GAME_OVER -> {}
+            case IN_GAME -> {}
         }
     }
 
+    /**
+     * Triggers when the opponent hovers his mouse over a tile during his turn
+     * @param playerHoverMessage The message containing the player's hover information
+     */
     @Override
-    public void placeShips(ArrayList<Ship> ships) {
-        if(gameState == null) return;
+    public void onPlayerHoverEvent(PlayerHoverMessage playerHoverMessage) {
+        if(gameState.getStatus() != GameState.GameStatus.IN_GAME) {
+            clientHandler.showError("Game is not in game phase.");
+            return;
+        }
+        //Only accept opponent hover events
+        if(playerHoverMessage.getUserId().equals(clientHandler.getUserId())) return;
 
+        Point point = new Point(playerHoverMessage.getX(), playerHoverMessage.getY());
+
+        //Forward the hover event to the game scene
+        clientHandler.getStageManager().gameIngameScene.setOpponentHover(point);
+    }
+
+    /**
+     * Update the game state during the in-game phase
+     * @param gameState The updated game state
+     * @param yourShips The ships of the player
+     */
+    @Override
+    public void onGameUpdate(GameState gameState, ArrayList<Ship> yourShips) {
+        //TODO: Implement in game logic
+    }
+
+    /**
+     * Handle the error message by showing it to the user in a dialog
+     * @param message The error message
+     */
+    @Override
+    public void onGameError(ErrorMessage message) {
+        clientHandler.showError(message.getError().getMessage());
+    }
+
+    /**
+     * Send the hover event to the server
+     * @param x The x coordinate of the tile
+     * @param y The y coordinate of the tile
+     */
+    @Override
+    public void sendPlayerHoverEvent(int x, int y) {
+        if(gameState.getStatus() != GameState.GameStatus.IN_GAME) {
+            clientHandler.showError("Game is not in game phase.");
+            return;
+        }
+
+        clientHandler.sendMessage(new PlayerHoverMessage(this.clientHandler.getUserId(), x, y));
+    }
+
+    /**
+     * Submit the placement of ships to the server
+     * @param ships The ships to be placed
+     */
+    @Override
+    public void sendSubmitPlacementEvent(ArrayList<Ship> ships) {
         if(gameState.getStatus() != GameState.GameStatus.BUILD_GAME_BOARD) {
-            showError("Game is not in build phase.");
+            clientHandler.showError("Game is not in build phase.");
             return;
         }
 
@@ -105,76 +158,40 @@ public class GameHandler implements GameClient {
     }
 
     /**
-     * Creates a new game with the given size. Trigger CLIENT -> SERVER
-     * @param size size of the game board
+     * Send the move to the server
+     * @param hit The hit object containing the move
      */
     @Override
-    public void createGameMessage(int size) {
-        clientHandler.sendMessage(new CreateGameMessage(size));
-    }
-
-    @Override
-    public void gameStarted(GameStartingMessage gameStartingMessage) {
-        this.gameId = gameStartingMessage.getGameState().getId();
-        this.gameState = gameStartingMessage.getGameState();
-
-        this.stageManager.startBuildScene();
-    }
-
-    @Override
-    public void joinGame(int sessionCode) {
-        System.out.println("Joining game with session code: " + sessionCode);
-        clientHandler.sendMessage(new JoinGameMessage(sessionCode));
-    }
-
-    @Override
-    public void leaveGame() {
-        clientHandler.sendMessage(new LeaveGameMessage());
-        this.stageManager.switchScene(Stage.LOBBY_SCENE);
-    }
-
-    @Override
-    public void onErrorMessage(ErrorMessage errorMessage) {
-        if(errorMessage.getError().equals(ErrorType.SERVER_CLOSED)) {
-            showError("Server closed.");
-            System.exit(1);
+    public void sendGameMoveEvent(Hit hit) {
+        if(gameState.getStatus() != GameState.GameStatus.IN_GAME) {
+            clientHandler.showError("Game is not in game phase.");
+            return;
         }
 
-        showError("Error: " + errorMessage.getError().toString());
+        clientHandler.sendMessage(new PlayerMoveMessage(hit));
     }
 
-    private void showError(String message) {
-        SwingUtilities.invokeLater(() ->
-                JOptionPane.showMessageDialog(this.getStageManager().getContentPane(), message, "Fehler", JOptionPane.ERROR_MESSAGE)
-        );
+    /**
+     * Leave the game
+     */
+    @Override
+    public void sendLeaveGame() {
+        clientHandler.sendMessage(new LeaveGameMessage());
+        this.clientHandler.endCurrentGame(); //Removes the game handler from the client handler and switch scene to lobby
     }
 
-    public boolean isInQueue() {
-        return isInQueue;
+    public void startBuildPhase() {
+        this.getClientHandler().getStageManager().startBuildScene();
+
+        boolean isOpponentReady = this.getGameState().hasOpponentSubmittedPlacement(this.getClientHandler().getUserId());
+
+        this.getClientHandler().getStageManager().gameBuildScene.setOpponentState(isOpponentReady);
+
+        this.isInGame = true;
     }
 
-    public UUID getUserId() {
-        return userId;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public UUID getGameId() {
-        return gameId;
-    }
-
-    public UUID getSecret() {
-        return secret;
-    }
-
-    public int getQueueLength() {
-        return queueLength;
-    }
-
-    public StageManager getStageManager() {
-        return stageManager;
+    public ArrayList<Ship> getPlayersShips() {
+        return playersShips;
     }
 
     public ClientHandler getClientHandler() {

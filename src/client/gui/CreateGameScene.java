@@ -14,7 +14,7 @@ public class CreateGameScene extends JPanel implements Scene {
     private final JRadioButton button10x10;
     private final JRadioButton button12x12;
 
-    private GameHandler gameHandler;
+    private ClientHandler clientHandler;
 
     @Override
     public String getTitle() {
@@ -26,8 +26,8 @@ public class CreateGameScene extends JPanel implements Scene {
         return new Dimension(320, 220);
     }
 
-    public CreateGameScene(GameHandler gameHandler) {
-        this.gameHandler = gameHandler;
+    public CreateGameScene(ClientHandler clientHandler) {
+        this.clientHandler = clientHandler;
 
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20)); // Padding um das Panel
@@ -83,14 +83,14 @@ public class CreateGameScene extends JPanel implements Scene {
                     int selectedSize = getSelectedBoardSize();
                     System.out.println("Selected board size: " + selectedSize);
 
-                    gameHandler.createGameMessage(selectedSize);
+                    clientHandler.getLobbyHandler().sendCreateGameEvent(selectedSize);
                 }
             }
         });
 
         // Listener für Back-Button
         backButton.addActionListener(e -> {
-            this.gameHandler.getStageManager().switchScene(Stage.LOBBY_SCENE);
+            clientHandler.getStageManager().switchScene(Stage.LOBBY_SCENE);
             sizeGroup.clearSelection();
         });
 

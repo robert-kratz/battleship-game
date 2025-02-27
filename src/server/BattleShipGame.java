@@ -5,9 +5,11 @@ import protocol.ShipPlacementValidator;
 import protocol.messages.GameStateUpdateMessage;
 import protocol.Ship;
 import protocol.messages.GameStartingMessage;
+import protocol.messages.JoinGameMessage;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.UUID;
 
 public class BattleShipGame implements Game, Runnable {
 
@@ -18,6 +20,9 @@ public class BattleShipGame implements Game, Runnable {
     private final int size;
 
     private final ArrayList<Ship> availableShips = new ArrayList<>();
+
+    private ArrayList<Ship> shipsPlayerA;
+    private ArrayList<Ship> shipsPlayerB;
 
     public BattleShipGame(Server server, int size) {
         this.server = server;
@@ -30,30 +35,32 @@ public class BattleShipGame implements Game, Runnable {
 
     @Override
     public void run() {
-        while (gameState.getStatus().equals(GameState.GameStatus.BUILD_GAME_BOARD)) {
+        while (this.gameState.getStatus().equals(GameState.GameStatus.BUILD_GAME_BOARD)) {
             sleep(1000);
             System.out.println("Build Game Board");
-            if(gameState.getBuildGameBoardFinished().before(new Date())) {
+            if(this.gameState.getBuildGameBoardFinished().before(new Date())) {
 
                 System.out.println("Build Game Board Finished");
 
                 System.out.println("Player A: " + gameState.hasPlayerASubmittedPlacement());
                 System.out.println("Player B: " + gameState.hasPlayerBSubmittedPlacement());
 
-                if(!gameState.hasPlayerASubmittedPlacement()) {
-                    gameState.setPlayerShips(playerA.getId(), ShipPlacementValidator.createRandomizedGameBoard(size, availableShips));
+                if(!this.gameState.hasPlayerASubmittedPlacement()) {
+                    this.shipsPlayerA = ShipPlacementValidator.createRandomizedGameBoard(size, availableShips);
+                    this.gameState.playerSubmitPlacement(playerA.getId());
                 }
 
-                if(!gameState.hasPlayerBSubmittedPlacement()) {
-                    gameState.setPlayerShips(playerB.getId(), ShipPlacementValidator.createRandomizedGameBoard(size, availableShips));
+                if(!this.gameState.hasPlayerBSubmittedPlacement()) {
+                    this.shipsPlayerB = ShipPlacementValidator.createRandomizedGameBoard(size, availableShips);
+                    this.gameState.playerSubmitPlacement(playerB.getId());
                 }
 
                 this.gameState.setStatus(GameState.GameStatus.IN_GAME);
 
                 GameState gameState = new GameState(this.getGameState());
 
-                playerA.sendMessage(new GameStateUpdateMessage(gameState));
-                playerB.sendMessage(new GameStateUpdateMessage(gameState));
+                this.playerA.sendMessage(new GameStateUpdateMessage(gameState));
+                this.playerB.sendMessage(new GameStateUpdateMessage(gameState));
             }
         }
 
@@ -78,7 +85,7 @@ public class BattleShipGame implements Game, Runnable {
     }
 
     @Override
-    public GameState addPlayer(PlayerInfo player) {
+    public synchronized GameState addPlayer(PlayerInfo player) {
         //ONLY TRIGGER IF GAME IS IN LOBBY WAITING
         if(!this.gameState.getStatus().equals(GameState.GameStatus.LOBBY_WAITING)) return null;
 
@@ -86,6 +93,10 @@ public class BattleShipGame implements Game, Runnable {
             playerA = player;
             GameState gameState = new GameState(this.getGameState());
             gameState.setPlayerA(playerA.getId(), playerA.getUsername());
+
+            System.out.println("Player A: " + playerA.getUsername());
+
+            playerA.sendMessage(new JoinGameMessage(gameState)); //First player is always A, no need to send to B
             playerA.sendMessage(new GameStateUpdateMessage(gameState));
 
             this.gameState = gameState;
@@ -93,6 +104,11 @@ public class BattleShipGame implements Game, Runnable {
             playerB = player;
             GameState gameState = new GameState(this.getGameState());
             gameState.setPlayerB(playerB.getId(), playerB.getUsername());
+
+            System.out.println("Player B: " + playerB.getUsername());
+
+            playerB.sendMessage(new JoinGameMessage(gameState));
+            playerA.sendMessage(new GameStateUpdateMessage(gameState));
             playerB.sendMessage(new GameStateUpdateMessage(gameState));
 
             this.gameState = gameState;
@@ -107,7 +123,7 @@ public class BattleShipGame implements Game, Runnable {
 
         gameState.setStatus(GameState.GameStatus.BUILD_GAME_BOARD);
 
-        Date date = new Date();
+        Date date = new Date(System.currentTimeMillis() + Parameters.TIMER_BEFORE_LOBBY_START * 1000);
 
         GameState gameState = new GameState(this.getGameState());
 
@@ -116,8 +132,8 @@ public class BattleShipGame implements Game, Runnable {
 
         this.gameState = gameState;
 
-        playerA.sendMessage(new GameStartingMessage(gameState));
-        playerB.sendMessage(new GameStartingMessage(gameState));
+        playerA.sendMessage(new GameStateUpdateMessage(gameState));
+        playerB.sendMessage(new GameStateUpdateMessage(gameState));
     }
 
     private synchronized void endGamePhase() {
@@ -139,11 +155,17 @@ public class BattleShipGame implements Game, Runnable {
         return gameState;
     }
 
-    public synchronized void sendGameStateUpdate() {
-
+    public void setPlayerShips(UUID playerId, ArrayList<Ship> ships) {
+        if(playerA.getId().equals(playerId)) {
+            this.shipsPlayerA = ships;
+            this.gameState.playerSubmitPlacement(playerA.getId());
+        } else if(playerB.getId().equals(playerId)) {
+            this.shipsPlayerB = ships;
+            this.gameState.playerSubmitPlacement(playerB.getId());
+        }
     }
 
-    private synchronized void sleep(int time) {
+    public synchronized void sleep(int time) {
         try {
             Thread.sleep(time);
         } catch (InterruptedException e) {

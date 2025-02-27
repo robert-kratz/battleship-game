@@ -1,5 +1,7 @@
 package protocol;
 
+import protocol.game.Hit;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
@@ -34,7 +36,10 @@ public class GameState implements Serializable  {
 
     private UUID playersTurn = null;
 
-    private ArrayList<Ship> shipsA, shipsB;
+    private boolean shipsPlacedA, shipsPlacedB;
+    private int energyA = 0, energyB = 0;
+    private ArrayList<Hit> hitsA = new ArrayList<>(), hitsB = new ArrayList<>();
+
     private final ArrayList<Ship> availableShips;
 
     private final int size;
@@ -51,11 +56,15 @@ public class GameState implements Serializable  {
         this.lastUpdated = gameState.lastUpdated;
         this.buildGameBoardStarted = gameState.buildGameBoardStarted;
         this.buildGameBoardFinished = gameState.buildGameBoardFinished;
+        this.hitsA = gameState.hitsA;
+        this.hitsB = gameState.hitsB;
+        this.energyA = gameState.energyA;
+        this.energyB = gameState.energyB;
         this.playersTurnStart = gameState.playersTurnStart;
         this.playersTurnEnd = gameState.playersTurnEnd;
         this.playersTurn = gameState.playersTurn;
-        this.shipsA = gameState.shipsA;
-        this.shipsB = gameState.shipsB;
+        this.shipsPlacedA = gameState.shipsPlacedA;
+        this.shipsPlacedB = gameState.shipsPlacedB;
         this.size = gameState.size;
         this.status = gameState.status;
         this.availableShips = gameState.availableShips;
@@ -78,26 +87,40 @@ public class GameState implements Serializable  {
         this.playerBName = name;
     }
 
+    public int getEnergyA() {
+        return energyA;
+    }
+
+    public int getEnergyB() {
+        return energyB;
+    }
+
+    public int getEnergy(UUID player) {
+        if(playerA.equals(player)) {
+            return energyA;
+        } else if(playerB.equals(player)) {
+            return energyB;
+        }
+        return -1;
+    }
+
     public GameState removePlayer(UUID player) {
         if(playerA.equals(player)) {
             playerA = null;
             playerAName = null;
-            shipsA = null;
         } else if(playerB.equals(player)) {
             playerB = null;
             playerBName = null;
-            shipsB = null;
         }
         return this;
     }
 
-    public GameState setPlayerShips(UUID player, ArrayList<Ship> ships) {
+    public void playerSubmitPlacement(UUID player) {
         if(playerA.equals(player)) {
-            shipsA = ships;
+            shipsPlacedA = true;
         } else if(playerB.equals(player)) {
-            shipsB = ships;
+            shipsPlacedB = true;
         }
-        return this;
     }
 
     public int getPlayerCount() {
@@ -112,16 +135,16 @@ public class GameState implements Serializable  {
         this.status = status;
     }
 
-    public boolean hasPlayerASubmittedPlacement() {
-        return shipsA != null;
-    }
-
-    public boolean hasPlayerBSubmittedPlacement() {
-        return shipsB != null;
-    }
-
     public GameStatus getStatus() {
         return status;
+    }
+
+    public String getPlayerAName() {
+        return playerAName;
+    }
+
+    public String getPlayerBName() {
+        return playerBName;
     }
 
     public UUID getId() {
@@ -132,17 +155,18 @@ public class GameState implements Serializable  {
         return sessionCode;
     }
 
+    public String getOpponentName(UUID player) {
+        if(playerA.equals(player)) {
+            return playerBName;
+        } else if(playerB.equals(player)) {
+            return playerAName;
+        }
+        return null;
+    }
+
     public GameState setSessionCode(int sessionCode) {
         this.sessionCode = sessionCode;
         return this;
-    }
-
-    public ArrayList<Ship> getShipsA() {
-        return shipsA;
-    }
-
-    public ArrayList<Ship> getShipsB() {
-        return shipsB;
     }
 
     public Date getBuildGameBoardFinished() {
@@ -183,6 +207,23 @@ public class GameState implements Serializable  {
 
     public UUID getPlayersTurn() {
         return playersTurn;
+    }
+
+    public boolean hasOpponentSubmittedPlacement(UUID player) {
+        if(playerA.equals(player)) {
+            return shipsPlacedB;
+        } else if(playerB.equals(player)) {
+            return shipsPlacedA;
+        }
+        return false;
+    }
+
+    public boolean hasPlayerASubmittedPlacement() {
+        return shipsPlacedA;
+    }
+
+    public boolean hasPlayerBSubmittedPlacement() {
+        return shipsPlacedB;
     }
 
     public void setBuildGameBoardFinished(Date buildGameBoardFinished) {

@@ -37,6 +37,8 @@ public class GameBuildScene extends JPanel implements Runnable {
     private JLabel playerStatusLabel;
     private JLabel opponentStatusLabel;
 
+    private JLabel tipLabel;
+
     public GameBuildScene(GameHandler gameHandler) {
         setLayout(new BorderLayout());
         this.gameHandler = gameHandler;
@@ -144,7 +146,7 @@ public class GameBuildScene extends JPanel implements Runnable {
         readyButton.setEnabled(false);
         readyButton.addActionListener(e -> {
             System.out.println("Ready button clicked");
-            gameHandler.placeShips(placedShips);
+            gameHandler.sendSubmitPlacementEvent(placedShips);
             buildBoard.lockBoard();
             for (JButton btn : shipButtonMap.values()) {
                 btn.setEnabled(false);
@@ -176,7 +178,7 @@ public class GameBuildScene extends JPanel implements Runnable {
         yourLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         rightPanel.add(yourLabel);
 
-        JLabel usernameLabel = new JLabel("Player");
+        JLabel usernameLabel = new JLabel(gameHandler.getClientHandler().getUsername());
         usernameLabel.setForeground(Color.WHITE);
         usernameLabel.setFont(new Font("Arial", Font.BOLD, 20));
         usernameLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -198,7 +200,10 @@ public class GameBuildScene extends JPanel implements Runnable {
         opponentLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         rightPanel.add(opponentLabel);
 
-        JLabel opponentNameLabel = new JLabel("Waiting...");
+        String opponentName = !gameHandler.getGameState().getPlayerA().equals(gameHandler.getClientHandler().getUserId()) ?
+                gameHandler.getGameState().getPlayerAName() : gameHandler.getGameState().getPlayerBName();
+
+        JLabel opponentNameLabel = new JLabel(opponentName);
         opponentNameLabel.setForeground(Color.WHITE);
         opponentNameLabel.setFont(new Font("Arial", Font.BOLD, 20));
         opponentNameLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -214,7 +219,7 @@ public class GameBuildScene extends JPanel implements Runnable {
         rightPanel.add(new JSeparator(SwingConstants.HORIZONTAL));
         rightPanel.add(Box.createVerticalStrut(10));
 
-        JLabel tipLabel = new JLabel("Press R to Rotate");
+        tipLabel = new JLabel("Press 'R' to rotate ship");
         tipLabel.setForeground(Color.WHITE);
         tipLabel.setFont(new Font("Arial", Font.PLAIN, 14));
         tipLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -230,6 +235,10 @@ public class GameBuildScene extends JPanel implements Runnable {
                 System.out.println("GameBuildScene: Resized: " + getWidth() + "x" + getHeight());
             }
         });
+    }
+
+    public void showTooltip(String text) {
+        tipLabel.setText(text);
     }
 
     private void updateReadyButton() {

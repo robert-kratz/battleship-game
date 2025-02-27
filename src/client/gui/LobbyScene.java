@@ -1,5 +1,6 @@
 package client.gui;
 
+import client.ClientHandler;
 import client.GameHandler;
 import client.Stage;
 import client.StageManager;
@@ -8,7 +9,7 @@ import java.awt.*;
 
 public class LobbyScene extends JPanel {
 
-    private GameHandler gameHandler;
+    private ClientHandler clientHandler;
 
     JLabel titleLabel;
     JLabel welcomeLabel;
@@ -18,8 +19,8 @@ public class LobbyScene extends JPanel {
     JButton createButton;
     JButton joinButton;
 
-    public LobbyScene(GameHandler gameHandler) {
-        this.gameHandler = gameHandler;
+    public LobbyScene(ClientHandler clientHandler) {
+        this.clientHandler = clientHandler;
 
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20)); // Padding um das Panel
@@ -30,7 +31,7 @@ public class LobbyScene extends JPanel {
         titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         // Begrüßungstext
-        welcomeLabel = new JLabel("Welcome, " + gameHandler.getUsername() + "!");
+        welcomeLabel = new JLabel("Welcome, " + clientHandler.getUsername() + "!");
         welcomeLabel.setFont(new Font("Arial", Font.PLAIN, 16));
         welcomeLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
@@ -47,7 +48,7 @@ public class LobbyScene extends JPanel {
         joinButton.setPreferredSize(buttonSize);
 
         createButton.addActionListener(e -> {
-            gameHandler.getStageManager().switchScene(Stage.CREATE_GAME_SCENE);
+            this.clientHandler.getStageManager().switchScene(Stage.CREATE_GAME_SCENE);
         });
 
         joinButton.addActionListener(e -> {
@@ -84,7 +85,7 @@ public class LobbyScene extends JPanel {
                     // Validierung der Game-ID
                     if (gameId.matches("\\d{6}")) {
                         System.out.println("Joining game with id: " + gameId);
-                        this.gameHandler.joinGame(Integer.parseInt(gameId));
+                        this.clientHandler.getLobbyHandler().sendJoinGameWithCodeEvent(Integer.parseInt(gameId));
                         // Hier die Logik zum Joinen des Spiels einfügen
                         break;
                     } else {
@@ -102,18 +103,18 @@ public class LobbyScene extends JPanel {
             } while (true);
         });
 
-        String queueSize = "(" + gameHandler.getQueueLength() + ")";
+        String queueSize = "(" + this.clientHandler.getLobbyHandler().getQueueLength() + ")";
 
-        queueButton.setText(gameHandler.isInQueue() ? "Leave Queue" : "Enter Queue " + queueSize);
+        queueButton.setText(this.clientHandler.getLobbyHandler().isInQueue() ? "Leave Queue" : "Enter Queue " + queueSize);
         queueButton.addActionListener(e -> {
 
-            System.out.println("Queue clicked" + gameHandler.isInQueue());
+            System.out.println("Queue clicked" + this.clientHandler.getLobbyHandler().isInQueue());
 
-            if (!gameHandler.isInQueue()) {
+            if (!this.clientHandler.getLobbyHandler().isInQueue()) {
                 System.out.println("Joining queue");
-                gameHandler.joinQueue();
+                this.clientHandler.getLobbyHandler().sendJoinQueueEvent();
             } else {
-                gameHandler.leaveQueue();
+                this.clientHandler.getLobbyHandler().sendLeaveQueueEvent();
             }
         });
 
@@ -136,8 +137,12 @@ public class LobbyScene extends JPanel {
         welcomeLabel.setText("Welcome, " + username + "!");
     }
 
+    /**
+     * Set the queue length on the queue button.
+     * @param queueLength The queue length.
+     */
     public void setQueueLength(int queueLength) {
-        if(gameHandler.isInQueue()) {
+        if(this.clientHandler.getLobbyHandler().isInQueue()) {
             queueButton.setText("Leave Queue");
         } else {
             queueButton.setText("Enter Queue (" + queueLength + ")");

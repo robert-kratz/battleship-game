@@ -5,7 +5,7 @@
     <option name="PROGRAM_PARAMETERS" value="--autostart" />
     <extension name="coverage">
       <pattern>
-        <option name="PATTERN" value="protocol.*" />
+        <option name="PATTERN" value="protocol.game.items.*" />
         <option name="ENABLED" value="true" />
       </pattern>
     </extension>

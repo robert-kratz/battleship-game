@@ -4,20 +4,26 @@ import client.GameHandler;
 import client.gui.board.InGameBattleshipBoard;
 import client.gui.painter.BoardPainter;
 import client.gui.painter.InGameBoardPainter;
+import protocol.GameState;
 import protocol.Ship;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class GameInGameScene extends JPanel implements Runnable {
+
+    private Point lastHoveredTile = new Point(-1, -1);
 
     private GameHandler gameHandler;
 
     private JPanel leftPanel;
     private JPanel rightPanel;
     private InGameBattleshipBoard inGameBoard;
+
+    private UUID playersTurn;
 
     public GameInGameScene(GameHandler gameHandler) {
         this.gameHandler = gameHandler;
@@ -26,11 +32,7 @@ public class GameInGameScene extends JPanel implements Runnable {
         Image inGameBackgroundImage = new ImageIcon("resource/background-2.png").getImage();
         BoardPainter inGamePainter = new InGameBoardPainter(inGameBackgroundImage);
 
-        // Hier wird angenommen, dass die platzierten Schiffe entweder aus dem GameState oder GameHandler stammen.
-        List<Ship> placedShips = new ArrayList<>();
-        if (gameHandler.getGameState().hasPlayerASubmittedPlacement()) {
-            placedShips = gameHandler.getGameState().getShipsA();
-        }
+        List<Ship> placedShips = gameHandler.getPlayersShips();
 
         inGameBoard = new InGameBattleshipBoard(gameHandler.getGameState().getBoardSize(), placedShips, inGamePainter,
                 (row, col) -> {
@@ -55,8 +57,12 @@ public class GameInGameScene extends JPanel implements Runnable {
         add(rightPanel, BorderLayout.EAST);
     }
 
+    public void setOpponentHover(Point lastHoveredTile) {
+        this.lastHoveredTile = lastHoveredTile;
+    }
+
     @Override
     public void run() {
-        System.out.println("GameIngameScene started");
+        System.out.println("GameInGameScene started");
     }
 }
