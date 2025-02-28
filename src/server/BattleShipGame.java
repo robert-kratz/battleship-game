@@ -46,8 +46,6 @@ public class BattleShipGame implements Game, Runnable {
                 System.out.println("Player A: " + gameState.hasPlayerASubmittedPlacement());
                 System.out.println("Player B: " + gameState.hasPlayerBSubmittedPlacement());
 
-                GameState gameState = new GameState(this.getGameState());
-
                 if(!this.gameState.hasPlayerASubmittedPlacement()) {
                     System.out.println("Player A did not submit placement");
                     this.shipsPlayerA = ShipPlacementValidator.createRandomizedGameBoard(size, availableShips);
@@ -60,24 +58,53 @@ public class BattleShipGame implements Game, Runnable {
                     this.gameState.playerSubmitPlacement(playerB.getId());
                 }
 
-                this.gameState.setStatus(GameState.GameStatus.IN_GAME);
-
-                for(Ship ship : shipsPlayerA) {
-                    System.out.println("Player A Ship: " + ship.getId() + " " + ship.getOrientation() + " " + ship.getLength() + " X:" + ship.getX() + " Y:" + ship.getY());
-                }
-
-                for(Ship ship : shipsPlayerB) {
-                    System.out.println("Player B Ship: " + ship.getId() + " " + ship.getOrientation() + " " + ship.getLength() + " X:" + ship.getX() + " Y:" + ship.getY());
-                }
-
                 this.playerA.sendMessage(new GameUpdateMessage(gameState, this.shipsPlayerA));
                 this.playerB.sendMessage(new GameUpdateMessage(gameState, this.shipsPlayerB));
+
+                GameState gameState = new GameState(this.getGameState());
+
+                Date start = new Date();
+                Date end = new Date(start.getTime() + Parameters.SHOOT_TIME_IN_SECONDS * 1000);
+
+                gameState.setPlayersTurnStart(start);
+                gameState.setPlayersTurnEnd(end);
+
+                gameState.setStatus(GameState.GameStatus.IN_GAME);
+
+                gameState.setNextTurn();
+
+                this.playerA.sendMessage(new GameStateUpdateMessage(gameState));
+                this.playerB.sendMessage(new GameStateUpdateMessage(gameState));
+
+                this.gameState = gameState;
             }
         }
 
         while (gameState.getStatus().equals(GameState.GameStatus.IN_GAME)) {
             sleep(1000);
-            System.out.println("In Game");
+
+            System.out.println();
+
+            //This triggers the next turn
+            if(this.gameState.getPlayersTurnEnd().before(new Date())) {
+                GameState gameState = new GameState(this.getGameState());
+
+                Date start = new Date();
+                Date end = new Date(start.getTime() + Parameters.SHOOT_TIME_IN_SECONDS * 1000);
+
+                gameState.setPlayersTurnStart(start);
+                gameState.setPlayersTurnEnd(end);
+
+                gameState.addEnergy(gameState.isPlayerATurn() ? gameState.getPlayerA() : gameState.getPlayerB(), Parameters.ENERGY_TURN_BONUS);
+
+                gameState.setNextTurn();
+
+                this.playerA.sendMessage(new GameUpdateMessage(gameState, this.shipsPlayerA));
+                this.playerB.sendMessage(new GameUpdateMessage(gameState, this.shipsPlayerB));
+
+                this.gameState = gameState;
+            }
+
         }
 
         while (gameState.getStatus().equals(GameState.GameStatus.GAME_OVER)) {
@@ -139,7 +166,7 @@ public class BattleShipGame implements Game, Runnable {
         GameState gameState = new GameState(this.getGameState());
 
         gameState.setBuildGameBoardStarted(date);
-        gameState.setBuildGameBoardFinished(new Date(date.getTime() + (Parameters.SHOOT_TIME_IN_SECONDS * 1000)));
+        gameState.setBuildGameBoardFinished(new Date(date.getTime() + (Parameters.BUILD_TIME_IN_SECONDS * 1000)));
 
         this.gameState = gameState;
 

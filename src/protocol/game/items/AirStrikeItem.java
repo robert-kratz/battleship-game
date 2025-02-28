@@ -12,6 +12,12 @@ public class AirStrikeItem extends Item {
 
     private final Orientation orientation;
 
+    public AirStrikeItem() {
+        super(ItemType.AIRSTRIKE, 60);
+
+        this.orientation = Orientation.HORIZONTAL;
+    }
+
     public AirStrikeItem(Orientation orientation) {
         super(ItemType.AIRSTRIKE, 60);
 

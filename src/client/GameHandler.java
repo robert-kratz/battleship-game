@@ -65,17 +65,16 @@ public class GameHandler implements GameClient {
                     }
                 }
                 case IN_GAME -> {
-
+                    if(this.clientHandler.getStageManager().gameIngameScene == null) {
+                        System.out.println("Starting in game scene");
+                        this.clientHandler.getStageManager().startInGameScene(this.playersShips);
+                    }
                 }
                 case GAME_OVER -> {}
             }
         }
 
         //ALWAYS EXECUTE
-
-        System.out.println("User ID: " + this.clientHandler.getUserId());
-        System.out.println("Opponent ID: " + this.gameState.hasOpponentSubmittedPlacement(this.clientHandler.getUserId()));
-
         switch (gameState.getStatus()) {
             case LOBBY_WAITING -> {
             }
@@ -86,7 +85,8 @@ public class GameHandler implements GameClient {
                     this.clientHandler.getStageManager().gameBuildScene.setOpponentState(isOpponentReady);
                 }
             }
-            case IN_GAME -> {}
+            case IN_GAME -> {
+            }
         }
     }
 
@@ -119,11 +119,20 @@ public class GameHandler implements GameClient {
         //TODO: Implement in game logic
 
         System.out.println("a");
+        this.playersShips = yourShips;
 
-        if(this.clientHandler.getStageManager().gameIngameScene == null) {
-            System.out.println("b");
-            this.clientHandler.getStageManager().startInGameScene(yourShips);
+        boolean playerTurnHasChanged = this.gameState.isPlayersTurn(this.clientHandler.getUserId()) != gameState.isPlayersTurn(this.clientHandler.getUserId());
+
+        System.out.println("Player turn has changed: " + playerTurnHasChanged);
+
+        if(playerTurnHasChanged) {
+            boolean isPlayerATurn = gameState.isPlayersTurn(this.clientHandler.getUserId());
+
+            this.clientHandler.getStageManager().gameIngameScene.toggleTurn(isPlayerATurn);
+            this.clientHandler.getStageManager().gameIngameScene.extendCurrentTurn(gameState.getPlayersTurnEnd());
+            this.clientHandler.getStageManager().gameIngameScene.setPlayerEnergy(gameState.getPlayerEnergy(this.clientHandler.getUserId()));
         }
+        this.gameState = gameState;
     }
 
     /**

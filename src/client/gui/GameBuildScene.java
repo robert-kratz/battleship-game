@@ -88,7 +88,7 @@ public class GameBuildScene extends JPanel implements Runnable {
                                     buildBoard.setSelectedShip(availableShips.get(0));
                                 } else {
                                     buildBoard.setSelectedShip(null);
-                                    this.gameHandler.sendSubmitPlacementEvent(placedShips);
+                                    this.gameHandler.sendSubmitPlacementEvent(placedShips); // Send Placement to Server
                                 }
                             }
                         }
@@ -158,7 +158,7 @@ public class GameBuildScene extends JPanel implements Runnable {
         leftPanel.add(readyButton);
         leftPanel.add(Box.createVerticalStrut(10));
 
-        timerLabel = new JLabel("00:45");
+        timerLabel = new JLabel(" ");
         timerLabel.setForeground(Color.WHITE);
         timerLabel.setFont(new Font("Arial", Font.BOLD, 18));
         timerLabel.setHorizontalAlignment(SwingConstants.CENTER);
@@ -273,11 +273,11 @@ public class GameBuildScene extends JPanel implements Runnable {
 
     @Override
     public void run() {
-        while (true) {
+        while (!Thread.currentThread().isInterrupted()) {
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
-                // Ignorieren
+                break;
             }
             Date start = gameHandler.getGameState().getBuildGameBoardStarted();
             Date end = gameHandler.getGameState().getBuildGameBoardFinished();

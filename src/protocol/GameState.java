@@ -34,13 +34,16 @@ public class GameState implements Serializable  {
     private Date playersTurnStart = null;
     private Date playersTurnEnd = null;
 
-    private UUID playersTurn = null;
+    private boolean playerATurn = true;
 
     private boolean shipsPlacedA, shipsPlacedB;
     private int energyA = 0, energyB = 0;
     private ArrayList<Hit> hitsA = new ArrayList<>(), hitsB = new ArrayList<>();
 
     private final ArrayList<Ship> availableShips;
+
+    //IMPORTANT: uncoveredShipsA are ships uncovered by player B
+    private ArrayList<Ship> uncoveredShipsFromA = new ArrayList<>(), uncoveredShipsFromB = new ArrayList<>();
 
     private final int size;
 
@@ -62,12 +65,14 @@ public class GameState implements Serializable  {
         this.energyB = gameState.energyB;
         this.playersTurnStart = gameState.playersTurnStart;
         this.playersTurnEnd = gameState.playersTurnEnd;
-        this.playersTurn = gameState.playersTurn;
+        this.playerATurn = gameState.playerATurn;
         this.shipsPlacedA = gameState.shipsPlacedA;
         this.shipsPlacedB = gameState.shipsPlacedB;
         this.size = gameState.size;
         this.status = gameState.status;
         this.availableShips = gameState.availableShips;
+        this.uncoveredShipsFromA = gameState.uncoveredShipsFromA;
+        this.uncoveredShipsFromB = gameState.uncoveredShipsFromB;
     }
 
     public GameState(int size, ArrayList<Ship> ships) {
@@ -75,6 +80,7 @@ public class GameState implements Serializable  {
         this.sessionCode = generateSessionCode();
 
         this.availableShips = ships;
+        this.playerATurn = Math.random() < 0.5;
     }
 
     public void setPlayerA(UUID playerA, String name) {
@@ -93,6 +99,14 @@ public class GameState implements Serializable  {
 
     public int getEnergyB() {
         return energyB;
+    }
+
+    public ArrayList<Ship> getUncoveredShipsFromA() {
+        return uncoveredShipsFromA;
+    }
+
+    public ArrayList<Ship> getUncoveredShipsFromB() {
+        return uncoveredShipsFromB;
     }
 
     public int getEnergy(UUID player) {
@@ -121,6 +135,23 @@ public class GameState implements Serializable  {
         } else if(playerB.equals(player)) {
             shipsPlacedB = true;
         }
+    }
+
+    public boolean isPlayersTurn(UUID player) {
+        if (playerATurn) {
+            return playerA.equals(player);
+        } else {
+            return playerB.equals(player);
+        }
+    }
+
+    public ArrayList<Ship> getUncoveredShips(UUID player) {
+        if(playerA.equals(player)) {
+            return uncoveredShipsFromB;
+        } else if(playerB.equals(player)) {
+            return uncoveredShipsFromA;
+        }
+        return null;
     }
 
     public int getPlayerCount() {
@@ -205,10 +236,6 @@ public class GameState implements Serializable  {
         return playerB;
     }
 
-    public UUID getPlayersTurn() {
-        return playersTurn;
-    }
-
     public boolean hasOpponentSubmittedPlacement(UUID player) {
         if(playerA.equals(player)) {
             return shipsPlacedB;
@@ -216,6 +243,39 @@ public class GameState implements Serializable  {
             return shipsPlacedA;
         }
         return false;
+    }
+
+    public int getPlayerEnergy(UUID player) {
+        if(playerA.equals(player)) {
+            return energyA;
+        } else if(playerB.equals(player)) {
+            return energyB;
+        }
+        return -1;
+    }
+
+    public void setEnergy(UUID player, int energy) {
+        if(playerA.equals(player)) {
+            energyA = energy;
+        } else if(playerB.equals(player)) {
+            energyB = energy;
+        }
+    }
+
+    public void addEnergy(UUID player, int energy) {
+        if(playerA.equals(player)) {
+            energyA += energy;
+        } else if(playerB.equals(player)) {
+            energyB += energy;
+        }
+    }
+
+    public void setEnergyA(int energyA) {
+        this.energyA = energyA;
+    }
+
+    public void setEnergyB(int energyB) {
+        this.energyB = energyB;
     }
 
     public boolean hasPlayerASubmittedPlacement() {
@@ -238,8 +298,8 @@ public class GameState implements Serializable  {
         this.lastUpdated = lastUpdated;
     }
 
-    public void setPlayersTurn(UUID playersTurn) {
-        this.playersTurn = playersTurn;
+    public void setNextTurn() {
+        playerATurn = !playerATurn;
     }
 
     public void setPlayersTurnStart(Date playersTurnStart) {
@@ -251,7 +311,7 @@ public class GameState implements Serializable  {
     }
 
     public boolean isPlayerATurn() {
-        return playerA.equals(playersTurn);
+        return playerATurn;
     }
 
     private int generateSessionCode() {
