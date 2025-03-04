@@ -1,16 +1,10 @@
 package server;
 
-import protocol.GameState;
-import protocol.ShipPlacementValidator;
-import protocol.messages.GameStateUpdateMessage;
-import protocol.Ship;
-import protocol.messages.GameStartingMessage;
-import protocol.messages.GameUpdateMessage;
-import protocol.messages.JoinGameMessage;
+import protocol.*;
+import protocol.game.Move;
+import protocol.messages.*;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.UUID;
+import java.util.*;
 
 public class BattleShipGame implements Game, Runnable {
 
@@ -99,6 +93,48 @@ public class BattleShipGame implements Game, Runnable {
 
                 gameState.setNextTurn();
 
+                System.out.println("Changed round to " + gameState.getCurrentGameRound() + " and player " + (gameState.isPlayerATurn() ? "A" : "B") + " turn");
+
+                //check if player who's turn it is has submitted their move. this can be done by comparing the this.gameState.getHitsA()
+
+                //Check
+                System.out.println("Player A: " + this.gameState.getMoveA().size() + " - " + this.gameState.getCurrentGameRound());
+                System.out.println("Player B: " + this.gameState.getMoveB().size() + " - " + this.gameState.getCurrentGameRound());
+
+                MoveManager moveManager = new MoveManager(gameState);
+
+                if(!moveManager.isAMoveStillPossible()) {
+                    System.out.println("No more moves possible");
+                    endGamePhase();
+                    break;
+                }
+
+                if(this.gameState.isPlayerATurn() && this.gameState.getMoveA().size() < this.gameState.getCurrentGameRound()) {
+
+                    System.out.println("Player A did not submit move");
+
+                    Move move = moveManager.makeRandomMove(playerA.getId());
+
+                    gameState.addMove(playerA.getId(), move);
+                    gameState.uncoverHitShips(this.shipsPlayerA, this.shipsPlayerB);
+                    gameState.updateHitList(this.shipsPlayerA, this.shipsPlayerB);
+                    gameState.loadRadars(this.shipsPlayerA, this.shipsPlayerB);
+
+                    System.out.println("Move: " + move.getX() + " - " + move.getY());
+
+                } else if(!this.gameState.isPlayerATurn() && this.gameState.getMoveB().size() < this.gameState.getCurrentGameRound()) {
+                    System.out.println("Player B did not submit move");
+
+                    Move move = moveManager.makeRandomMove(playerB.getId());
+
+                    System.out.println("Move: " + move.getX() + " - " + move.getY());
+
+                    gameState.addMove(playerB.getId(), move);
+                    gameState.uncoverHitShips(this.shipsPlayerA, this.shipsPlayerB);
+                    gameState.updateHitList(this.shipsPlayerA, this.shipsPlayerB);
+                    gameState.loadRadars(this.shipsPlayerA, this.shipsPlayerB);
+                }
+
                 this.playerA.sendMessage(new GameUpdateMessage(gameState, this.shipsPlayerA));
                 this.playerB.sendMessage(new GameUpdateMessage(gameState, this.shipsPlayerB));
 
@@ -123,9 +159,9 @@ public class BattleShipGame implements Game, Runnable {
     }
 
     @Override
-    public synchronized GameState addPlayer(PlayerInfo player) {
+    public synchronized void addPlayer(PlayerInfo player) {
         //ONLY TRIGGER IF GAME IS IN LOBBY WAITING
-        if(!this.gameState.getStatus().equals(GameState.GameStatus.LOBBY_WAITING)) return null;
+        if(!this.gameState.getStatus().equals(GameState.GameStatus.LOBBY_WAITING)) return;
 
         if (playerA == null) {
             playerA = player;
@@ -153,7 +189,6 @@ public class BattleShipGame implements Game, Runnable {
         }
 
         if(playerA != null && playerB != null) startBuildPhase(); //START BUILD PHASE
-        return this.gameState;
     }
 
     private synchronized void startBuildPhase() {
@@ -185,6 +220,87 @@ public class BattleShipGame implements Game, Runnable {
 
         //end game logic
 
+    }
+
+    @Override
+    public void playerMove(PlayerInfo player, Move move) {
+        if (!this.gameState.getStatus().equals(GameState.GameStatus.IN_GAME)) return;
+
+        MoveManager moveManager = new MoveManager(gameState);
+        if (!moveManager.isPlayerMoveMoveValid(player.getId(), move)) {
+            player.sendMessage(new ErrorMessage(ErrorType.INVALID_MOVE));
+            return;
+        }
+
+        // Create a new game state copy to work on
+        GameState newState = new GameState(this.getGameState());
+
+        move.computeAffectedCells(this.size);
+
+        // Add the move to the game state for the current player
+        if (playerA.getId().equals(player.getId())) {
+            newState.addMove(playerA.getId(), move);
+        } else if (playerB.getId().equals(player.getId())) {
+            newState.addMove(playerB.getId(), move);
+        }
+
+        // Determine if the move results in a hit by checking against the opponent’s ships
+        boolean moveIsHit = MoveManager.moveHasHit(
+                player.getId().equals(playerA.getId()) ? this.shipsPlayerB : this.shipsPlayerA,
+                move
+        );
+
+        System.out.println("Move: " + move.getX() + " - " + move.getY() + " - Is a Hit: " + moveIsHit);
+
+        if (moveIsHit) {
+            newState.addEnergy(player.getId(), Parameters.ENERGY_SHIP_HIT);
+        }
+
+        // Update the hit-related information
+        newState.uncoverHitShips(this.shipsPlayerA, this.shipsPlayerB);
+        newState.updateHitList(this.shipsPlayerA, this.shipsPlayerB);
+        newState.loadRadars(this.shipsPlayerA, this.shipsPlayerB);
+
+        newState.setPlayersTurnEnd(new Date(newState.getPlayersTurnEnd().getTime() + 1000));
+
+        // Immediately send update message with the hit result (but without changing turn)
+        this.playerA.sendMessage(new GameUpdateMessage(newState, this.shipsPlayerA));
+        this.playerB.sendMessage(new GameUpdateMessage(newState, this.shipsPlayerB));
+
+        // Schedule a delayed task (1 second delay) to switch turn and update the game state further
+        Timer timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                // Create a new game state copy for the turn change
+                GameState stateWithTurn = new GameState(newState);
+
+                Date start = new Date();
+                Date end = new Date(start.getTime() + Parameters.SHOOT_TIME_IN_SECONDS * 1000);
+                stateWithTurn.setPlayersTurnStart(start);
+                stateWithTurn.setPlayersTurnEnd(end);
+
+                stateWithTurn.setNextTurn();
+
+                // Recalculate hit info (if needed)
+                stateWithTurn.uncoverHitShips(shipsPlayerA, shipsPlayerB);
+                stateWithTurn.updateHitList(shipsPlayerA, shipsPlayerB);
+                stateWithTurn.loadRadars(shipsPlayerA, shipsPlayerB);
+
+                System.out.println("Changed round to " + stateWithTurn.getCurrentGameRound() +
+                        " and player " + (stateWithTurn.isPlayerATurn() ? "A" : "B") + " turn");
+
+                // Send the update message that enforces the board switch
+                playerA.sendMessage(new GameUpdateMessage(stateWithTurn, shipsPlayerA));
+                playerB.sendMessage(new GameUpdateMessage(stateWithTurn, shipsPlayerB));
+
+                // Update the main game state reference
+                gameState = stateWithTurn;
+            }
+        }, 1000);
+
+        // Immediately update the current game state to reflect the hit result.
+        this.gameState = newState;
     }
 
     @Override

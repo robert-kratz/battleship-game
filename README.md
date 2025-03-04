@@ -9,7 +9,7 @@ Network-Based Battleship is an interactive 1v1 multiplayer game inspired by the 
   Once two players are paired, the game enters the **PRE_GAME** stage. Each player places five ships on a grid (default 16×16; alternatives: 12×12, 20×20, 24×24 based on majority vote) selecting from six ship types (2×1, L-shape, two 3×3 variants, 4×1, and S-shape). If a player fails to place ships within 1:30 minutes, the remaining ships are automatically positioned.
 
 - **In-Game Mode**:  
-  After setup, players assume the roles of attacker and defender. The attacker targets grid cells, with successful hits adding 15 energy and sinking ships granting 20 energy. A hit extends the turn timer by 25 seconds, and players may continue attacking within the maximum turn duration of 3 minutes.
+  After setup, players assume the roles of attacker and defender. The attacker targets grid cells, with successful moves adding 15 energy and sinking ships granting 20 energy. A move extends the turn timer by 25 seconds, and players may continue attacking within the maximum turn duration of 3 minutes.
 
 - **Energy & Items System**:  
   Every turn begins with 15 energy. Additional energy can be earned through gameplay, and players can strategically use items:
@@ -18,7 +18,7 @@ Network-Based Battleship is an interactive 1v1 multiplayer game inspired by the 
     - **Bomb (60 energy):** Uncover a 2×2 section of the grid.
 
 - **Turn Timers**:  
-  Each turn is initially limited to 40 seconds, with time extensions on successful hits.
+  Each turn is initially limited to 40 seconds, with time extensions on successful moves.
 
 - **Endgame & Statistics**:  
   The match concludes when one player loses all their ships. The final screen displays the winner along with detailed statistics such as total playtime, items used, and energy accumulated.

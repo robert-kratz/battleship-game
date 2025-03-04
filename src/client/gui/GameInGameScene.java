@@ -8,9 +8,12 @@ import client.gui.painter.BoardPainter;
 import client.gui.painter.InGameBoardPainter;
 import protocol.GameState;
 import protocol.Ship;
+import protocol.game.Cell;
+import protocol.game.Move;
 import protocol.game.items.AirStrikeItem;
 import protocol.game.items.RadarItem;
 import protocol.game.items.SeaBombItem;
+import protocol.game.Item;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -20,24 +23,17 @@ import java.util.Date;
 
 public class GameInGameScene extends JPanel implements Runnable {
 
-    private Point lastHoveredTile = new Point(-1, -1);
-
     private GameHandler gameHandler;
-
     private JPanel leftPanel;
     private JPanel rightPanel;
     private JLabel timerLabel;
-
-    private InGameBattleshipBoard playerBoard, opponentBoard;
-
+    public InGameBattleshipBoard playerBoard, opponentBoard;
     private boolean playersTurn;
     private Date currentTurnStart;
     private Date currentTurnEnd;
-
     private JLabel playerTurnLabel;
     private JLabel opponentTurnLabel;
-
-    // Neue Felder für Energieanzeige und Item-Buttons
+    // Felder für Energieanzeige und Item-Buttons
     private JLabel energyLabel;
     private JButton bombButton;
     private JButton radarButton;
@@ -58,17 +54,97 @@ public class GameInGameScene extends JPanel implements Runnable {
             System.out.println("Ship: " + ship);
         }
 
-        playerBoard = new InGameBattleshipBoard(gameHandler.getGameState().getBoardSize(), placedShips, inGamePainter,
-                (row, col) -> {
-                    System.out.println("playerBoard clicked at: " + row + ", " + col);
-                });
+        // Erzeuge beide Boards mit erweitertem onHover-Event und Callback, wenn sich das selektierte Item ändert.
+        playerBoard = new InGameBattleshipBoard(
+                gameHandler.getGameState().getBoardSize(),
+                placedShips,
+                inGamePainter,
+                new InGameBattleshipBoard.InGameBoardListener() {
+                    @Override
+                    public void onCellClick(int row, int col) {
+                        System.out.println("playerBoard clicked at: " + row + ", " + col);
+                    }
 
-        opponentBoard = new InGameBattleshipBoard(gameHandler.getGameState().getBoardSize(),
+                    @Override
+                    public void onHover(int row, int col, ArrayList<protocol.game.Cell> affectedCells) {
+                        System.out.println("playerBoard hovered at: " + row + ", " + col + ". Affected cells: " + affectedCells);
+                    }
+
+                    @Override
+                    public void onSelectedItemChanged(Item newItem) {
+                        updateItemButtonHighlighting(newItem);
+                    }
+                }
+        );
+
+        opponentBoard = new InGameBattleshipBoard(
+                gameHandler.getGameState().getBoardSize(),
                 this.gameHandler.getGameState().getUncoveredShips(this.gameHandler.getClientHandler().getUserId()),
                 inGamePainter,
-                (row, col) -> {
-                    System.out.println("opponentBoard clicked at: " + row + ", " + col);
-                });
+                new InGameBattleshipBoard.InGameBoardListener() {
+                    @Override
+                    public void onCellClick(int row, int col) {
+                        System.out.println("opponentBoard clicked at: " + row + ", " + col);
+
+                        ArrayList<Cell> takenCells;
+
+                        if(gameHandler.getGameState().getPlayerA().equals(gameHandler.getClientHandler().getUserId())) {
+                            takenCells = gameHandler.getGameState().getAttackedCellsForPlayerA();
+                        } else {
+                            takenCells = gameHandler.getGameState().getAttackedCellsForPlayerB();
+                        }
+
+                        //ceck if the cell is already taken
+                        for (Cell cell : takenCells) {
+                            if (cell.getX() == row && cell.getY() == col) {
+                                System.out.println("Cell already taken");
+                                return;
+                            }
+                        }
+
+                        Move move;
+
+                        if(opponentBoard.getSelectedItem() != null) {
+                            move = switch (opponentBoard.getSelectedItem().getClass().getSimpleName()) {
+                                case "SeaBombItem" -> {
+                                    SeaBombItem seaBombItem = (SeaBombItem) opponentBoard.getSelectedItem();
+
+                                    yield new Move(seaBombItem, col, row);
+                                }
+                                case "RadarItem" -> {
+                                    RadarItem radarItem = (RadarItem) opponentBoard.getSelectedItem();
+
+                                    yield new Move(radarItem, col, row);
+                                }
+                                case "AirStrikeItem" -> {
+                                    AirStrikeItem airStrikeItem = (AirStrikeItem) opponentBoard.getSelectedItem();
+
+                                    yield new Move(airStrikeItem, airStrikeItem.getOrientation() == AirStrikeItem.Orientation.HORIZONTAL ? row : col);
+                                }
+                                default -> new Move(col, row);
+                            };
+                        } else {
+                            move = new Move(col, row);
+                        }
+
+                        System.out.println("Sending move: " + move);
+
+                        gameHandler.sendGameMoveEvent(move);
+                    }
+
+                    @Override
+                    public void onHover(int row, int col, ArrayList<protocol.game.Cell> affectedCells) {
+                        System.out.println("opponentBoard hovered at: " + row + ", " + col + ". Affected cells: " + affectedCells);
+                        // Sende das Hover-Event an den Server
+                        gameHandler.sendPlayerHoverEvent(row, col, affectedCells);
+                    }
+
+                    @Override
+                    public void onSelectedItemChanged(Item newItem) {
+                        updateItemButtonHighlighting(newItem);
+                    }
+                }
+        );
 
         leftPanel = new JPanel();
         leftPanel.setPreferredSize(new Dimension(200, 804));
@@ -103,8 +179,14 @@ public class GameInGameScene extends JPanel implements Runnable {
         bombButton.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
         bombButton.setBackground(Color.WHITE);
         bombButton.addActionListener(e -> {
-            // Hier wird der Bomben-Item-Action ausgeführt
+            if (!playersTurn) return;
+
+            removeSelectedItems(); // Entferne selektierte Items, da AirStrike nur einmalig ausgewählt werden kann
+
             System.out.println("Bomb item selected");
+            opponentBoard.setSelectedItem(new SeaBombItem());
+            updateItemButtonHighlighting(opponentBoard.getSelectedItem());
+            opponentBoard.requestFocusInWindow();
         });
         leftPanel.add(bombButton);
         leftPanel.add(Box.createVerticalStrut(10));
@@ -115,8 +197,14 @@ public class GameInGameScene extends JPanel implements Runnable {
         radarButton.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
         radarButton.setBackground(Color.WHITE);
         radarButton.addActionListener(e -> {
-            // Hier wird der Radar-Item-Action ausgeführt
+            if (!playersTurn) return;
+
+            removeSelectedItems(); // Entferne selektierte Items, da AirStrike nur einmalig ausgewählt werden kann
+
             System.out.println("Radar item selected");
+            opponentBoard.setSelectedItem(new RadarItem());
+            updateItemButtonHighlighting(opponentBoard.getSelectedItem());
+            opponentBoard.requestFocusInWindow();
         });
         leftPanel.add(radarButton);
         leftPanel.add(Box.createVerticalStrut(10));
@@ -127,13 +215,20 @@ public class GameInGameScene extends JPanel implements Runnable {
         airStrikeButton.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
         airStrikeButton.setBackground(Color.WHITE);
         airStrikeButton.addActionListener(e -> {
-            // Hier wird der Air Strike-Item-Action ausgeführt
+            if (!playersTurn) return;
+
+            removeSelectedItems(); // Entferne selektierte Items, da AirStrike nur einmalig ausgewählt werden kann
+
+
             System.out.println("Air Strike item selected");
+            opponentBoard.setSelectedItem(new AirStrikeItem());
+            updateItemButtonHighlighting(opponentBoard.getSelectedItem());
+            opponentBoard.requestFocusInWindow();
         });
         leftPanel.add(airStrikeButton);
         leftPanel.add(Box.createVerticalStrut(10));
 
-        // Buttons abhängig von der aktuellen Energie aktivieren/deaktivieren
+        // Aktivierung der Buttons abhängig von der aktuellen Energie
         updateItemButtons(energy);
 
         leftPanel.add(Box.createVerticalStrut(10));
@@ -206,6 +301,43 @@ public class GameInGameScene extends JPanel implements Runnable {
         add(leftPanel, BorderLayout.WEST);
         add(playersTurn ? opponentBoard : playerBoard, BorderLayout.CENTER);
         add(rightPanel, BorderLayout.EAST);
+
+        // Nur das aktive Board interaktiv schalten:
+        if (playersTurn) {
+            opponentBoard.setInteractive(true);
+            playerBoard.setInteractive(false);
+        } else {
+            opponentBoard.setInteractive(false);
+            playerBoard.setInteractive(false);
+        }
+    }
+
+    public void removeSelectedItems() {
+        playerBoard.clearSelectedItem();
+        opponentBoard.clearSelectedItem();
+    }
+
+    private void updateItemButtons(int energy) {
+        boolean canSelect = playersTurn;
+        bombButton.setEnabled(canSelect && energy >= new SeaBombItem().getEnergyCost());
+        radarButton.setEnabled(canSelect && energy >= new RadarItem().getEnergyCost());
+        airStrikeButton.setEnabled(canSelect && energy >= new AirStrikeItem().getEnergyCost());
+    }
+
+    private void updateItemButtonHighlighting(Item selected) {
+        // Setze alle Buttons zunächst auf Weiß
+        bombButton.setBackground(Color.WHITE);
+        radarButton.setBackground(Color.WHITE);
+        airStrikeButton.setBackground(Color.WHITE);
+
+        if (selected == null) return;
+        if (selected instanceof SeaBombItem) {
+            bombButton.setBackground(Color.YELLOW);
+        } else if (selected instanceof RadarItem) {
+            radarButton.setBackground(Color.YELLOW);
+        } else if (selected instanceof AirStrikeItem) {
+            airStrikeButton.setBackground(Color.YELLOW);
+        }
     }
 
     public void extendCurrentTurn(Date newEndTime) {
@@ -219,7 +351,12 @@ public class GameInGameScene extends JPanel implements Runnable {
         playerTurnLabel.setForeground(playerATurn ? Color.GREEN : Color.LIGHT_GRAY);
         opponentTurnLabel.setForeground(!playerATurn ? Color.GREEN : Color.LIGHT_GRAY);
 
-        // Sicherstellen, dass auch die Turn-Zeiten (falls benötigt) aktualisiert werden
+        // Bei Turn-Wechsel die selektierten Items und Hover-Daten zurücksetzen
+        playerBoard.clearSelectedItem();
+        opponentBoard.clearSelectedItem();
+        playerBoard.clearOpponentAffectedCells();
+        opponentBoard.clearOpponentAffectedCells();
+
         this.gameHandler.getGameState().setPlayersTurnStart(this.gameHandler.getGameState().getPlayersTurnStart());
         this.gameHandler.getGameState().setPlayersTurnEnd(this.gameHandler.getGameState().getPlayersTurnEnd());
 
@@ -227,24 +364,37 @@ public class GameInGameScene extends JPanel implements Runnable {
         add(playersTurn ? opponentBoard : playerBoard, BorderLayout.CENTER);
         revalidate();
         repaint();
-    }
 
-    public void setOpponentHover(Point lastHoveredTile) {
-        this.lastHoveredTile = lastHoveredTile;
+        // Interaktivität des Boards anpassen
+        if (playersTurn) {
+            opponentBoard.setInteractive(true);
+            playerBoard.setInteractive(false);
+        } else {
+            opponentBoard.setInteractive(false);
+            playerBoard.setInteractive(false);
+        }
     }
 
     /**
-     * Aktualisiert die Energieanzeige und setzt den enabled/disabled-Status der Item-Buttons.
+     * Setzt die Gegner-Hover-Daten im eigenen Board (playerBoard).
+     * Falls der übergebene Parameter null ist, wird stattdessen eine leere Liste gesetzt.
      */
+    public void setOpponentHover(int row, int col, ArrayList<Cell> affectedCells) {
+        if (affectedCells == null) {
+            System.out.println("Affected cells are null. Setting to empty list.");
+            affectedCells = new ArrayList<>();
+        }
+        // Wenn der Spieler sein eigenes Board sieht (playersTurn == false),
+        // wird im playerBoard das Gegner-Hover-Overlay gesetzt.
+        if (!playersTurn) {
+            System.out.println("Setting opponent hover at: " + row + ", " + col + ". Affected cells: " + affectedCells);
+            playerBoard.setOpponentAffectedCells(affectedCells);
+        }
+    }
+
     public void setPlayerEnergy(int energy) {
         energyLabel.setText("Energy: " + energy);
         updateItemButtons(energy);
-    }
-
-    private void updateItemButtons(int energy) {
-        bombButton.setEnabled(energy >= new SeaBombItem().getEnergyCost());
-        radarButton.setEnabled(energy >= new RadarItem().getEnergyCost());
-        airStrikeButton.setEnabled(energy >= new AirStrikeItem().getEnergyCost());
     }
 
     @Override
@@ -256,7 +406,6 @@ public class GameInGameScene extends JPanel implements Runnable {
             } catch (InterruptedException e) {
                 break;
             }
-
             long remainingMillis = currentTurnEnd.getTime() - System.currentTimeMillis();
             long minutes = (remainingMillis / (60 * 1000)) % 60;
             long seconds = (remainingMillis / 1000) % 60;

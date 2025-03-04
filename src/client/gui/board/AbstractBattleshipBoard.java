@@ -34,6 +34,16 @@ public abstract class AbstractBattleshipBoard extends JPanel {
         });
     }
 
+    public void setPlacedShips(List<Ship> placedShips) {
+        this.placedShips.clear();
+        this.placedShips.addAll(placedShips);
+        repaint();
+    }
+
+    public List<Ship> getPlacedShips() {
+        return placedShips;
+    }
+
     /**
      * Gibt das Schiff zurück, das die Zelle (row, col) belegt – ansonsten null.
      */

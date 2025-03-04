@@ -1,7 +1,9 @@
 package protocol;
 
-import protocol.game.Hit;
+import protocol.game.Cell;
+import protocol.game.Move;
 
+import java.awt.*;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
@@ -37,8 +39,8 @@ public class GameState implements Serializable  {
     private boolean playerATurn = true;
 
     private boolean shipsPlacedA, shipsPlacedB;
-    private int energyA = 0, energyB = 0;
-    private ArrayList<Hit> hitsA = new ArrayList<>(), hitsB = new ArrayList<>();
+    private int energyA = 30, energyB = 30;
+    private ArrayList<Move> moveA = new ArrayList<>(), moveB = new ArrayList<>();
 
     private final ArrayList<Ship> availableShips;
 
@@ -46,6 +48,7 @@ public class GameState implements Serializable  {
     private ArrayList<Ship> uncoveredShipsFromA = new ArrayList<>(), uncoveredShipsFromB = new ArrayList<>();
 
     private final int size;
+    private int currentGameRound = 0;
 
     private GameStatus status = GameStatus.LOBBY_WAITING;
 
@@ -59,8 +62,8 @@ public class GameState implements Serializable  {
         this.lastUpdated = gameState.lastUpdated;
         this.buildGameBoardStarted = gameState.buildGameBoardStarted;
         this.buildGameBoardFinished = gameState.buildGameBoardFinished;
-        this.hitsA = gameState.hitsA;
-        this.hitsB = gameState.hitsB;
+        this.moveA = new ArrayList<>(gameState.moveA);
+        this.moveB = new ArrayList<>(gameState.moveB);
         this.energyA = gameState.energyA;
         this.energyB = gameState.energyB;
         this.playersTurnStart = gameState.playersTurnStart;
@@ -70,9 +73,10 @@ public class GameState implements Serializable  {
         this.shipsPlacedB = gameState.shipsPlacedB;
         this.size = gameState.size;
         this.status = gameState.status;
-        this.availableShips = gameState.availableShips;
-        this.uncoveredShipsFromA = gameState.uncoveredShipsFromA;
-        this.uncoveredShipsFromB = gameState.uncoveredShipsFromB;
+        this.availableShips = new ArrayList<>(gameState.availableShips);
+        this.uncoveredShipsFromA = new ArrayList<>(gameState.uncoveredShipsFromA);
+        this.uncoveredShipsFromB = new ArrayList<>(gameState.uncoveredShipsFromB);
+        this.currentGameRound = gameState.currentGameRound;
     }
 
     public GameState(int size, ArrayList<Ship> ships) {
@@ -154,6 +158,192 @@ public class GameState implements Serializable  {
         return null;
     }
 
+    /**
+     * Aktualisiert die Hit-Informationen in den Moves.
+     * Für jeden Move in moveA wird überprüft, ob die betroffenen Zellen (auf dem gegnerischen Spielfeld, also shipsB)
+     * von einem Schiff belegt sind. Analog für moveB (hier werden shipsA geprüft).
+     *
+     * @param shipsA Die Liste der Schiffe von Spieler A
+     * @param shipsB Die Liste der Schiffe von Spieler B
+     */
+    public void updateHitList(ArrayList<Ship> shipsA, ArrayList<Ship> shipsB) {
+        int boardSize = getBoardSize();
+        // Für die Züge von Spieler A: Überprüfe gegen die Schiffe von Spieler B
+        for (Move move : moveA) {
+            move.computeAffectedCells(boardSize);
+            for (Cell cell : move.getAffectedCells()) {
+                boolean hit = false;
+                for (Ship ship : shipsB) {
+                    ArrayList<Point> occupiedCells = ship.getOccupiedCells();
+                    for (Point p : occupiedCells) {
+                        if (p.x == cell.getX() && p.y == cell.getY()) {
+                            hit = true;
+                            break;
+                        }
+                    }
+                    if (hit) break;
+                }
+                cell.setHit(hit);
+            }
+        }
+        // Für die Züge von Spieler B: Überprüfe gegen die Schiffe von Spieler A
+        for (Move move : moveB) {
+            move.computeAffectedCells(boardSize);
+            for (Cell cell : move.getAffectedCells()) {
+                boolean hit = false;
+                for (Ship ship : shipsA) {
+                    ArrayList<Point> occupiedCells = ship.getOccupiedCells();
+                    for (Point p : occupiedCells) {
+                        if (p.x == cell.getX() && p.y == cell.getY()) {
+                            hit = true;
+                            break;
+                        }
+                    }
+                    if (hit) break;
+                }
+                cell.setHit(hit);
+            }
+        }
+    }
+
+    public void loadRadars(ArrayList<Ship> shipsA, ArrayList<Ship> shipsB) {
+        for (Move move : moveA) {
+            if(move.getRadarItem() != null) {
+                move.setRadarShipsIn3x3Area(ItemManager.getAmountOfShipsIn3x3Area(shipsB, move.getX(), move.getY()));
+            }
+        }
+
+        for (Move move : moveB) {
+            if(move.getRadarItem() != null) {
+                move.setRadarShipsIn3x3Area(ItemManager.getAmountOfShipsIn3x3Area(shipsA, move.getX(), move.getY()));
+            }
+        }
+    }
+
+    /**
+     * Prüft für beide Spieler, ob Schiffe komplett getroffen wurden.
+     * Für Spieler A (eigene Schiffe, angegriffen von Spieler B) werden alle
+     * Schiffe, deren alle belegt Zellen getroffen wurden, in uncoveredShipsFromB
+     * aufgenommen – da diese für den Gegner (Spieler B) sichtbar sein sollen.
+     * Analog werden für Spieler B alle vollständig getroffenen Schiffe in
+     * uncoveredShipsFromA aufgenommen.
+     *
+     * Es wird darauf geachtet, dass kein Schiff doppelt hinzugefügt wird.
+     *
+     * @param shipsA Liste der Schiffe von Spieler A
+     * @param shipsB Liste der Schiffe von Spieler B
+     */
+    public void uncoverHitShips(ArrayList<Ship> shipsA, ArrayList<Ship> shipsB) {
+        // Prüfe Schiffe von Spieler A (wird vom Gegner, also Spieler B, angegriffen)
+        for (Ship ship : shipsA) {
+            // Falls das Schiff bereits als aufgedeckt in uncoveredShipsFromB vorhanden ist, überspringen
+            boolean alreadyUncovered = false;
+            for (Ship s : uncoveredShipsFromB) {
+                if (s.getId() == ship.getId()) {
+                    alreadyUncovered = true;
+                    break;
+                }
+            }
+            if (alreadyUncovered) continue;
+
+            boolean fullyHit = true;
+            // Hole alle Zellen, die dieses Schiff belegt
+            java.util.List<Point> occupiedCells = ship.getOccupiedCells();
+            // Für jede belegte Zelle wird geprüft, ob es in einem Move von Spieler B
+            // (also in moveB) eine betroffene Zelle gibt, die als hit markiert wurde.
+            for (Point p : occupiedCells) {
+                boolean cellHit = false;
+                for (Move move : moveB) {
+                    // Stelle sicher, dass für den Move die affectedCells berechnet wurden
+                    move.computeAffectedCells(getBoardSize());
+                    for (protocol.game.Cell cell : move.getAffectedCells()) {
+                        if (cell.getX() == p.x && cell.getY() == p.y && cell.isHit()) {
+                            cellHit = true;
+                            break;
+                        }
+                    }
+                    if (cellHit) break;
+                }
+                if (!cellHit) {
+                    fullyHit = false;
+                    break;
+                }
+            }
+            // Wenn alle Zellen getroffen wurden, wird das Schiff zur Liste hinzugefügt
+            if (fullyHit) {
+                uncoveredShipsFromB.add(ship);
+            }
+        }
+
+        // Prüfe Schiffe von Spieler B (wird vom Gegner, also Spieler A, angegriffen)
+        for (Ship ship : shipsB) {
+            boolean alreadyUncovered = false;
+            for (Ship s : uncoveredShipsFromA) {
+                if (s.getId() == ship.getId()) {
+                    alreadyUncovered = true;
+                    break;
+                }
+            }
+            if (alreadyUncovered) continue;
+
+            boolean fullyHit = true;
+            java.util.List<Point> occupiedCells = ship.getOccupiedCells();
+            for (Point p : occupiedCells) {
+                boolean cellHit = false;
+                for (Move move : moveA) {
+                    move.computeAffectedCells(getBoardSize());
+                    for (protocol.game.Cell cell : move.getAffectedCells()) {
+                        if (cell.getX() == p.x && cell.getY() == p.y && cell.isHit()) {
+                            cellHit = true;
+                            break;
+                        }
+                    }
+                    if (cellHit) break;
+                }
+                if (!cellHit) {
+                    fullyHit = false;
+                    break;
+                }
+            }
+            if (fullyHit) {
+                uncoveredShipsFromA.add(ship);
+            }
+        }
+    }
+
+    public void addUncoveredShip(UUID player, Ship ship) {
+        if(playerA.equals(player)) {
+            uncoveredShipsFromA.add(ship);
+        } else if(playerB.equals(player)) {
+            uncoveredShipsFromB.add(ship);
+        }
+    }
+
+    /**
+     * Returns a list of all cells targeted by player A’s moves.
+     * Each Cell in the returned list carries its hit attribute (true if a ship was hit, false otherwise).
+     */
+    public ArrayList<Cell> getAttackedCellsForPlayerA() {
+        ArrayList<Cell> attackedCells = new ArrayList<>();
+        for (Move move : moveA) {
+            // If you want all cells (hits and misses), simply add them all:
+            attackedCells.addAll(move.getAffectedCells());
+        }
+        return attackedCells;
+    }
+
+    /**
+     * Returns a list of all cells targeted by player B’s moves.
+     * Each Cell in the returned list carries its hit attribute (true if a ship was hit, false otherwise).
+     */
+    public ArrayList<Cell> getAttackedCellsForPlayerB() {
+        ArrayList<Cell> attackedCells = new ArrayList<>();
+        for (Move move : moveB) {
+            attackedCells.addAll(move.getAffectedCells());
+        }
+        return attackedCells;
+    }
+
     public int getPlayerCount() {
         return (playerA != null ? 1 : 0) + (playerB != null ? 1 : 0);
     }
@@ -198,6 +388,14 @@ public class GameState implements Serializable  {
     public GameState setSessionCode(int sessionCode) {
         this.sessionCode = sessionCode;
         return this;
+    }
+
+    public int getCurrentGameRound() {
+        return currentGameRound;
+    }
+
+    private void nextGameRound() {
+        currentGameRound++;
     }
 
     public Date getBuildGameBoardFinished() {
@@ -300,6 +498,16 @@ public class GameState implements Serializable  {
 
     public void setNextTurn() {
         playerATurn = !playerATurn;
+        nextGameRound();
+    }
+
+    public void addMove(UUID player, Move move) {
+        System.out.println("Adding move: " + move);
+        if(playerA.equals(player)) {
+            moveA.add(move);
+        } else if(playerB.equals(player)) {
+            moveB.add(move);
+        }
     }
 
     public void setPlayersTurnStart(Date playersTurnStart) {
@@ -312,6 +520,14 @@ public class GameState implements Serializable  {
 
     public boolean isPlayerATurn() {
         return playerATurn;
+    }
+
+    public ArrayList<Move> getMoveA() {
+        return moveA;
+    }
+
+    public ArrayList<Move> getMoveB() {
+        return moveB;
     }
 
     private int generateSessionCode() {

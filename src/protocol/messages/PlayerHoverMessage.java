@@ -1,5 +1,8 @@
 package protocol.messages;
 
+import protocol.game.Cell;
+
+import java.util.ArrayList;
 import java.util.UUID;
 
 public class PlayerHoverMessage extends Message {
@@ -9,17 +12,23 @@ public class PlayerHoverMessage extends Message {
     private final UUID userId;
     private int x;
     private int y;
+    private ArrayList<Cell> affectedFields;
 
-    public PlayerHoverMessage(UUID userId, int x, int y) {
+    public PlayerHoverMessage(PlayerHoverMessage message) {
+        super(MessageType.PLAYER_HOVER);
+        this.userId = message.userId;
+        this.x = message.x;
+        this.y = message.y;
+        this.affectedFields = message.affectedFields;
+    }
+
+    public PlayerHoverMessage(UUID userId, int x, int y, ArrayList<Cell> affectedFields) {
         super(MessageType.PLAYER_HOVER);
         this.userId = userId;
         this.x = x;
         this.y = y;
-    }
+        this.affectedFields = affectedFields;
 
-    public PlayerHoverMessage(UUID userId) {
-        super(MessageType.PLAYER_HOVER);
-        this.userId = userId;
     }
 
     public int getX() {
@@ -28,6 +37,10 @@ public class PlayerHoverMessage extends Message {
 
     public int getY() {
         return y;
+    }
+
+    public ArrayList<Cell> getAffectedFields() {
+        return affectedFields;
     }
 
     public UUID getUserId() {

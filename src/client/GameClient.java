@@ -2,7 +2,8 @@ package client;
 
 import protocol.GameState;
 import protocol.Ship;
-import protocol.game.Hit;
+import protocol.game.Cell;
+import protocol.game.Move;
 import protocol.messages.*;
 
 import java.util.ArrayList;
@@ -54,7 +55,7 @@ public interface GameClient {
      * @param x The x coordinate of the tile
      * @param y The y coordinate of the tile
      */
-    void sendPlayerHoverEvent(int x, int y);
+    void sendPlayerHoverEvent(int x, int y, ArrayList<Cell> affectedFields);
 
     /**
      * This submits a placement of ships to the server, each time the client places a ship
@@ -64,9 +65,9 @@ public interface GameClient {
 
     /**
      * This method is called when the user makes a move
-     * @param hit The hit object containing the move
+     * @param move The move object containing the move
      */
-    void sendGameMoveEvent(Hit hit);
+    void sendGameMoveEvent(Move move);
 
     /**
      * This method is called when the user leaves the game, either by closing the window or pressing a button

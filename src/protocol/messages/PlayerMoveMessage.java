@@ -1,16 +1,19 @@
 package protocol.messages;
 
-import protocol.game.Hit;
+import protocol.game.Move;
 
 public class PlayerMoveMessage extends Message {
 
     private static final long serialVersionUID = 1L;
 
-    public PlayerMoveMessage(Hit hit) {
+    private Move move;
+
+    public PlayerMoveMessage(Move move) {
         super(MessageType.PLAYER_MOVE);
+        this.move = move;
     }
 
-    public Hit getHit() {
-        return null;
+    public Move getMove() {
+        return move;
     }
 }

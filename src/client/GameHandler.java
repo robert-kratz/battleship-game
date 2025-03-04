@@ -1,7 +1,8 @@
 package client;
 
 import protocol.Ship;
-import protocol.game.Hit;
+import protocol.game.Cell;
+import protocol.game.Move;
 import protocol.messages.*;
 import protocol.GameState;
 
@@ -86,6 +87,13 @@ public class GameHandler implements GameClient {
                 }
             }
             case IN_GAME -> {
+                if (this.clientHandler.getStageManager().gameIngameScene != null) {
+                    boolean isPlayerATurn = gameState.isPlayersTurn(this.clientHandler.getUserId());
+
+                    this.clientHandler.getStageManager().gameIngameScene.toggleTurn(isPlayerATurn);
+                    this.clientHandler.getStageManager().gameIngameScene.extendCurrentTurn(gameState.getPlayersTurnEnd());
+                    this.clientHandler.getStageManager().gameIngameScene.setPlayerEnergy(gameState.getPlayerEnergy(this.clientHandler.getUserId()));
+                }
             }
         }
     }
@@ -100,13 +108,17 @@ public class GameHandler implements GameClient {
             clientHandler.showError("Game is not in game phase.");
             return;
         }
-        //Only accept opponent hover events
-        if(playerHoverMessage.getUserId().equals(clientHandler.getUserId())) return;
 
-        Point point = new Point(playerHoverMessage.getX(), playerHoverMessage.getY());
+        System.out.println("Player hover event received");
 
-        //Forward the hover event to the game scene
-        clientHandler.getStageManager().gameIngameScene.setOpponentHover(point);
+        //Forward the hover event to the game scene only if the uuid in the message is the opponent's
+        boolean isPlayersTurn = gameState.isPlayersTurn(this.clientHandler.getUserId());
+
+        if(isPlayersTurn) return;
+
+        System.out.println("Setting opponent hover");
+
+        clientHandler.getStageManager().gameIngameScene.setOpponentHover(playerHoverMessage.getX(), playerHoverMessage.getY(), playerHoverMessage.getAffectedFields());
     }
 
     /**
@@ -132,6 +144,29 @@ public class GameHandler implements GameClient {
             this.clientHandler.getStageManager().gameIngameScene.extendCurrentTurn(gameState.getPlayersTurnEnd());
             this.clientHandler.getStageManager().gameIngameScene.setPlayerEnergy(gameState.getPlayerEnergy(this.clientHandler.getUserId()));
         }
+
+        //Check weather a move has been made
+
+        boolean moveMade = gameState.getMoveA().size() != this.gameState.getMoveA().size() || gameState.getMoveB().size() != this.gameState.getMoveB().size();
+
+        if (moveMade) {
+            System.out.println("Move GUI Update");
+            // Prüfe, ob der lokale Spieler Spieler A ist:
+            if (clientHandler.getUserId().equals(gameState.getPlayerA())) {
+                // Spieler A:
+                // - Das Player Board zeigt die Züge des Gegners (moveB, da diese auf A's Schiffe zielen)
+                // - Das Opponent Board zeigt die eigenen Züge (moveA)
+                clientHandler.getStageManager().gameIngameScene.playerBoard.setMoves(gameState.getMoveB());
+                clientHandler.getStageManager().gameIngameScene.opponentBoard.setMoves(gameState.getMoveA());
+            } else {
+                // Andernfalls (lokaler Spieler ist Spieler B):
+                // - Das Player Board zeigt die Züge des Gegners (moveA, da diese auf B's Schiffe zielen)
+                // - Das Opponent Board zeigt die eigenen Züge (moveB)
+                clientHandler.getStageManager().gameIngameScene.playerBoard.setMoves(gameState.getMoveA());
+                clientHandler.getStageManager().gameIngameScene.opponentBoard.setMoves(gameState.getMoveB());
+            }
+        }
+
         this.gameState = gameState;
     }
 
@@ -150,13 +185,20 @@ public class GameHandler implements GameClient {
      * @param y The y coordinate of the tile
      */
     @Override
-    public void sendPlayerHoverEvent(int x, int y) {
+    public void sendPlayerHoverEvent(int x, int y, ArrayList<Cell> affectedFields) {
         if(gameState.getStatus() != GameState.GameStatus.IN_GAME) {
             clientHandler.showError("Game is not in game phase.");
             return;
         }
-
-        clientHandler.sendMessage(new PlayerHoverMessage(this.clientHandler.getUserId(), x, y));
+        // Deep copy der affectedFields, um spätere Änderungen zu vermeiden:
+        ArrayList<Cell> copy = new ArrayList<>();
+        if(affectedFields != null) {
+            for (Cell c : affectedFields) {
+                // Voraussetzung: Die Klasse Cell hat einen geeigneten Kopierkonstruktor oder Getter
+                copy.add(new Cell(c.getX(), c.getY()));
+            }
+        }
+        clientHandler.sendMessage(new PlayerHoverMessage(this.clientHandler.getUserId(), x, y, copy));
     }
 
     /**
@@ -175,16 +217,16 @@ public class GameHandler implements GameClient {
 
     /**
      * Send the move to the server
-     * @param hit The hit object containing the move
+     * @param move The move object containing the move
      */
     @Override
-    public void sendGameMoveEvent(Hit hit) {
+    public void sendGameMoveEvent(Move move) {
         if(gameState.getStatus() != GameState.GameStatus.IN_GAME) {
             clientHandler.showError("Game is not in game phase.");
             return;
         }
 
-        clientHandler.sendMessage(new PlayerMoveMessage(hit));
+        clientHandler.sendMessage(new PlayerMoveMessage(move));
     }
 
     /**

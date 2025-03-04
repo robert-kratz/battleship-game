@@ -45,7 +45,7 @@ public class Board {
     public static void drawLegend(Graphics g, int boardSize, int rows, int cols) {
         double cellWidth = boardSize / (double) cols;
         double cellHeight = boardSize / (double) rows;
-        // Draw row labels (numbers) on the left
+        // Zeichne Zeilenbeschriftung (Nummern) links
         g.setFont(new Font("Arial", Font.BOLD, 14));
         g.setColor(Color.WHITE);
         FontMetrics fm = g.getFontMetrics();
@@ -58,7 +58,7 @@ public class Board {
             g.drawString(label, x, y);
         }
 
-        // Draw column labels (letters) at the top
+        // Zeichne Spaltenbeschriftung (Buchstaben) oben
         for (int col = 0; col < cols; col++) {
             char letter = (char) ('A' + col);
             String label = String.valueOf(letter);
@@ -70,4 +70,74 @@ public class Board {
         }
     }
 
+    /**
+     * Verdunkelt eine Zelle im Spielfeld.
+     * @param g Graphics-Objekt
+     * @param row Zeile (Zellenindex)
+     * @param col Spalte (Zellenindex)
+     * @param cellWidth Breite der Zelle
+     * @param cellHeight Höhe der Zelle
+     */
+    public static void darkenCell(Graphics g, int row, int col, double cellWidth, double cellHeight) {
+        g.setColor(new Color(0, 0, 0, 100));
+        int x = (int) Math.round(col * cellWidth);
+        int y = (int) Math.round(row * cellHeight);
+        int fillWidth = (int) Math.ceil(cellWidth);
+        int fillHeight = (int) Math.ceil(cellHeight);
+        g.fillRect(x, y, fillWidth, fillHeight);
+    }
+
+    /**
+     * Zeichnet einen Treffer (rote Markierung) in der Zelle.
+     * @param g Graphics-Objekt
+     * @param row Zeile (Zellenindex)
+     * @param col Spalte (Zellenindex)
+     * @param cellWidth Breite der Zelle
+     * @param cellHeight Höhe der Zelle
+     */
+    public static void drawShipHitCell(Graphics g, int row, int col, double cellWidth, double cellHeight) {
+        g.setColor(Color.RED);
+        int centerX = (int) Math.round(col * cellWidth + cellWidth / 2);
+        int centerY = (int) Math.round(row * cellHeight + cellHeight / 2);
+        int radius = 7;
+        g.fillOval(centerX - radius, centerY - radius, 2 * radius, 2 * radius);
+    }
+
+    /**
+     * Zeichnet einen Fehlschuss (graue Markierung) in der Zelle.
+     * @param g Graphics-Objekt
+     * @param row Zeile (Zellenindex)
+     * @param col Spalte (Zellenindex)
+     * @param cellWidth Breite der Zelle
+     * @param cellHeight Höhe der Zelle
+     */
+    public static void drawShipMissCell(Graphics g, int row, int col, double cellWidth, double cellHeight) {
+        g.setColor(Color.LIGHT_GRAY);
+        int centerX = (int) Math.round(col * cellWidth + cellWidth / 2);
+        int centerY = (int) Math.round(row * cellHeight + cellHeight / 2);
+        int radius = 7;
+        g.fillOval(centerX - radius, centerY - radius, 2 * radius, 2 * radius);
+    }
+
+    /**
+     * Zeichnet eine Radarzahl in der Zelle.
+     * @param g Graphics-Objekt
+     * @param row Zeile (Zellenindex)
+     * @param col Spalte (Zellenindex)
+     * @param cellWidth Breite der Zelle
+     * @param cellHeight Höhe der Zelle
+     * @param number Die Radarzahl
+     */
+    public static void drawRadar(Graphics g, int row, int col, double cellWidth, double cellHeight, int number) {
+        g.setColor(Color.RED);
+        int centerX = (int) Math.round(col * cellWidth + cellWidth / 2);
+        int centerY = (int) Math.round(row * cellHeight + cellHeight / 2);
+        FontMetrics fm = g.getFontMetrics();
+        String label = String.valueOf(number);
+        g.setFont(new Font("Arial", Font.BOLD, 14));
+        int textWidth = fm.stringWidth(label);
+        // Berechne die Basislinie, sodass der Text vertikal zentriert ist
+        int y = centerY + (fm.getAscent() - fm.getDescent()) / 2;
+        g.drawString(label, centerX - textWidth / 2, y);
+    }
 }

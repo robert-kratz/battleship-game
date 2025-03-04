@@ -8,6 +8,7 @@ import protocol.ShipPlacementValidator;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.ArrayList;
 import java.util.List;
 
 public class BuildBattleshipBoard extends AbstractBattleshipBoard {
@@ -20,7 +21,7 @@ public class BuildBattleshipBoard extends AbstractBattleshipBoard {
     private final Color HOVER_COLOR = new Color(175, 175, 175, 150);
     private final Color COLLISION_COLOR = new Color(255, 89, 94, 150);
 
-    private protocol.ShipPlacementValidator validator;
+    private ShipPlacementValidator validator;
     private BuildBoardListener listener;
 
     public BuildBattleshipBoard(int boardSize, List<Ship> placedShips, BoardPainter boardPainter,
@@ -98,10 +99,27 @@ public class BuildBattleshipBoard extends AbstractBattleshipBoard {
         });
     }
 
-    public void setSelectedShip(Ship ship) {
-        this.selectedShip = ship;
-
+    public void removePlacedShip(int ship) {
+        this.placedShips.removeIf(ship1 -> ship1.getId() == ship);
         repaint();
+    }
+
+    public Ship getSelectedShip() {
+        return selectedShip;
+    }
+
+    public void setSelectedShip(Ship selectedShip) {
+        this.selectedShip = selectedShip;
+    }
+
+    @Override
+    public void setPlacedShips(List<Ship> placedShips) {
+        super.setPlacedShips(placedShips);
+    }
+
+    @Override
+    public List<Ship> getPlacedShips() {
+        return super.getPlacedShips();
     }
 
     public void lockBoard() {

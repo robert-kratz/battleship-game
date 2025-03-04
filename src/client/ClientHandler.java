@@ -126,6 +126,15 @@ public class ClientHandler {
 
                             gameHandler.onGameUpdate(gameUpdateMessage.getGameState(), gameUpdateMessage.getShips());
                         }
+                        case MessageType.PLAYER_HOVER -> {
+                            PlayerHoverMessage playerHoverMessage = (PlayerHoverMessage) received;
+
+                            if(this.gameHandler == null) return;
+
+                            System.out.println(playerHoverMessage.getAffectedFields() != null ? "Affected fields: " + playerHoverMessage.getAffectedFields().size() : "No affected fields");
+
+                            gameHandler.onPlayerHoverEvent(playerHoverMessage);
+                        }
                     }
                 }
             } catch (IOException | ClassNotFoundException  | ClassCastException e) {

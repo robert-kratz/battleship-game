@@ -167,6 +167,38 @@ public class PlayerInfo implements Runnable {
 
                         System.out.println("Player " + username + " submitted placement");
                     }
+                    case MessageType.PLAYER_HOVER -> {
+                        PlayerHoverMessage playerHoverMessage = (PlayerHoverMessage) received;
+
+                        BattleShipGame game = server.getGame(this);
+
+                        if(game == null) {
+                            sendMessage(new ErrorMessage(ErrorType.NO_GAME_IN_PROGRESS));
+                            break;
+                        }
+
+                        if(!game.getGameState().getStatus().equals(GameState.GameStatus.IN_GAME)) return;
+
+                        if(game.getPlayerA().getId().equals(this.getId())) {
+                            game.getPlayerB().sendMessage(new PlayerHoverMessage(playerHoverMessage));
+                        } else if(game.getPlayerB().getId().equals(this.getId())) {
+                            game.getPlayerA().sendMessage(new PlayerHoverMessage(playerHoverMessage));
+                        }
+                    }
+                    case MessageType.PLAYER_MOVE -> {
+                        PlayerMoveMessage playerMoveMessage = (PlayerMoveMessage) received;
+
+                        BattleShipGame game = server.getGame(this);
+
+                        if(game == null) {
+                            sendMessage(new ErrorMessage(ErrorType.NO_GAME_IN_PROGRESS));
+                            break;
+                        }
+
+                        if(!game.getGameState().getStatus().equals(GameState.GameStatus.IN_GAME)) return;
+
+                        game.playerMove(this, playerMoveMessage.getMove());
+                    }
                 }
             }
         } catch (IOException | ClassNotFoundException e) {

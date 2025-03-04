@@ -1,5 +1,7 @@
 package protocol;
 
+import protocol.game.Cell;
+
 import java.awt.Point;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -69,6 +71,20 @@ public class Ship implements Serializable {
         this.icon = other.icon;
     }
 
+    public boolean isIn3x3Area(int x, int y) {
+
+        System.out.println("isIn3x3Area x: " + x + " y: " + y);
+
+        for (Point cells : getOccupiedCells()) {
+            System.out.println("cells.x: " + cells.x + " cells.y: " + cells.y);
+
+            if (cells.x == x && cells.y == y) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     // Getter und Setter
     public void setOrientation(Orientation orientation) {
         this.orientation = orientation;
@@ -130,15 +146,15 @@ public class Ship implements Serializable {
     /**
      * Gibt die Liste der Zellen zurück, die von diesem Schiff belegt werden.
      */
-    public List<Point> getOccupiedCells() {
+    public ArrayList<Point> getOccupiedCells() {
         return getOccupiedCellsAt(this.x, this.y);
     }
 
     /**
      * Gibt die Liste der Zellen zurück, die belegt würden, wenn das Schiff am Ankerpunkt (anchorX, anchorY) platziert wird.
      */
-    public List<Point> getOccupiedCellsAt(int anchorX, int anchorY) {
-        List<Point> cells = new ArrayList<>();
+    public ArrayList<Point> getOccupiedCellsAt(int anchorX, int anchorY) {
+        ArrayList<Point> cells = new ArrayList<>();
         switch (orientation) {
             case EAST:
                 for (int i = 0; i < length; i++) {
