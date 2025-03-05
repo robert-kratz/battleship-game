@@ -98,6 +98,7 @@ public class ClientHandler {
 
                             gameHandler = new GameHandler(this, joinGameMessage.getGameState());
                             this.getStageManager().startWaitingLobbyScene(); //Start waiting lobby scene
+                            this.lobbyHandler.setInQueue(false);
                             //If no GameHandler is present, create one
 
                         }
@@ -107,6 +108,8 @@ public class ClientHandler {
                             System.out.println("Game state updated: " + gameStateUpdateMessage.getGameState().getStatus());
 
                             if(this.gameHandler == null) return;
+
+                            this.lobbyHandler.setInQueue(false);
 
                             System.out.println("Player A: " + gameStateUpdateMessage.getGameState().getPlayerAName());
                             System.out.println("Player B: " + gameStateUpdateMessage.getGameState().getPlayerBName());

@@ -78,6 +78,10 @@ public class LobbyHandler implements LobbyClient {
         this.clientHandler.sendMessage(new JoinGameWithCodeMessage(code));
     }
 
+    public void setInQueue(boolean inQueue) {
+        this.inQueue = inQueue;
+    }
+
     public int getQueueLength() {
         return queueLength;
     }

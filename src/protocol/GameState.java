@@ -22,7 +22,7 @@ public class GameState implements Serializable  {
 
     private final UUID id = UUID.randomUUID();
 
-    public UUID playerA, playerB;
+    public UUID playerA, playerB, winner;
     public String playerAName, playerBName;
 
     private int sessionCode;
@@ -494,6 +494,14 @@ public class GameState implements Serializable  {
 
     public void setLastUpdated(Date lastUpdated) {
         this.lastUpdated = lastUpdated;
+    }
+
+    public void setWinner(UUID winner) {
+        this.winner = winner;
+    }
+
+    public UUID getWinner() {
+        return winner;
     }
 
     public void setNextTurn() {

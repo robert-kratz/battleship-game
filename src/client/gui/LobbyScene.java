@@ -133,6 +133,11 @@ public class LobbyScene extends JPanel {
         add(buttonPanel);
     }
 
+    public void updateQueueButton() {
+
+        queueButton.setText(this.clientHandler.getLobbyHandler().isInQueue() ? "Leave Queue" : "Enter Queue");
+    }
+
     public void setUsername(String username) {
         welcomeLabel.setText("Welcome, " + username + "!");
     }

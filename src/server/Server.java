@@ -7,27 +7,46 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class Server {
 
     private static Server instance;
-
     private static int PORT = 12345;
     private ServerSocket serverSocket;
-
     private boolean running = false;
 
     private final List<PlayerInfo> players = new ArrayList<>();
     private final List<Thread> clientThreads = new ArrayList<>();
 
-    private ArrayList<BattleShipGame> games = new ArrayList<>();
-    private ArrayList<Thread> gameThreads = new ArrayList<>();
+    // HashMap, die sowohl das Spiel als auch den zugehörigen Thread speichert
+    private final Map<UUID, GameContainer> games = new HashMap<>();
 
-    private ArrayList<PlayerInfo> queue = new ArrayList<>();
-
+    private final ArrayList<PlayerInfo> queue = new ArrayList<>();
     private final ServerGUI gui;
+
+    // Innerer Container, der das BattleShipGame und den zugehörigen Thread zusammenhält
+    private static class GameContainer {
+        private final BattleShipGame game;
+        private final Thread thread;
+
+        public GameContainer(BattleShipGame game, Thread thread) {
+            this.game = game;
+            this.thread = thread;
+        }
+
+        public BattleShipGame getGame() {
+            return game;
+        }
+
+        public Thread getThread() {
+            return thread;
+        }
+    }
 
     public Server() {
         this.gui = new ServerGUI(this);
@@ -63,8 +82,7 @@ public class Server {
     }
 
     /**
-     * Returns the instance of the server
-     * @return instance of the server
+     * Returns the players that are currently in the lobby (not in a game).
      */
     public ArrayList<PlayerInfo> getPlayersInLobby() {
         ArrayList<PlayerInfo> playersInLobby = new ArrayList<>();
@@ -77,11 +95,15 @@ public class Server {
     }
 
     /**
-     * Stops the server and closes all connections
+     * Stops the server, closes all connections and unregisters all games.
      */
     public void stopServer() {
         running = false;
         try {
+            // Alle laufenden Spiele abmelden
+            for (UUID gameId : new ArrayList<>(games.keySet())) {
+                unregisterGame(gameId);
+            }
             for (PlayerInfo p : players) {
                 p.sendMessage(new ErrorMessage(ErrorType.SERVER_CLOSED));
             }
@@ -101,45 +123,37 @@ public class Server {
     }
 
     /**
-     * Registers a new game and starts the game thread
-     * @param game game to register
-     * @param thread thread to start
+     * Registers a new game. Der Server erstellt intern den Game-Thread und startet ihn.
+     * @param game the game to register
      */
-    public void registerGame(BattleShipGame game, Thread thread) {
-        games.add(game);
-        gameThreads.add(thread);
-
-        thread.start();
+    public void registerGame(BattleShipGame game) {
+        Thread gameThread = new Thread(game);
+        GameContainer container = new GameContainer(game, gameThread);
+        games.put(game.getGameState().getId(), container);
+        gameThread.start();
     }
 
     /**
-     * Removes a game from the list of active games
+     * Unregisters a game with the given id by interrupting its thread and removing it from the map.
      * @param id id of the game to remove
      */
     public void unregisterGame(UUID id) {
-        BattleShipGame targetGame = null;
-        Thread targetThread = null;
-        for (BattleShipGame game : games) {
-            if (game.getGameState().getId().equals(id)) {
-                targetGame = game;
-                targetThread = gameThreads.get(games.indexOf(game));
-            }
-        }
-
-        if (targetGame != null) {
-            //Stop the game thread
-            targetThread.interrupt();
-            games.remove(targetGame);
+        GameContainer container = games.get(id);
+        if (container != null) {
+            container.getThread().interrupt();
+            games.remove(id);
+            System.out.println("Game " + id + " removed");
         }
     }
 
     /**
-     * Returns the game the player is currently in
-     * @param player player to get the game for
-     * @return game the player is in
+     * Returns the game the player is currently in.
+     * @param player the player for whom to retrieve the game
+     * @return the game the player is in or null if none
      */
     public synchronized BattleShipGame getGame(PlayerInfo player) {
-        for (BattleShipGame game : games) {
+        for (GameContainer container : games.values()) {
+            BattleShipGame game = container.getGame();
             if (game.getPlayerA().getId().equals(player.getId()) || game.getPlayerB().getId().equals(player.getId())) {
                 return game;
             }
@@ -147,7 +161,17 @@ public class Server {
         return null;
     }
 
+    /**
+     * Removes a player from the server. If the player is in a game, the game is ended and unregistered.
+     * @param player the player leaving the server
+     */
     public void removePlayer(PlayerInfo player) {
+        BattleShipGame game = getGame(player);
+        System.out.println("Player " + player.getUsername() + " left the server");
+
+        if (game != null) {
+            game.leaveGame(player);
+        }
         players.remove(player);
         updatePlayerList();
     }
@@ -159,13 +183,12 @@ public class Server {
 
     public void removeFromQueue(UUID id) {
         queue.removeIf(player -> {
-            if(player.getId().equals(id)) {
+            if (player.getId().equals(id)) {
                 player.sendMessage(new protocol.messages.QueueUpdateMessage(queue.size(), false));
                 return true;
             }
             return false;
         });
-
     }
 
     private void updatePlayerList() {
@@ -184,8 +207,11 @@ public class Server {
         return queue;
     }
 
+    /**
+     * Returns a list of all active games.
+     */
     public ArrayList<BattleShipGame> getGames() {
-        return games;
+        return new ArrayList<>(games.values().stream().map(GameContainer::getGame).collect(Collectors.toList()));
     }
 
     /**

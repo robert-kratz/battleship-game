@@ -39,6 +39,7 @@ public class StageManager extends JFrame {
 
     private final Dimension BIG_DIMENSION = new Dimension(900, 530);
     private final Dimension SMALL_DIMENSION = new Dimension(430, 270);
+    private final Dimension GAME_OVER_DIMENSION = new Dimension(510, 590);
 
     public StageManager(ClientHandler clientHandler) {
         this.clientHandler = clientHandler;
@@ -105,6 +106,24 @@ public class StageManager extends JFrame {
         this.gameIngameSceneThread.start();
     }
 
+    public void startGameOverScene() {
+
+        if(this.gameOverScene != null) return;
+
+        try {
+            this.gameIngameSceneThread.interrupt();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        this.gameOverScene = new GameOverScene(this.clientHandler.getGameHandler());
+
+        adaptScreenSize();
+
+        addScene(Stage.GAME_END_SCENE, gameOverScene);
+        switchScene(Stage.GAME_END_SCENE);
+    }
+
     /**
      * Call this method to exit the game scene and return to the lobby, assuming the
      */
@@ -126,7 +145,11 @@ public class StageManager extends JFrame {
             this.gameIngameScene = null;
         }
 
+        this.lobbyScene.updateQueueButton();
+
         switchScene(Stage.LOBBY_SCENE);
+
+        adaptScreenSize();
     }
 
     private void addScene(Stage stage, JPanel panel) {
@@ -135,8 +158,12 @@ public class StageManager extends JFrame {
     }
 
     private void removeScene(Stage stage) {
-        scenes.remove(stage);
-        mainPanel.remove(scenes.get(stage));
+        try {
+            scenes.remove(stage);
+            mainPanel.remove(scenes.get(stage));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -151,14 +178,18 @@ public class StageManager extends JFrame {
             case CREATE_GAME_SCENE:
                 setSize(SMALL_DIMENSION);
                 setMinimumSize(SMALL_DIMENSION);
-                setResizable(true);
+                setResizable(false);
                 break;
             case GAME_WAITING_SCENE:
             case GAME_BUILD_SCENE:
             case GAME_IN_GAME_SCENE:
-            case GAME_END_SCENE:
                 setSize(BIG_DIMENSION);
                 setMinimumSize(BIG_DIMENSION);
+                setResizable(false);
+                break;
+            case GAME_END_SCENE:
+                setSize(GAME_OVER_DIMENSION);
+                setMinimumSize(GAME_OVER_DIMENSION);
                 setResizable(false);
                 break;
         }

@@ -30,8 +30,10 @@ public class BattleShipGame implements Game, Runnable {
 
     @Override
     public void run() {
+        sleep(1000);
+
         while (this.gameState.getStatus().equals(GameState.GameStatus.BUILD_GAME_BOARD)) {
-            sleep(1000);
+
             System.out.println("Build Game Board");
             if(this.gameState.getBuildGameBoardFinished().before(new Date())) {
 
@@ -75,7 +77,6 @@ public class BattleShipGame implements Game, Runnable {
         }
 
         while (gameState.getStatus().equals(GameState.GameStatus.IN_GAME)) {
-            sleep(1000);
 
             System.out.println();
 
@@ -143,8 +144,7 @@ public class BattleShipGame implements Game, Runnable {
 
         }
 
-        while (gameState.getStatus().equals(GameState.GameStatus.GAME_OVER)) {
-            sleep(1000);
+        if (gameState.getStatus().equals(GameState.GameStatus.GAME_OVER)) {
             System.out.println("Game Over");
         }
     }
@@ -304,9 +304,20 @@ public class BattleShipGame implements Game, Runnable {
     }
 
     @Override
-    public GameState leaveGame(PlayerInfo player) {
+    public void leaveGame(PlayerInfo player) {
+        GameState gameState = new GameState(this.getGameState());
 
-        return gameState;
+        gameState.setStatus(GameState.GameStatus.GAME_OVER);
+
+        PlayerInfo winner = player.getId().equals(playerA.getId()) ? playerB : playerA;
+
+        gameState.setWinner(winner.getId());
+
+        winner.sendMessage(new GameStateUpdateMessage(gameState));
+
+        this.gameState = gameState;
+
+        server.unregisterGame(this.gameState.getId());
     }
 
     public void setPlayerShips(UUID playerId, ArrayList<Ship> ships) {

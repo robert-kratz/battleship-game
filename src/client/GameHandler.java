@@ -71,7 +71,12 @@ public class GameHandler implements GameClient {
                         this.clientHandler.getStageManager().startInGameScene(this.playersShips);
                     }
                 }
-                case GAME_OVER -> {}
+                case GAME_OVER -> {
+                    if(this.clientHandler.getStageManager().gameOverScene == null) {
+                        System.out.println("Starting game over scene");
+                        this.clientHandler.getStageManager().startGameOverScene();
+                    }
+                }
             }
         }
 
@@ -239,6 +244,8 @@ public class GameHandler implements GameClient {
     }
 
     public void startBuildPhase() {
+        if(this.gameState.getStatus() == GameState.GameStatus.IN_GAME) return;
+
         this.getClientHandler().getStageManager().startBuildScene();
 
         boolean isOpponentReady = this.getGameState().hasOpponentSubmittedPlacement(this.getClientHandler().getUserId());

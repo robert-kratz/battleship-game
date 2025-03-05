@@ -9,7 +9,7 @@ public interface Game {
 
     void addPlayer(PlayerInfo player);
 
-    GameState leaveGame(PlayerInfo player);
+    void leaveGame(PlayerInfo player);
 
     void playerMove(PlayerInfo player, Move move);
 
