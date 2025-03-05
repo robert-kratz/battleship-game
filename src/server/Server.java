@@ -225,6 +225,7 @@ public class Server {
             int moveBCount = game.getGameState().getMoveB().size();
             String status = game.getGameState().getStatus().toString();
             sb.append("Game ID: ").append(gameId).append("\n");
+            sb.append("Current Turn: ").append(game.getGameState().isPlayerATurn() ? playerAName : playerBName).append("\n");
             sb.append("Player A: ").append(playerAName).append(" (Moves: ").append(moveACount).append(")\n");
             sb.append("Player B: ").append(playerBName).append(" (Moves: ").append(moveBCount).append(")\n");
             sb.append("Status: ").append(status).append("\n");

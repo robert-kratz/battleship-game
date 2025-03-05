@@ -30,10 +30,10 @@ public class BattleShipGame implements Game, Runnable {
 
     @Override
     public void run() {
-        sleep(1000);
 
         // Build-Phase
         while (this.gameState.getStatus().equals(GameState.GameStatus.BUILD_GAME_BOARD)) {
+            sleep(1000);
 
             System.out.println("Build Game Board");
             if(this.gameState.getBuildGameBoardFinished().before(new Date())) {
@@ -80,8 +80,8 @@ public class BattleShipGame implements Game, Runnable {
 
         // In-Game Phase
         while (gameState.getStatus().equals(GameState.GameStatus.IN_GAME)) {
-
-            System.out.println();
+            sleep(1000);
+            System.out.println( "Game in progress");
 
             if(this.gameState.getPlayersTurnEnd().before(new Date())) {
                 GameState newState = new GameState(this.getGameState());

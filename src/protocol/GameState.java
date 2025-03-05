@@ -20,7 +20,7 @@ public class GameState implements Serializable  {
         GAME_OVER,
     }
 
-    private final UUID id = UUID.randomUUID();
+    private final UUID id;
 
     public UUID playerA, playerB, winner;
     public String playerAName, playerBName;
@@ -77,11 +77,14 @@ public class GameState implements Serializable  {
         this.uncoveredShipsFromA = new ArrayList<>(gameState.uncoveredShipsFromA);
         this.uncoveredShipsFromB = new ArrayList<>(gameState.uncoveredShipsFromB);
         this.currentGameRound = gameState.currentGameRound;
+        this.id = gameState.id;
+        this.winner = gameState.winner;
     }
 
     public GameState(int size, ArrayList<Ship> ships) {
         this.size = size;
         this.sessionCode = generateSessionCode();
+        this.id = UUID.randomUUID();
 
         this.availableShips = ships;
         this.playerATurn = Math.random() < 0.5;

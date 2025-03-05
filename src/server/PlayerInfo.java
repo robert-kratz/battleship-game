@@ -241,8 +241,6 @@ public class PlayerInfo implements Runnable {
         } catch (IOException e) {
             System.out.println("Failed to send message to player " + username + " (" + message.getType().toString() + ")");
             e.printStackTrace();
-            server.removeFromQueue(this.getId());
-            server.removePlayer(this);
         }
     }
 
