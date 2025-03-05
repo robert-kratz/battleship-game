@@ -22,9 +22,6 @@ public class GameState implements Serializable  {
 
     private final UUID id;
 
-    public UUID playerA, playerB, winner;
-    public String playerAName, playerBName;
-
     private int sessionCode;
 
     private Date created = new Date();
@@ -36,16 +33,9 @@ public class GameState implements Serializable  {
     private Date playersTurnStart = null;
     private Date playersTurnEnd = null;
 
-    private boolean playerATurn = true;
-
-    private boolean isAReady, isBReady;
-    private int energyA = 30, energyB = 30;
-    private ArrayList<Move> moveA = new ArrayList<>(), moveB = new ArrayList<>();
+    private ClientPlayer playerA, playerB;
 
     private final ArrayList<Ship> availableShips;
-
-    //IMPORTANT: uncoveredShipsA are ships uncovered by player B
-    private ArrayList<Ship> uncoveredShipsFromA = new ArrayList<>(), uncoveredShipsFromB = new ArrayList<>();
 
     private final int size;
     private int currentGameRound = 0;
@@ -53,32 +43,20 @@ public class GameState implements Serializable  {
     private GameStatus status = GameStatus.LOBBY_WAITING;
 
     public GameState(GameState gameState) {
-        this.playerA = gameState.playerA;
-        this.playerB = gameState.playerB;
-        this.playerAName = gameState.playerAName;
-        this.playerBName = gameState.playerBName;
+        if(gameState.playerA != null) this.playerA = new ClientPlayer(gameState.playerA);
+        if(gameState.playerB != null) this.playerB = new ClientPlayer(gameState.playerB);
         this.sessionCode = gameState.sessionCode;
         this.created = gameState.created;
         this.lastUpdated = gameState.lastUpdated;
         this.buildGameBoardStarted = gameState.buildGameBoardStarted;
         this.buildGameBoardFinished = gameState.buildGameBoardFinished;
-        this.moveA = new ArrayList<>(gameState.moveA);
-        this.moveB = new ArrayList<>(gameState.moveB);
-        this.energyA = gameState.energyA;
-        this.energyB = gameState.energyB;
         this.playersTurnStart = gameState.playersTurnStart;
         this.playersTurnEnd = gameState.playersTurnEnd;
-        this.playerATurn = gameState.playerATurn;
-        this.isAReady = gameState.isAReady;
-        this.isBReady = gameState.isBReady;
         this.size = gameState.size;
         this.status = gameState.status;
         this.availableShips = new ArrayList<>(gameState.availableShips);
-        this.uncoveredShipsFromA = new ArrayList<>(gameState.uncoveredShipsFromA);
-        this.uncoveredShipsFromB = new ArrayList<>(gameState.uncoveredShipsFromB);
         this.currentGameRound = gameState.currentGameRound;
         this.id = gameState.id;
-        this.winner = gameState.winner;
     }
 
     public GameState(int size, ArrayList<Ship> ships) {
@@ -87,76 +65,60 @@ public class GameState implements Serializable  {
         this.id = UUID.randomUUID();
 
         this.availableShips = ships;
-        this.playerATurn = Math.random() < 0.5;
     }
 
-    public void setPlayerA(UUID playerA, String name) {
+    public void setPlayerA(ClientPlayer playerA) {
+        System.out.println("Setting player A: " + playerA);
         this.playerA = playerA;
-        this.playerAName = name;
     }
 
-    public void setPlayerB(UUID playerB, String name) {
+    public void setPlayerB(ClientPlayer playerB) {
+        System.out.println("Setting player B: " + playerB);
         this.playerB = playerB;
-        this.playerBName = name;
-    }
 
-    public int getEnergyA() {
-        return energyA;
-    }
+        // Randomly assign turn to one of the players
 
-    public int getEnergyB() {
-        return energyB;
-    }
-
-    public ArrayList<Ship> getUncoveredShipsFromA() {
-        return uncoveredShipsFromA;
-    }
-
-    public ArrayList<Ship> getUncoveredShipsFromB() {
-        return uncoveredShipsFromB;
-    }
-
-    public int getEnergy(UUID player) {
-        if(playerA.equals(player)) {
-            return energyA;
-        } else if(playerB.equals(player)) {
-            return energyB;
+        if(Math.random() < 0.5) {
+            playerA.setTurn(true);
+            playerB.setTurn(false);
+        } else {
+            playerA.setTurn(false);
+            playerB.setTurn(true);
         }
-        return -1;
     }
 
     public GameState removePlayer(UUID player) {
-        if(playerA.equals(player)) {
-            playerA = null;
-            playerAName = null;
-        } else if(playerB.equals(player)) {
+        if(playerA.isPlayer(player)) {
+            playerA = null;;
+        } else if(playerB.isPlayer(player)) {
             playerB = null;
-            playerBName = null;
         }
         return this;
     }
 
-    public void playerSubmitPlacement(UUID player) {
-        if(playerA.equals(player)) {
-            isAReady = true;
-        } else if(playerB.equals(player)) {
-            isBReady = true;
+    public boolean setPlayerReady(UUID player, boolean ready) {
+        if(playerA.isPlayer(player)) {
+            playerA.setReady(ready);
+        } else if(playerB.isPlayer(player)) {
+            playerB.setReady(ready);
         }
+
+        return playerA.isReady() && playerB.isReady();
     }
 
     public boolean isPlayersTurn(UUID player) {
-        if (playerATurn) {
-            return playerA.equals(player);
+        if (playerA.isPlayer(player)) {
+            return playerA.isTurn();
         } else {
-            return playerB.equals(player);
+            return playerB.isTurn();
         }
     }
 
     public ArrayList<Ship> getUncoveredShips(UUID player) {
-        if(playerA.equals(player)) {
-            return uncoveredShipsFromB;
-        } else if(playerB.equals(player)) {
-            return uncoveredShipsFromA;
+        if(playerA.isPlayer(player)) {
+            return playerA.getUncoveredShips();
+        } else if(playerB.isPlayer(player)) {
+            return playerB.getUncoveredShips();
         }
         return null;
     }
@@ -172,7 +134,7 @@ public class GameState implements Serializable  {
     public void updateHitList(ArrayList<Ship> shipsA, ArrayList<Ship> shipsB) {
         int boardSize = getBoardSize();
         // Für die Züge von Spieler A: Überprüfe gegen die Schiffe von Spieler B
-        for (Move move : moveA) {
+        for (Move move : playerA.getMoves()) {
             move.computeAffectedCells(boardSize);
             for (Cell cell : move.getAffectedCells()) {
                 boolean hit = false;
@@ -190,7 +152,7 @@ public class GameState implements Serializable  {
             }
         }
         // Für die Züge von Spieler B: Überprüfe gegen die Schiffe von Spieler A
-        for (Move move : moveB) {
+        for (Move move : playerB.getMoves()) {
             move.computeAffectedCells(boardSize);
             for (Cell cell : move.getAffectedCells()) {
                 boolean hit = false;
@@ -210,13 +172,13 @@ public class GameState implements Serializable  {
     }
 
     public void loadRadars(ArrayList<Ship> shipsA, ArrayList<Ship> shipsB) {
-        for (Move move : moveA) {
+        for (Move move : playerA.getMoves()) {
             if(move.getRadarItem() != null) {
                 move.setRadarShipsIn3x3Area(ItemManager.getAmountOfShipsIn3x3Area(shipsB, move.getX(), move.getY()));
             }
         }
 
-        for (Move move : moveB) {
+        for (Move move : playerB.getMoves()) {
             if(move.getRadarItem() != null) {
                 move.setRadarShipsIn3x3Area(ItemManager.getAmountOfShipsIn3x3Area(shipsA, move.getX(), move.getY()));
             }
@@ -241,7 +203,7 @@ public class GameState implements Serializable  {
         for (Ship ship : shipsA) {
             // Falls das Schiff bereits als aufgedeckt in uncoveredShipsFromB vorhanden ist, überspringen
             boolean alreadyUncovered = false;
-            for (Ship s : uncoveredShipsFromB) {
+            for (Ship s : playerB.getUncoveredShips()) {
                 if (s.getId() == ship.getId()) {
                     alreadyUncovered = true;
                     break;
@@ -256,7 +218,7 @@ public class GameState implements Serializable  {
             // (also in moveB) eine betroffene Zelle gibt, die als hit markiert wurde.
             for (Point p : occupiedCells) {
                 boolean cellHit = false;
-                for (Move move : moveB) {
+                for (Move move : playerB.getMoves()) {
                     // Stelle sicher, dass für den Move die affectedCells berechnet wurden
                     move.computeAffectedCells(getBoardSize());
                     for (protocol.game.Cell cell : move.getAffectedCells()) {
@@ -274,14 +236,14 @@ public class GameState implements Serializable  {
             }
             // Wenn alle Zellen getroffen wurden, wird das Schiff zur Liste hinzugefügt
             if (fullyHit) {
-                uncoveredShipsFromB.add(ship);
+                playerB.getUncoveredShips().add(ship);
             }
         }
 
         // Prüfe Schiffe von Spieler B (wird vom Gegner, also Spieler A, angegriffen)
         for (Ship ship : shipsB) {
             boolean alreadyUncovered = false;
-            for (Ship s : uncoveredShipsFromA) {
+            for (Ship s : playerA.getUncoveredShips()) {
                 if (s.getId() == ship.getId()) {
                     alreadyUncovered = true;
                     break;
@@ -293,7 +255,7 @@ public class GameState implements Serializable  {
             java.util.List<Point> occupiedCells = ship.getOccupiedCells();
             for (Point p : occupiedCells) {
                 boolean cellHit = false;
-                for (Move move : moveA) {
+                for (Move move : playerA.getMoves()) {
                     move.computeAffectedCells(getBoardSize());
                     for (protocol.game.Cell cell : move.getAffectedCells()) {
                         if (cell.getX() == p.x && cell.getY() == p.y && cell.isHit()) {
@@ -309,16 +271,16 @@ public class GameState implements Serializable  {
                 }
             }
             if (fullyHit) {
-                uncoveredShipsFromA.add(ship);
+                playerA.getUncoveredShips().add(ship);
             }
         }
     }
 
     public void addUncoveredShip(UUID player, Ship ship) {
-        if(playerA.equals(player)) {
-            uncoveredShipsFromA.add(ship);
-        } else if(playerB.equals(player)) {
-            uncoveredShipsFromB.add(ship);
+        if(playerA.isPlayer(player)) {
+            playerA.getUncoveredShips().add(ship);
+        } else if(playerB.isPlayer(player)) {
+            playerB.getUncoveredShips().add(ship);
         }
     }
 
@@ -328,7 +290,7 @@ public class GameState implements Serializable  {
      */
     public ArrayList<Cell> getAttackedCellsForPlayerA() {
         ArrayList<Cell> attackedCells = new ArrayList<>();
-        for (Move move : moveA) {
+        for (Move move : playerA.getMoves()) {
             // If you want all cells (hits and misses), simply add them all:
             attackedCells.addAll(move.getAffectedCells());
         }
@@ -341,7 +303,7 @@ public class GameState implements Serializable  {
      */
     public ArrayList<Cell> getAttackedCellsForPlayerB() {
         ArrayList<Cell> attackedCells = new ArrayList<>();
-        for (Move move : moveB) {
+        for (Move move : playerB.getMoves()) {
             attackedCells.addAll(move.getAffectedCells());
         }
         return attackedCells;
@@ -363,29 +325,20 @@ public class GameState implements Serializable  {
         return status;
     }
 
-    public String getPlayerAName() {
-        return playerAName;
-    }
-
-    public String getPlayerBName() {
-        return playerBName;
-    }
-
     public UUID getId() {
         return id;
     }
 
-    public int getSessionCode() {
-        return sessionCode;
+    public ClientPlayer getPlayerA() {
+        return playerA;
     }
 
-    public String getOpponentName(UUID player) {
-        if(playerA.equals(player)) {
-            return playerBName;
-        } else if(playerB.equals(player)) {
-            return playerAName;
-        }
-        return null;
+    public ClientPlayer getPlayerB() {
+        return playerB;
+    }
+
+    public int getSessionCode() {
+        return sessionCode;
     }
 
     public GameState setSessionCode(int sessionCode) {
@@ -429,62 +382,31 @@ public class GameState implements Serializable  {
         return size;
     }
 
-    public UUID getPlayerA() {
-        return playerA;
-    }
-
-    public UUID getPlayerB() {
-        return playerB;
-    }
-
-    public boolean hasOpponentSubmittedPlacement(UUID player) {
-        if(playerA.equals(player)) {
-            return isBReady;
-        } else if(playerB.equals(player)) {
-            return isAReady;
+    public ClientPlayer getPlayer(UUID player) {
+        if(playerA.isPlayer(player)) {
+            return playerA;
+        } else if(playerB.isPlayer(player)) {
+            return playerB;
         }
-        return false;
+        return null;
     }
 
-    public int getPlayerEnergy(UUID player) {
-        if(playerA.equals(player)) {
-            return energyA;
-        } else if(playerB.equals(player)) {
-            return energyB;
+    public ClientPlayer getOpponent(UUID player) {
+        if(playerA.isPlayer(player)) {
+            return playerB;
+        } else if(playerB.isPlayer(player)) {
+            return playerA;
         }
-        return -1;
+        return null;
     }
 
-    public void setEnergy(UUID player, int energy) {
-        if(playerA.equals(player)) {
-            energyA = energy;
-        } else if(playerB.equals(player)) {
-            energyB = energy;
+    public ClientPlayer getCurrentTurnPlayer() {
+        if(playerA.isTurn()) {
+            return playerA;
+        } else if(playerB.isTurn()) {
+            return playerB;
         }
-    }
-
-    public void addEnergy(UUID player, int energy) {
-        if(playerA.equals(player)) {
-            energyA += energy;
-        } else if(playerB.equals(player)) {
-            energyB += energy;
-        }
-    }
-
-    public void setEnergyA(int energyA) {
-        this.energyA = energyA;
-    }
-
-    public void setEnergyB(int energyB) {
-        this.energyB = energyB;
-    }
-
-    public boolean hasPlayerASubmittedPlacement() {
-        return isAReady;
-    }
-
-    public boolean hasPlayerBSubmittedPlacement() {
-        return isBReady;
+        return null;
     }
 
     public void setBuildGameBoardFinished(Date buildGameBoardFinished) {
@@ -500,24 +422,66 @@ public class GameState implements Serializable  {
     }
 
     public void setWinner(UUID winner) {
-        this.winner = winner;
+        if(playerA.isPlayer(winner)) {
+            playerA.setWinner(true);
+        } else if(playerB.isPlayer(winner)) {
+            playerB.setWinner(true);
+        }
     }
 
-    public UUID getWinner() {
-        return winner;
+    public ArrayList<ClientPlayer> getWinner() {
+        if(this.status != GameStatus.GAME_OVER) return null;
+
+        ArrayList<ClientPlayer> winners = new ArrayList<>();
+
+        if(playerA.isWinner()) {
+            winners.add(playerA);
+        }
+
+        if(playerB.isWinner()) {
+            winners.add(playerB);
+        }
+
+        return winners;
+    }
+
+    public ArrayList<ClientPlayer> getLoser() {
+        if(this.status != GameStatus.GAME_OVER) return null;
+
+        ArrayList<ClientPlayer> losers = new ArrayList<>();
+
+        if(!playerA.isWinner()) {
+            losers.add(playerA);
+        }
+
+        if(!playerB.isWinner()) {
+            losers.add(playerB);
+        }
+
+        return losers;
     }
 
     public void setNextTurn() {
-        playerATurn = !playerATurn;
+        if (playerA.isTurn()) {
+            playerA.setTurn(false);
+            playerB.setTurn(true);
+        } else if (playerB.isTurn()) {
+            playerB.setTurn(false);
+            playerA.setTurn(true);
+        } else {
+            // Falls keiner als aktiv markiert ist, legen wir einen Standard fest
+            playerA.setTurn(true);
+            playerB.setTurn(false);
+        }
         nextGameRound();
     }
 
     public void addMove(UUID player, Move move) {
         System.out.println("Adding move: " + move);
-        if(playerA.equals(player)) {
-            moveA.add(move);
-        } else if(playerB.equals(player)) {
-            moveB.add(move);
+        if(playerA.isPlayer(player)) {
+            playerA.getMoves().add(move);
+        } else if(playerB.isPlayer(player)) {
+            playerB.getMoves().add(move);
         }
     }
 
@@ -527,18 +491,6 @@ public class GameState implements Serializable  {
 
     public void setPlayersTurnEnd(Date playersTurnEnd) {
         this.playersTurnEnd = playersTurnEnd;
-    }
-
-    public boolean isPlayerATurn() {
-        return playerATurn;
-    }
-
-    public ArrayList<Move> getMoveA() {
-        return moveA;
-    }
-
-    public ArrayList<Move> getMoveB() {
-        return moveB;
     }
 
     private int generateSessionCode() {

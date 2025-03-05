@@ -4,12 +4,12 @@ import protocol.Ship;
 
 import java.util.ArrayList;
 
-public class SubmitPlacementMessage extends Message {
+public class UpdateBuildBoardMessage extends Message {
 
     private final ArrayList<Ship> ships;
 
-    public SubmitPlacementMessage(ArrayList<Ship> ships) {
-        super(MessageType.SUBMIT_PLACEMENT);
+    public UpdateBuildBoardMessage(ArrayList<Ship> ships) {
+        super(MessageType.UPDATE_BUILD_BOARD);
         this.ships = ships;
     }
 

@@ -112,7 +112,7 @@ public class GameWaitingScene extends JPanel {
         // Falls der User einem bestehenden Spiel beitritt, setze den opponentName
         if(gameHandler.getGameState().getPlayerCount() == 2) {
             UUID userId = gameHandler.getClientHandler().getUserId();
-            setOpponentName(gameHandler.getGameState().getOpponentName(userId));
+            setOpponentName(gameHandler.getGameState().getOpponent(userId).getName());
         }
     }
 

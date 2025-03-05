@@ -21,11 +21,11 @@ public class MoveManager {
                 move.getY() < 0 || move.getY() >= gameState.getBoardSize())
             return false;
 
-        if(gameState.getPlayerA().equals(player)) {
-            ArrayList<Move> moves = gameState.getMoveA();
+        if(gameState.getPlayerA().isPlayer(player)) {
+            ArrayList<Move> moves = gameState.getPlayerA().getMoves();
             return isMoveValid(move, moves);
-        } else if(gameState.getPlayerB().equals(player)) {
-            ArrayList<Move> moves = gameState.getMoveB();
+        } else if(gameState.getPlayerB().isPlayer(player)) {
+            ArrayList<Move> moves = gameState.getPlayerB().getMoves();
             return isMoveValid(move, moves);
         } else {
             return false;
@@ -126,7 +126,7 @@ public class MoveManager {
         boolean[][] hitCells = new boolean[boardSize][boardSize];
 
         // Markiere alle betroffenen Zellen aus den Zügen von Spieler A.
-        for (Move move : gameState.getMoveA()) {
+        for (Move move : gameState.getPlayerA().getMoves()){
             move.computeAffectedCells(boardSize);
             for (Cell cell : move.getAffectedCells()) {
                 int x = cell.getX();
@@ -137,7 +137,7 @@ public class MoveManager {
             }
         }
         // Markiere alle betroffenen Zellen aus den Zügen von Spieler B.
-        for (Move move : gameState.getMoveB()) {
+        for (Move move : gameState.getPlayerB().getMoves()){
             move.computeAffectedCells(boardSize);
             for (Cell cell : move.getAffectedCells()) {
                 int x = cell.getX();

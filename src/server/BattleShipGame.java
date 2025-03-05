@@ -40,19 +40,19 @@ public class BattleShipGame implements Game, Runnable {
 
                 System.out.println("Build Game Board Finished");
 
-                System.out.println("Player A: " + gameState.hasPlayerASubmittedPlacement());
-                System.out.println("Player B: " + gameState.hasPlayerBSubmittedPlacement());
+                System.out.println("Player A: " + gameState.getPlayerA().isReady());
+                System.out.println("Player B: " + gameState.getPlayerB().isReady());
 
-                if(!this.gameState.hasPlayerASubmittedPlacement()) {
+                if(!this.gameState.getPlayerA().isReady()) {
                     System.out.println("Player A did not submit placement");
                     this.shipsPlayerA = ShipPlacementValidator.createRandomizedGameBoard(size, availableShips);
-                    this.gameState.playerSubmitPlacement(playerA.getId());
+                    this.gameState.getPlayerA().setReady(true);
                 }
 
-                if(!this.gameState.hasPlayerBSubmittedPlacement()) {
+                if(!this.gameState.getPlayerB().isReady()) {
                     System.out.println("Player B did not submit placement");
                     this.shipsPlayerB = ShipPlacementValidator.createRandomizedGameBoard(size, availableShips);
-                    this.gameState.playerSubmitPlacement(playerB.getId());
+                    this.gameState.getPlayerB().setReady(true);
                 }
 
                 playerA.sendMessage(new GameUpdateMessage(gameState, this.shipsPlayerA));
@@ -92,14 +92,12 @@ public class BattleShipGame implements Game, Runnable {
                 newState.setPlayersTurnStart(start);
                 newState.setPlayersTurnEnd(end);
 
-                newState.addEnergy(newState.isPlayerATurn() ? newState.getPlayerA() : newState.getPlayerB(), Parameters.ENERGY_TURN_BONUS);
+                newState.getCurrentTurnPlayer().addEnergy(Parameters.ENERGY_TURN_BONUS);
 
                 newState.setNextTurn();
 
-                System.out.println("Changed round to " + newState.getCurrentGameRound() + " and player " + (newState.isPlayerATurn() ? "A" : "B") + " turn");
-
-                System.out.println("Player A: " + this.gameState.getMoveA().size() + " - " + this.gameState.getCurrentGameRound());
-                System.out.println("Player B: " + this.gameState.getMoveB().size() + " - " + this.gameState.getCurrentGameRound());
+                System.out.println("Player A: " + this.gameState.getPlayerA().getMoves().size() + " - " + this.gameState.getCurrentGameRound());
+                System.out.println("Player B: " + this.gameState.getPlayerB().getMoves().size() + " - " + this.gameState.getCurrentGameRound());
 
                 MoveManager moveManager = new MoveManager(newState);
 
@@ -109,7 +107,9 @@ public class BattleShipGame implements Game, Runnable {
                     break;
                 }
 
-                if(this.gameState.isPlayerATurn() && this.gameState.getMoveA().size() < this.gameState.getCurrentGameRound()) {
+                //TODO CHANGE THIS TO THE LOGIC OF HOW MANY MOVES A PLAYER CAN MAKE PER ROUND
+
+                if(this.gameState.getPlayerA().isTurn() && this.gameState.getPlayerA().getMoves().size() < this.gameState.getCurrentGameRound()) {
 
                     System.out.println("Player A did not submit move");
 
@@ -122,7 +122,7 @@ public class BattleShipGame implements Game, Runnable {
 
                     System.out.println("Move: " + move.getX() + " - " + move.getY());
 
-                } else if(!this.gameState.isPlayerATurn() && this.gameState.getMoveB().size() < this.gameState.getCurrentGameRound()) {
+                } else if(this.gameState.getPlayerB().isTurn() && this.gameState.getPlayerB().getMoves().size() < this.gameState.getCurrentGameRound()) {
                     System.out.println("Player B did not submit move");
 
                     Move move = moveManager.makeRandomMove(playerB.getId());
@@ -165,7 +165,7 @@ public class BattleShipGame implements Game, Runnable {
         if (playerA == null) {
             playerA = player;
             GameState newState = new GameState(this.getGameState());
-            newState.setPlayerA(playerA.getId(), playerA.getUsername());
+            newState.setPlayerA(new ClientPlayer(playerA.getId(), playerA.getUsername()));
 
             System.out.println("Player A: " + playerA.getUsername());
 
@@ -177,7 +177,7 @@ public class BattleShipGame implements Game, Runnable {
         } else if (playerB == null) {
             playerB = player;
             GameState newState = new GameState(this.getGameState());
-            newState.setPlayerB(playerB.getId(), playerB.getUsername());
+            newState.setPlayerB(new ClientPlayer(playerB.getId(), playerB.getUsername()));
 
             System.out.println("Player B: " + playerB.getUsername());
 
@@ -253,7 +253,7 @@ public class BattleShipGame implements Game, Runnable {
         System.out.println("Move: " + move.getX() + " - " + move.getY() + " - Is a Hit: " + moveIsHit);
 
         if (moveIsHit) {
-            newState.addEnergy(player.getId(), Parameters.ENERGY_SHIP_HIT);
+            newState.getCurrentTurnPlayer().addEnergy(Parameters.ENERGY_SHIP_HIT);
         }
 
         newState.uncoverHitShips(this.shipsPlayerA, this.shipsPlayerB);
@@ -282,9 +282,6 @@ public class BattleShipGame implements Game, Runnable {
                 stateWithTurn.uncoverHitShips(shipsPlayerA, shipsPlayerB);
                 stateWithTurn.updateHitList(shipsPlayerA, shipsPlayerB);
                 stateWithTurn.loadRadars(shipsPlayerA, shipsPlayerB);
-
-                System.out.println("Changed round to " + stateWithTurn.getCurrentGameRound() +
-                        " and player " + (stateWithTurn.isPlayerATurn() ? "A" : "B") + " turn");
 
                 playerA.sendMessage(new GameUpdateMessage(stateWithTurn, shipsPlayerA));
                 playerB.sendMessage(new GameUpdateMessage(stateWithTurn, shipsPlayerB));
@@ -319,13 +316,29 @@ public class BattleShipGame implements Game, Runnable {
         server.updateGameList();
     }
 
+    @Override
+    public void onPlayerPlaceShips(PlayerInfo player, ArrayList<Ship> ships) {
+
+    }
+
+    @Override
+    public void onPlayerReadyStateChange(PlayerInfo player, boolean ready) {
+
+    }
+
     public void setPlayerShips(UUID playerId, ArrayList<Ship> ships) {
         if(playerA.getId().equals(playerId)) {
             this.shipsPlayerA = ships;
-            this.gameState.playerSubmitPlacement(playerA.getId());
+
+            if(ships.size() == availableShips.size()) {
+                this.gameState.getPlayerA().setReady(true);
+            }
         } else if(playerB.getId().equals(playerId)) {
             this.shipsPlayerB = ships;
-            this.gameState.playerSubmitPlacement(playerB.getId());
+
+            if(ships.size() == availableShips.size()) {
+                this.gameState.getPlayerB().setReady(true);
+            }
         }
     }
 

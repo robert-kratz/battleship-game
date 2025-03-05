@@ -6,7 +6,6 @@ import protocol.game.Move;
 import protocol.messages.*;
 import protocol.GameState;
 
-import java.awt.*;
 import java.util.ArrayList;
 import java.util.UUID;
 
@@ -43,8 +42,8 @@ public class GameHandler implements GameClient {
 
         System.out.println("Game state updated: " + gameState.getStatus());
 
-        System.out.println("Player A ready: " + gameState.hasPlayerASubmittedPlacement());
-        System.out.println("Player B ready: " + gameState.hasPlayerBSubmittedPlacement());
+        System.out.println("Player A ready: " + gameState.getPlayerA().isReady());
+        System.out.println("Player B ready: " + gameState.getPlayerA().isReady());
 
         //ONLY EXECUTE IF GAME STATE HAS CHANGED
         if(gameStateUpdated) {
@@ -57,7 +56,7 @@ public class GameHandler implements GameClient {
                     if(!isInGame) {
                         if(this.gameState.getPlayerCount() == 2) {
                             UUID userId = this.clientHandler.getUserId();
-                            String opponentName = this.gameState.getOpponentName(userId);
+                            String opponentName = this.gameState.getOpponent(userId).getName();
 
                             this.clientHandler.getStageManager().gameWaitingScene.setOpponentName(opponentName);
                         }
@@ -86,7 +85,7 @@ public class GameHandler implements GameClient {
             }
             case BUILD_GAME_BOARD -> {
                 if(this.clientHandler.getStageManager().gameBuildScene != null) {
-                    boolean isOpponentReady = this.gameState.hasOpponentSubmittedPlacement(this.clientHandler.getUserId());
+                    boolean isOpponentReady = this.gameState.getOpponent(this.clientHandler.getUserId()).isReady();
 
                     this.clientHandler.getStageManager().gameBuildScene.setOpponentState(isOpponentReady);
                 }
@@ -97,7 +96,7 @@ public class GameHandler implements GameClient {
 
                     this.clientHandler.getStageManager().gameIngameScene.toggleTurn(isPlayerATurn);
                     this.clientHandler.getStageManager().gameIngameScene.extendCurrentTurn(gameState.getPlayersTurnEnd());
-                    this.clientHandler.getStageManager().gameIngameScene.setPlayerEnergy(gameState.getPlayerEnergy(this.clientHandler.getUserId()));
+                    this.clientHandler.getStageManager().gameIngameScene.setPlayerEnergy(gameState.getPlayer(this.clientHandler.getUserId()).getEnergy());
                 }
             }
         }
@@ -140,35 +139,37 @@ public class GameHandler implements GameClient {
 
         boolean playerTurnHasChanged = this.gameState.isPlayersTurn(this.clientHandler.getUserId()) != gameState.isPlayersTurn(this.clientHandler.getUserId());
 
+        System.out.println("PlayerTurn: " + this.gameState.isPlayersTurn(this.clientHandler.getUserId()));
+
         System.out.println("Player turn has changed: " + playerTurnHasChanged);
 
-        if(playerTurnHasChanged) {
-            boolean isPlayerATurn = gameState.isPlayersTurn(this.clientHandler.getUserId());
+        boolean isPlayersTurn = gameState.isPlayersTurn(this.clientHandler.getUserId());
 
-            this.clientHandler.getStageManager().gameIngameScene.toggleTurn(isPlayerATurn);
+        if(this.getClientHandler().getStageManager().gameIngameScene != null) {
+            this.clientHandler.getStageManager().gameIngameScene.toggleTurn(isPlayersTurn);
             this.clientHandler.getStageManager().gameIngameScene.extendCurrentTurn(gameState.getPlayersTurnEnd());
-            this.clientHandler.getStageManager().gameIngameScene.setPlayerEnergy(gameState.getPlayerEnergy(this.clientHandler.getUserId()));
+            this.clientHandler.getStageManager().gameIngameScene.setPlayerEnergy(gameState.getPlayer(this.clientHandler.getUserId()).getEnergy());
         }
 
         //Check weather a move has been made
 
-        boolean moveMade = gameState.getMoveA().size() != this.gameState.getMoveA().size() || gameState.getMoveB().size() != this.gameState.getMoveB().size();
+        boolean moveMade = gameState.getPlayerA().getMoves().size() != this.gameState.getPlayerA().getMoves().size() || gameState.getPlayerB().getMoves().size() != this.gameState.getPlayerB().getMoves().size();
 
         if (moveMade) {
             System.out.println("Move GUI Update");
             // Prüfe, ob der lokale Spieler Spieler A ist:
-            if (clientHandler.getUserId().equals(gameState.getPlayerA())) {
+            if (clientHandler.getUserId().equals(gameState.getPlayerA().getId())) {
                 // Spieler A:
                 // - Das Player Board zeigt die Züge des Gegners (moveB, da diese auf A's Schiffe zielen)
                 // - Das Opponent Board zeigt die eigenen Züge (moveA)
-                clientHandler.getStageManager().gameIngameScene.playerBoard.setMoves(gameState.getMoveB());
-                clientHandler.getStageManager().gameIngameScene.opponentBoard.setMoves(gameState.getMoveA());
+                clientHandler.getStageManager().gameIngameScene.playerBoard.setMoves(gameState.getPlayerB().getMoves());
+                clientHandler.getStageManager().gameIngameScene.opponentBoard.setMoves(gameState.getPlayerA().getMoves());
             } else {
                 // Andernfalls (lokaler Spieler ist Spieler B):
                 // - Das Player Board zeigt die Züge des Gegners (moveA, da diese auf B's Schiffe zielen)
                 // - Das Opponent Board zeigt die eigenen Züge (moveB)
-                clientHandler.getStageManager().gameIngameScene.playerBoard.setMoves(gameState.getMoveA());
-                clientHandler.getStageManager().gameIngameScene.opponentBoard.setMoves(gameState.getMoveB());
+                clientHandler.getStageManager().gameIngameScene.playerBoard.setMoves(gameState.getPlayerA().getMoves());
+                clientHandler.getStageManager().gameIngameScene.opponentBoard.setMoves(gameState.getPlayerB().getMoves());
             }
         }
 
@@ -217,7 +218,7 @@ public class GameHandler implements GameClient {
             return;
         }
 
-        clientHandler.sendMessage(new SubmitPlacementMessage(ships));
+        clientHandler.sendMessage(new UpdateBuildBoardMessage(ships));
     }
 
     /**
@@ -248,7 +249,7 @@ public class GameHandler implements GameClient {
 
         this.getClientHandler().getStageManager().startBuildScene();
 
-        boolean isOpponentReady = this.getGameState().hasOpponentSubmittedPlacement(this.getClientHandler().getUserId());
+        boolean isOpponentReady = this.getGameState().getOpponent(this.getClientHandler().getUserId()).isReady();
 
         this.getClientHandler().getStageManager().gameBuildScene.setOpponentState(isOpponentReady);
 

@@ -1,11 +1,14 @@
 package client.gui;
 
 import client.GameHandler;
+import protocol.ClientPlayer;
 import protocol.GameState;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class GameOverScene extends JPanel {
     private final GameHandler gameHandler;
@@ -24,18 +27,15 @@ public class GameOverScene extends JPanel {
         // boolean isUserPlayerB = currentUserId.equals(gameState.getPlayerB()); // nicht zwingend nötig
 
         // Hole Gewinner und Verlierer aus dem GameState (bei GAME_OVER ist winner gesetzt)
-        UUID winnerId = gameState.getWinner();
-        String winnerName = winnerId.equals(gameState.getPlayerA()) ? gameState.getPlayerAName() : gameState.getPlayerBName();
-        String loserName;
-        if (winnerId.equals(gameState.getPlayerA())) {
-            loserName = gameState.getPlayerBName();
-        } else {
-            loserName = gameState.getPlayerAName();
-        }
+        ArrayList<ClientPlayer> winners = gameState.getWinner();
+        ArrayList<ClientPlayer> loosers = gameState.getLoser();
+
+        String winnerNames = winners.stream().map(ClientPlayer::getName).collect(Collectors.joining(", "));
+        String loserNames = loosers.stream().map(ClientPlayer::getName).collect(Collectors.joining(", "));
 
         // Oberste Überschrift: "You won" oder "You lost"
         JLabel resultLabel;
-        if (currentUserId.equals(winnerId)) {
+        if (winners.stream().anyMatch(player -> player.getId().equals(currentUserId))) {
             resultLabel = new JLabel("You won");
         } else {
             resultLabel = new JLabel("You lost");
@@ -44,13 +44,13 @@ public class GameOverScene extends JPanel {
         resultLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         // Gewinner-Klarname unterhalb der Überschrift (kleiner dargestellt)
-        JLabel winnerLabel = new JLabel("Winner: " + winnerName);
+        JLabel winnerLabel = new JLabel("Winner: " + winnerNames);
         winnerLabel.setFont(new Font("Arial", Font.PLAIN, 24));
         winnerLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         // Verlierer-Anzeige – wenn der User verloren hat, wird "(You)" angehängt
-        String loserText = "Loser: " + loserName;
-        if (!currentUserId.equals(winnerId)) {
+        String loserText = "Loser: " + loserNames;
+        if (!loosers.stream().anyMatch(player -> player.getId().equals(currentUserId))) {
             loserText += " (You)";
         }
         JLabel loserLabel = new JLabel(loserText);
@@ -65,11 +65,11 @@ public class GameOverScene extends JPanel {
         // Statistik-Panel für Player A
         JPanel playerAPanel = new JPanel();
         playerAPanel.setLayout(new BoxLayout(playerAPanel, BoxLayout.Y_AXIS));
-        playerAPanel.setBorder(BorderFactory.createTitledBorder(gameState.getPlayerAName()));
-        JLabel energyALabel = new JLabel("Energy: " + gameState.getEnergyA());
+        playerAPanel.setBorder(BorderFactory.createTitledBorder(gameState.getPlayerA().getName()));
+        JLabel energyALabel = new JLabel("Energy: " + gameState.getPlayerA().getEnergy());
         energyALabel.setFont(new Font("Arial", Font.PLAIN, 18));
         energyALabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        JLabel movesALabel = new JLabel("Moves: " + gameState.getMoveA().size());
+        JLabel movesALabel = new JLabel("Moves: " + gameState.getPlayerA().getMoves().size());
         movesALabel.setFont(new Font("Arial", Font.PLAIN, 18));
         movesALabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         playerAPanel.add(Box.createVerticalGlue());
@@ -81,11 +81,11 @@ public class GameOverScene extends JPanel {
         // Statistik-Panel für Player B
         JPanel playerBPanel = new JPanel();
         playerBPanel.setLayout(new BoxLayout(playerBPanel, BoxLayout.Y_AXIS));
-        playerBPanel.setBorder(BorderFactory.createTitledBorder(gameState.getPlayerBName()));
-        JLabel energyBLabel = new JLabel("Energy: " + gameState.getEnergyB());
+        playerBPanel.setBorder(BorderFactory.createTitledBorder(gameState.getPlayerB().getName()));
+        JLabel energyBLabel = new JLabel("Energy: " + gameState.getPlayerB().getEnergy());
         energyBLabel.setFont(new Font("Arial", Font.PLAIN, 18));
         energyBLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        JLabel movesBLabel = new JLabel("Moves: " + gameState.getMoveB().size());
+        JLabel movesBLabel = new JLabel("Moves: " + gameState.getPlayerB().getMoves().size());
         movesBLabel.setFont(new Font("Arial", Font.PLAIN, 18));
         movesBLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         playerBPanel.add(Box.createVerticalGlue());

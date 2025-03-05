@@ -128,8 +128,8 @@ public class PlayerInfo implements Runnable {
                         createGame(createGameMessage.getSize());
                         System.out.println("Player A created a game");
                     }
-                    case MessageType.SUBMIT_PLACEMENT -> {
-                        SubmitPlacementMessage submitPlacementMessage = (SubmitPlacementMessage) received;
+                    case MessageType.UPDATE_BUILD_BOARD -> {
+                        UpdateBuildBoardMessage updateBuildBoardMessage = (UpdateBuildBoardMessage) received;
 
                         BattleShipGame game = server.getGame(this);
 
@@ -140,16 +140,16 @@ public class PlayerInfo implements Runnable {
 
                         System.out.println("Received placement from player " + username);
 
-                        for (Ship ship : submitPlacementMessage.getShips()) {
+                        for (Ship ship : updateBuildBoardMessage.getShips()) {
                             System.out.println("Ship: " + ship);
                         }
 
                         // TODO: VALIDATE PLACEMENT
 
-                        game.setPlayerShips(this.getId(), submitPlacementMessage.getShips());
+                        game.setPlayerShips(this.getId(), updateBuildBoardMessage.getShips());
 
                         System.out.println("Submitted placement");
-                        for (Ship ship : submitPlacementMessage.getShips()) {
+                        for (Ship ship : updateBuildBoardMessage.getShips()) {
                             System.out.println("Ship: " + ship);
                         }
 

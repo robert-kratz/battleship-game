@@ -221,11 +221,11 @@ public class Server {
             String gameId = game.getGameState().getId().toString();
             String playerAName = game.getPlayerA() != null ? game.getPlayerA().getUsername() : "waiting";
             String playerBName = game.getPlayerB() != null ? game.getPlayerB().getUsername() : "waiting";
-            int moveACount = game.getGameState().getMoveA().size();
-            int moveBCount = game.getGameState().getMoveB().size();
+            int moveACount = game.getGameState().getPlayerA() != null ? game.getGameState().getPlayerA().getMoves().size() : 0;
+            int moveBCount = game.getGameState().getPlayerB() != null ? game.getGameState().getPlayerB().getMoves().size() : 0;
             String status = game.getGameState().getStatus().toString();
             sb.append("Game ID: ").append(gameId).append("\n");
-            sb.append("Current Turn: ").append(game.getGameState().isPlayerATurn() ? playerAName : playerBName).append("\n");
+            sb.append("Current Turn: ").append(game.getGameState().getCurrentTurnPlayer() != null ? game.getGameState().getCurrentTurnPlayer().getName() : "-").append("\n");
             sb.append("Player A: ").append(playerAName).append(" (Moves: ").append(moveACount).append(")\n");
             sb.append("Player B: ").append(playerBName).append(" (Moves: ").append(moveBCount).append(")\n");
             sb.append("Status: ").append(status).append("\n");

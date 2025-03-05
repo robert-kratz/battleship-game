@@ -88,7 +88,7 @@ public class GameInGameScene extends JPanel implements Runnable {
 
                         ArrayList<Cell> takenCells;
 
-                        if(gameHandler.getGameState().getPlayerA().equals(gameHandler.getClientHandler().getUserId())) {
+                        if(gameHandler.getGameState().getPlayerA().isPlayer(gameHandler.getClientHandler().getUserId())) {
                             takenCells = gameHandler.getGameState().getAttackedCellsForPlayerA();
                         } else {
                             takenCells = gameHandler.getGameState().getAttackedCellsForPlayerB();
@@ -163,7 +163,7 @@ public class GameInGameScene extends JPanel implements Runnable {
         leftPanel.add(Box.createVerticalStrut(10));
 
         // Energieanzeige
-        int energy = this.gameHandler.getGameState().getEnergy(this.gameHandler.getClientHandler().getUserId());
+        int energy = this.gameHandler.getGameState().getPlayer(this.gameHandler.getClientHandler().getUserId()).getEnergy();
         energyLabel = new JLabel("Energy: " + energy);
         energyLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         energyLabel.setForeground(Color.WHITE);
@@ -278,8 +278,7 @@ public class GameInGameScene extends JPanel implements Runnable {
         opponentLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         rightPanel.add(opponentLabel);
 
-        String opponentName = !gameHandler.getGameState().getPlayerA().equals(gameHandler.getClientHandler().getUserId()) ?
-                gameHandler.getGameState().getPlayerAName() : gameHandler.getGameState().getPlayerBName();
+        String opponentName = gameHandler.getGameState().getOpponent(this.gameHandler.getClientHandler().getUserId()).getName();
 
         JLabel opponentNameLabel = new JLabel(opponentName);
         opponentNameLabel.setForeground(Color.WHITE);
@@ -344,12 +343,12 @@ public class GameInGameScene extends JPanel implements Runnable {
         this.currentTurnEnd = newEndTime;
     }
 
-    public void toggleTurn(boolean playerATurn) {
-        this.playersTurn = playerATurn;
-        playerTurnLabel.setText(playerATurn ? "Your Turn" : "Waiting for Opponent");
-        opponentTurnLabel.setText(!playerATurn ? "Opponents Turn" : "Waiting for your Move");
-        playerTurnLabel.setForeground(playerATurn ? Color.GREEN : Color.LIGHT_GRAY);
-        opponentTurnLabel.setForeground(!playerATurn ? Color.GREEN : Color.LIGHT_GRAY);
+    public void toggleTurn(boolean isPlayersTurn) {
+        this.playersTurn = isPlayersTurn;
+        playerTurnLabel.setText(isPlayersTurn ? "Your Turn" : "Waiting for Opponent");
+        opponentTurnLabel.setText(!isPlayersTurn ? "Opponents Turn" : "Waiting for your Move");
+        playerTurnLabel.setForeground(isPlayersTurn ? Color.GREEN : Color.LIGHT_GRAY);
+        opponentTurnLabel.setForeground(!isPlayersTurn ? Color.GREEN : Color.LIGHT_GRAY);
 
         // Bei Turn-Wechsel die selektierten Items und Hover-Daten zurücksetzen
         playerBoard.clearSelectedItem();

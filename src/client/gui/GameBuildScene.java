@@ -232,8 +232,7 @@ public class GameBuildScene extends JPanel implements Runnable {
         opponentLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         rightPanel.add(opponentLabel);
 
-        String opponentName = !gameHandler.getGameState().getPlayerA().equals(gameHandler.getClientHandler().getUserId()) ?
-                gameHandler.getGameState().getPlayerAName() : gameHandler.getGameState().getPlayerBName();
+        String opponentName = this.gameHandler.getGameState().getOpponent(this.gameHandler.getClientHandler().getUserId()).getName();
 
         JLabel opponentNameLabel = new JLabel(opponentName);
         opponentNameLabel.setForeground(Color.WHITE);

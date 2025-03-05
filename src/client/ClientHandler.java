@@ -113,8 +113,8 @@ public class ClientHandler {
 
                             this.lobbyHandler.setInQueue(false);
 
-                            System.out.println("Player A: " + gameStateUpdateMessage.getGameState().getPlayerAName());
-                            System.out.println("Player B: " + gameStateUpdateMessage.getGameState().getPlayerBName());
+                            System.out.println("Player A: " + gameStateUpdateMessage.getGameState().getPlayerA().getName());
+                            //System.out.println("Player B: " + gameStateUpdateMessage.getGameState().getPlayerB().getName());
 
                             gameHandler.onGameStateUpdate(gameStateUpdateMessage);
                         }
@@ -143,7 +143,8 @@ public class ClientHandler {
                     }
                 }
             } catch (IOException | ClassNotFoundException  | ClassCastException e) {
-                JOptionPane.showMessageDialog(null, "Verbindung unterbrochen.", "Fehler", JOptionPane.ERROR_MESSAGE);
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(null, "Connection lost", "Error", JOptionPane.ERROR_MESSAGE);
                 System.exit(1);
             }
         }).start();
@@ -168,7 +169,7 @@ public class ClientHandler {
             out.writeObject(message);
             out.flush();
         } catch (IOException e) {
-            showError("Nachricht konnte nicht gesendet werden.");
+            showError("Unable to send message to server.");
         }
     }
 
