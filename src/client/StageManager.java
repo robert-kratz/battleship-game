@@ -6,10 +6,7 @@ import protocol.Ship;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -201,7 +198,7 @@ public class StageManager extends JFrame {
 
             this.currentStage = stage;
 
-            setTitle(stage.toString());
+            setTitle(stage.getWindowTitle());
             adaptScreenSize();
         } else {
             System.err.println("Unable to switch to scene: " + stage);

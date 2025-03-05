@@ -17,7 +17,7 @@ public class GameState implements Serializable  {
         LOBBY_WAITING,
         BUILD_GAME_BOARD,
         IN_GAME,
-        GAME_OVER,
+        GAME_OVER;
     }
 
     private final UUID id;
