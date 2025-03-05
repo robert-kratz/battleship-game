@@ -38,7 +38,7 @@ public class GameState implements Serializable  {
 
     private boolean playerATurn = true;
 
-    private boolean shipsPlacedA, shipsPlacedB;
+    private boolean isAReady, isBReady;
     private int energyA = 30, energyB = 30;
     private ArrayList<Move> moveA = new ArrayList<>(), moveB = new ArrayList<>();
 
@@ -69,8 +69,8 @@ public class GameState implements Serializable  {
         this.playersTurnStart = gameState.playersTurnStart;
         this.playersTurnEnd = gameState.playersTurnEnd;
         this.playerATurn = gameState.playerATurn;
-        this.shipsPlacedA = gameState.shipsPlacedA;
-        this.shipsPlacedB = gameState.shipsPlacedB;
+        this.isAReady = gameState.isAReady;
+        this.isBReady = gameState.isBReady;
         this.size = gameState.size;
         this.status = gameState.status;
         this.availableShips = new ArrayList<>(gameState.availableShips);
@@ -135,9 +135,9 @@ public class GameState implements Serializable  {
 
     public void playerSubmitPlacement(UUID player) {
         if(playerA.equals(player)) {
-            shipsPlacedA = true;
+            isAReady = true;
         } else if(playerB.equals(player)) {
-            shipsPlacedB = true;
+            isBReady = true;
         }
     }
 
@@ -436,9 +436,9 @@ public class GameState implements Serializable  {
 
     public boolean hasOpponentSubmittedPlacement(UUID player) {
         if(playerA.equals(player)) {
-            return shipsPlacedB;
+            return isBReady;
         } else if(playerB.equals(player)) {
-            return shipsPlacedA;
+            return isAReady;
         }
         return false;
     }
@@ -477,11 +477,11 @@ public class GameState implements Serializable  {
     }
 
     public boolean hasPlayerASubmittedPlacement() {
-        return shipsPlacedA;
+        return isAReady;
     }
 
     public boolean hasPlayerBSubmittedPlacement() {
-        return shipsPlacedB;
+        return isBReady;
     }
 
     public void setBuildGameBoardFinished(Date buildGameBoardFinished) {

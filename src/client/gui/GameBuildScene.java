@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class GameBuildScene extends JPanel implements Runnable {
     private int height, width;
@@ -27,12 +28,13 @@ public class GameBuildScene extends JPanel implements Runnable {
     private JPanel leftPanel;
     private JPanel rightPanel;
     private JLabel timerLabel;
-    private JButton radomizeButton;
+    private JButton randomizeButton;
     private JButton readyButton;
 
-    private ArrayList<Ship> availableShips;
-    private ArrayList<Ship> placedShips;
-    // Verwende als Schlüssel die eindeutige Ship-ID
+    // Alle Schiffe, die im Spiel zur Verfügung stehen
+    private ArrayList<Ship> allShips;
+
+    // Mapping: Ship-ID -> Button
     private Map<Integer, JButton> shipButtonMap = new HashMap<>();
 
     private JLabel playerStatusLabel;
@@ -44,53 +46,59 @@ public class GameBuildScene extends JPanel implements Runnable {
         setLayout(new BorderLayout());
         this.gameHandler = gameHandler;
 
-        // Verfügbare Schiffe aus dem GameState laden
-        this.availableShips = new ArrayList<>(gameHandler.getGameState().getAvailableShips());
-        this.placedShips = new ArrayList<>();
+        // Alle möglichen Schiffe aus dem GameState laden
+        this.allShips = new ArrayList<>(gameHandler.getGameState().getAvailableShips());
+
+        // Zentrale Liste der platzierten Schiffe – diese wird im Board gepflegt
+        ArrayList<Ship> centralPlacedShips = new ArrayList<>();
 
         // Board-Painter für die Build-Phase
         Image buildBackgroundImage = new ImageIcon("resource/background-2.png").getImage();
         BoardPainter buildPainter = new BuildBoardPainter(buildBackgroundImage);
 
-        // ShipPlacementValidator initialisieren (nutzt den GameState)
+        // Initialisiere den ShipPlacementValidator anhand der Boardgröße
         ShipPlacementValidator validator = new ShipPlacementValidator(gameHandler.getGameState().getBoardSize());
 
-        buildBoard = new BuildBattleshipBoard(gameHandler.getGameState().getBoardSize(), placedShips, buildPainter, validator,
+        buildBoard = new BuildBattleshipBoard(gameHandler.getGameState().getBoardSize(), centralPlacedShips, buildPainter, validator,
                 (row, col, selectedShip) -> {
                     Ship placed = buildBoard.getPlacedShipAt(row, col);
                     if (placed != null) {
-                        // Falls bereits ein Schiff platziert wurde, wird es wieder freigegeben
-                        placedShips.remove(placed);
-                        if (!availableShips.contains(placed)) {
-                            availableShips.add(placed);
-                        }
+                        // Falls hier bereits ein Schiff liegt, entferne es aus der zentralen Liste
+                        buildBoard.getPlacedShips().remove(placed);
+                        // Aktualisiere den Button für dieses Schiff
                         JButton btn = shipButtonMap.get(placed.getId());
                         if (btn != null) {
                             btn.setText("Ship (" + placed.getWidth() + "x" + placed.getLength() + ")");
                             btn.setBackground(Color.WHITE);
                         }
+                        // Setze das entfernte Schiff als selektiertes Schiff
                         buildBoard.setSelectedShip(placed);
                     } else {
-                        if (validator.isCollision(selectedShip, row, col, placedShips)) {
+                        // Prüfe, ob an dieser Position eine Kollision entsteht
+                        if (validator.isCollision(selectedShip, row, col, buildBoard.getPlacedShips())) {
                             System.out.println("Cannot place ship here due to collision.");
                             return;
                         }
                         if (selectedShip != null) {
                             selectedShip.setX(col);
                             selectedShip.setY(row);
-                            if (!placedShips.contains(selectedShip)) {
-                                placedShips.add(selectedShip);
+                            if (!buildBoard.getPlacedShips().contains(selectedShip)) {
+                                buildBoard.getPlacedShips().add(selectedShip);
                                 JButton btn = shipButtonMap.get(selectedShip.getId());
                                 if (btn != null) {
                                     btn.setText("Ship (" + selectedShip.getWidth() + "x" + selectedShip.getLength() + ") placed");
                                     btn.setBackground(Color.LIGHT_GRAY);
                                 }
-                                availableShips.remove(selectedShip);
+                                // Berechne die noch verfügbaren Schiffe als Differenz zwischen allShips und den platzierten Schiffen
+                                ArrayList<Ship> availableShips = computeAvailableShips();
+
+                                System.out.println("Available ships: " + availableShips);
+
                                 if (!availableShips.isEmpty()) {
                                     buildBoard.setSelectedShip(availableShips.get(0));
                                 } else {
                                     buildBoard.setSelectedShip(null);
-                                    this.gameHandler.sendSubmitPlacementEvent(placedShips); // Send Placement to Server
+                                    gameHandler.sendSubmitPlacementEvent(new ArrayList<>(buildBoard.getPlacedShips())); // Sende die Platzierung an den Server
                                 }
                             }
                         }
@@ -115,7 +123,8 @@ public class GameBuildScene extends JPanel implements Runnable {
         leftPanel.add(new JSeparator(SwingConstants.HORIZONTAL));
         leftPanel.add(Box.createVerticalStrut(10));
 
-        for (Ship ship : new ArrayList<>(availableShips)) {
+        // Erstelle für jedes Schiff einen Button
+        for (Ship ship : new ArrayList<>(allShips)) {
             JButton shipButton = new JButton("Ship (" + ship.getWidth() + "x" + ship.getLength() + ")");
             shipButton.setAlignmentX(Component.CENTER_ALIGNMENT);
             shipButton.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
@@ -123,39 +132,24 @@ public class GameBuildScene extends JPanel implements Runnable {
             shipButton.addActionListener(e -> {
                 System.out.println("Ship button clicked: " + ship.getId());
 
-                for (Ship s : buildBoard.getPlacedShips()) {
-                    System.out.println("Ship: " + s);
-                }
+                boolean shipAlreadyPlaced = buildBoard.getPlacedShips().stream().anyMatch(s -> s.getId() == ship.getId());
 
-                for (Ship s : placedShips) {
-                    System.out.println("Ship: " + s);
-                }
-
-                //check with id
-                boolean shipAlreadyOnBoard = buildBoard.getPlacedShips().stream().anyMatch(s -> s.getId() == ship.getId());
-                boolean shipAlreadyPlaced = placedShips.stream().anyMatch(s -> s.getId() == ship.getId());
-
-                // Wenn das Schiff bereits platziert ist, entferne es vom Board
-                if (shipAlreadyOnBoard || shipAlreadyPlaced) {
-                    placedShips.remove(ship);
+                // Falls das Schiff bereits platziert wurde, entferne es vom Board
+                if (shipAlreadyPlaced) {
+                    buildBoard.getPlacedShips().removeIf(s -> s.getId() == ship.getId());
                     buildBoard.removePlacedShip(ship.getId());
-                    if (!availableShips.contains(ship)) {
-                        availableShips.add(ship);
-                    }
                     shipButton.setText("Ship (" + ship.getWidth() + "x" + ship.getLength() + ")");
                     shipButton.setBackground(Color.WHITE);
-                    // Falls dieses Schiff aktuell ausgewählt war, deselektiere es
                     if (buildBoard.getSelectedShip() != null && buildBoard.getSelectedShip().getId() == ship.getId()) {
                         buildBoard.setSelectedShip(null);
                     }
                     buildBoard.repaint();
                     updateReadyButton();
                 } else {
-                    // Wenn das Schiff noch nicht platziert ist, wähle es zur Platzierung aus
+                    // Wähle das Schiff zur Platzierung aus
                     buildBoard.setSelectedShip(ship);
                 }
             });
-            // Ship-ID als Schlüssel verwenden
             shipButtonMap.put(ship.getId(), shipButton);
             leftPanel.add(shipButton);
             leftPanel.add(Box.createVerticalStrut(5));
@@ -172,14 +166,26 @@ public class GameBuildScene extends JPanel implements Runnable {
         readyButton.setEnabled(false);
         readyButton.addActionListener(e -> {
             System.out.println("Ready button clicked");
-            gameHandler.sendSubmitPlacementEvent(placedShips);
-            buildBoard.lockBoard();
-            for (JButton btn : shipButtonMap.values()) {
-                btn.setEnabled(false);
+            gameHandler.sendSubmitPlacementEvent(new ArrayList<>(buildBoard.getPlacedShips()));
+            if(!buildBoard.isLocked()) {
+                buildBoard.lockBoard();
+                for (JButton btn : shipButtonMap.values()) {
+                    btn.setEnabled(false);
+                }
+                randomizeButton.setEnabled(false);
+                playerStatusLabel.setText("Ready");
+                readyButton.setText("Not Ready");
+                playerStatusLabel.setForeground(Color.GREEN);
+            } else {
+                buildBoard.unlockBoard();
+                for (JButton btn : shipButtonMap.values()) {
+                    btn.setEnabled(true);
+                }
+                randomizeButton.setEnabled(true);
+                playerStatusLabel.setText("Build Board");
+                readyButton.setText("Ready");
+                playerStatusLabel.setForeground(Color.YELLOW);
             }
-            readyButton.setEnabled(false);
-            playerStatusLabel.setText("Ready");
-            playerStatusLabel.setForeground(Color.GREEN);
         });
         leftPanel.add(readyButton);
         leftPanel.add(Box.createVerticalStrut(10));
@@ -245,26 +251,22 @@ public class GameBuildScene extends JPanel implements Runnable {
         rightPanel.add(new JSeparator(SwingConstants.HORIZONTAL));
         rightPanel.add(Box.createVerticalStrut(10));
 
-        radomizeButton = new JButton("Randomize");
-        radomizeButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-        radomizeButton.setMaximumSize(new Dimension(Integer.MAX_VALUE, 60));
-        radomizeButton.setBackground(Color.LIGHT_GRAY);
-        radomizeButton.setOpaque(true);
-        radomizeButton.addActionListener(e -> {
+        randomizeButton = new JButton("Randomize");
+        randomizeButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        randomizeButton.setMaximumSize(new Dimension(Integer.MAX_VALUE, 60));
+        randomizeButton.setBackground(Color.LIGHT_GRAY);
+        randomizeButton.setOpaque(true);
+        randomizeButton.addActionListener(e -> {
             int boardSize = gameHandler.getGameState().getBoardSize();
             System.out.println("Randomizing ships");
 
-            this.availableShips.clear();
-            ArrayList<Ship> randomizedShips = ShipPlacementValidator.createRandomizedGameBoard(boardSize, this.gameHandler.getGameState().getAvailableShips());
-            this.placedShips.clear();
-            this.placedShips.addAll(randomizedShips);
-            // Da alle Schiffe nun platziert sind, leeren wir auch availableShips
-            this.availableShips.clear();
-            this.buildBoard.repaint();
+            ArrayList<Ship> randomizedShips = ShipPlacementValidator.createRandomizedGameBoard(boardSize, new ArrayList<>(allShips));
+            buildBoard.getPlacedShips().clear();
+            buildBoard.getPlacedShips().addAll(randomizedShips);
+            buildBoard.repaint();
+            buildBoard.setSelectedShip(null);
 
-            this.buildBoard.setSelectedShip(null);
-
-            for (Ship ship : this.placedShips) {
+            for (Ship ship : randomizedShips) {
                 JButton btn = shipButtonMap.get(ship.getId());
                 if (btn != null) {
                     btn.setText("Ship (" + ship.getWidth() + "x" + ship.getLength() + ") placed");
@@ -272,10 +274,10 @@ public class GameBuildScene extends JPanel implements Runnable {
                 }
             }
 
-            System.out.println("Randomized ships: " + placedShips);
+            System.out.println("Randomized ships: " + buildBoard.getPlacedShips());
             updateReadyButton();
         });
-        rightPanel.add(radomizeButton);
+        rightPanel.add(randomizeButton);
 
         rightPanel.add(Box.createVerticalStrut(10));
         rightPanel.add(new JSeparator(SwingConstants.HORIZONTAL));
@@ -299,12 +301,21 @@ public class GameBuildScene extends JPanel implements Runnable {
         });
     }
 
-    public void showTooltip(String text) {
-        tipLabel.setText(text);
+    /**
+     * Berechnet die verfügbaren Schiffe als Differenz zwischen allShips und den im Board bereits platzierten Schiffen.
+     */
+    private ArrayList<Ship> computeAvailableShips() {
+        ArrayList<Ship> available = new ArrayList<>(allShips);
+
+        for (Ship ship : this.buildBoard.getPlacedShips()) {
+            available.removeIf(s -> s.getId() == ship.getId());
+        }
+
+        return available;
     }
 
     private void updateReadyButton() {
-        if (availableShips.isEmpty()) {
+        if (computeAvailableShips().isEmpty()) {
             readyButton.setEnabled(true);
             readyButton.setBackground(Color.GREEN);
         } else {
@@ -333,6 +344,10 @@ public class GameBuildScene extends JPanel implements Runnable {
         }
     }
 
+    public void showTooltip(String text) {
+        tipLabel.setText(text);
+    }
+
     @Override
     public void run() {
         while (!Thread.currentThread().isInterrupted()) {
@@ -359,9 +374,9 @@ public class GameBuildScene extends JPanel implements Runnable {
                     SwingUtilities.invokeLater(() -> timerLabel.setText("Time over"));
 
                     SwingUtilities.invokeLater(() -> {
-                        readyButton.setEnabled(false);
                         readyButton.setBackground(Color.GREEN);
                         buildBoard.lockBoard();
+                        randomizeButton.setEnabled(false);
                     });
                     break;
                 } else {

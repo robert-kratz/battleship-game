@@ -1,6 +1,5 @@
 package client.gui.board;
 
-import client.GameHandler;
 import client.gui.painter.BoardPainter;
 import protocol.Ship;
 import protocol.ShipPlacementValidator;
@@ -8,7 +7,6 @@ import protocol.ShipPlacementValidator;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.util.ArrayList;
 import java.util.List;
 
 public class BuildBattleshipBoard extends AbstractBattleshipBoard {
@@ -34,7 +32,7 @@ public class BuildBattleshipBoard extends AbstractBattleshipBoard {
     }
 
     private void initializeBoard() {
-        // Anstelle von einzelnen Buttons wird das Board mit MouseListenern ausgestattet.
+        // Statt einzelner Buttons wird das Board mit MouseListenern ausgestattet.
         addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
@@ -99,8 +97,8 @@ public class BuildBattleshipBoard extends AbstractBattleshipBoard {
         });
     }
 
-    public void removePlacedShip(int ship) {
-        this.placedShips.removeIf(ship1 -> ship1.getId() == ship);
+    public void removePlacedShip(int shipId) {
+        this.placedShips.removeIf(ship -> ship.getId() == shipId);
         repaint();
     }
 
@@ -127,6 +125,15 @@ public class BuildBattleshipBoard extends AbstractBattleshipBoard {
         repaint();
     }
 
+    public void unlockBoard() {
+        locked = false;
+        repaint();
+    }
+
+    public boolean isLocked() {
+        return locked;
+    }
+
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -136,7 +143,7 @@ public class BuildBattleshipBoard extends AbstractBattleshipBoard {
         double cellWidth = boardSize / (double) cols;
         double cellHeight = boardSize / (double) rows;
 
-        // Zeichne Ghost-Ship wenn vorhanden
+        // Zeichne das "Ghost-Ship" (Vorschau) falls vorhanden
         if (selectedShip != null && lastHoveredRow != null && lastHoveredCol != null) {
             java.util.List<Point> ghostCells = selectedShip.getOccupiedCellsAt(lastHoveredCol, lastHoveredRow);
             boolean collision = validator.isCollision(selectedShip, lastHoveredRow, lastHoveredCol, placedShips);
