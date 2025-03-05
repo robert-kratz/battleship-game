@@ -109,7 +109,6 @@ public class GameHandler implements GameClient {
     @Override
     public void onPlayerHoverEvent(PlayerHoverMessage playerHoverMessage) {
         if(gameState.getStatus() != GameState.GameStatus.IN_GAME) {
-            clientHandler.showError("Game is not in game phase.");
             return;
         }
 
@@ -193,7 +192,6 @@ public class GameHandler implements GameClient {
     @Override
     public void sendPlayerHoverEvent(int x, int y, ArrayList<Cell> affectedFields) {
         if(gameState.getStatus() != GameState.GameStatus.IN_GAME) {
-            clientHandler.showError("Game is not in game phase.");
             return;
         }
         // Deep copy der affectedFields, um spätere Änderungen zu vermeiden:
@@ -228,7 +226,6 @@ public class GameHandler implements GameClient {
     @Override
     public void sendGameMoveEvent(Move move) {
         if(gameState.getStatus() != GameState.GameStatus.IN_GAME) {
-            clientHandler.showError("Game is not in game phase.");
             return;
         }
 
