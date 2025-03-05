@@ -317,6 +317,8 @@ public class BattleShipGame implements Game, Runnable {
 
         this.gameState = gameState;
 
+        player.setInGame(false);
+
         server.unregisterGame(this.gameState.getId());
     }
 
