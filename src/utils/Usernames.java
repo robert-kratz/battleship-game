@@ -4,11 +4,11 @@ import java.util.Random;
 
 public class Usernames {
     private static final String[] ADJECTIVES = {
-            "Stürmische", "Wütend", "Gefährlich", "Schnell", "Taktisch", "Mutig", "Heimlich", "Listig", "Hartnäckig"
+            "Stormy", "Furious", "Dangerous", "Swift", "Tactical", "Brave", "Stealthy", "Cunning", "Relentless"
     };
 
     private static final String[] NOUNS = {
-            "Wühlmaus", "Pirat", "Flotte", "Kanone", "Seeräuber", "U-Boot", "Zerstörer", "Admiral", "Schiff"
+            "Mole", "Pirate", "Fleet", "Cannon", "Raider", "Submarine", "Destroyer", "Admiral", "Ship"
     };
 
     private static final Random RANDOM = new Random();
