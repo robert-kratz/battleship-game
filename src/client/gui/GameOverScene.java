@@ -103,7 +103,7 @@ public class GameOverScene extends JPanel {
         backButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         backButton.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
         backButton.addActionListener(e -> {
-            gameHandler.getClientHandler().getStageManager().exitGameScene();
+            gameHandler.getClientHandler().endCurrentGame();
             System.out.println("Back to lobby");
         });
 

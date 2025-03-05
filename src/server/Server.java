@@ -1,5 +1,6 @@
 package server;
 
+import protocol.GameState;
 import protocol.messages.ErrorMessage;
 import protocol.ErrorType;
 
@@ -60,6 +61,7 @@ public class Server {
             try {
                 serverSocket = new ServerSocket(PORT);
                 running = true;
+                this.gui.updateServerOnlineStatus(true);
                 System.out.println("Server gestartet auf Port " + PORT);
 
                 while (running) {
@@ -117,6 +119,7 @@ public class Server {
             players.clear();
             clientThreads.clear();
             updatePlayerList();
+            updateGameList();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -131,6 +134,7 @@ public class Server {
         GameContainer container = new GameContainer(game, gameThread);
         games.put(game.getGameState().getId(), container);
         gameThread.start();
+        updateGameList();
     }
 
     /**
@@ -143,6 +147,7 @@ public class Server {
             container.getThread().interrupt();
             games.remove(id);
             System.out.println("Game " + id + " removed");
+            updateGameList();
         }
     }
 
@@ -174,6 +179,7 @@ public class Server {
         }
         players.remove(player);
         updatePlayerList();
+        updateGameList();
     }
 
     public void addToQueue(PlayerInfo player) {
@@ -197,6 +203,34 @@ public class Server {
             sb.append(p.getUsername()).append(" (").append(p.getIp()).append(")\n");
         }
         gui.updatePlayerList(sb.toString());
+        gui.updatePlayerCount(players.size());
+    }
+
+    /**
+     * Aktualisiert in der GUI die Liste der aktiven Spiele.
+     * Für jedes Spiel werden die Game-ID (aus dem GameState), die Spielernamen,
+     * die Anzahl der Züge (Move-Arrays) und der aktuelle Status ausgegeben.
+     * Beendete Spiele (GAME_OVER) werden nicht angezeigt.
+     */
+    public void updateGameList() {
+        StringBuilder sb = new StringBuilder();
+        for (GameContainer container : games.values()) {
+            BattleShipGame game = container.getGame();
+            // Nur aktive Spiele anzeigen
+            if (game.getGameState().getStatus().equals(GameState.GameStatus.GAME_OVER)) continue;
+            String gameId = game.getGameState().getId().toString();
+            String playerAName = game.getPlayerA() != null ? game.getPlayerA().getUsername() : "waiting";
+            String playerBName = game.getPlayerB() != null ? game.getPlayerB().getUsername() : "waiting";
+            int moveACount = game.getGameState().getMoveA().size();
+            int moveBCount = game.getGameState().getMoveB().size();
+            String status = game.getGameState().getStatus().toString();
+            sb.append("Game ID: ").append(gameId).append("\n");
+            sb.append("Player A: ").append(playerAName).append(" (Moves: ").append(moveACount).append(")\n");
+            sb.append("Player B: ").append(playerBName).append(" (Moves: ").append(moveBCount).append(")\n");
+            sb.append("Status: ").append(status).append("\n");
+            sb.append("--------------\n");
+        }
+        gui.updateGameList(sb.toString());
     }
 
     public List<PlayerInfo> getPlayers() {
@@ -205,6 +239,10 @@ public class Server {
 
     public ArrayList<PlayerInfo> getQueue() {
         return queue;
+    }
+
+    public boolean isRunning() {
+        return running;
     }
 
     /**

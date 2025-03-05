@@ -5,30 +5,43 @@ import java.awt.*;
 public class ServerGUI extends JFrame {
     private JButton toggleButton;
     private JTextArea playerList;
+    private JTextArea gameList;
     private JLabel playerCountLabel;
     private Server server;
-    private boolean serverRunning = false;
 
     public ServerGUI(Server server) {
         this.server = server;
-        setTitle("Schiffe Versenken - Server");
-        setSize(400, 300);
+        setTitle("BattleShip Server");
+        setSize(600, 500);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
+        // Textbereich für die Spielerliste
         playerList = new JTextArea();
         playerList.setEditable(false);
-        add(new JScrollPane(playerList), BorderLayout.CENTER);
+        JScrollPane playerScrollPane = new JScrollPane(playerList);
+        playerScrollPane.setBorder(BorderFactory.createTitledBorder("Players online"));
+
+        // Textbereich für die Liste der aktiven Spiele
+        gameList = new JTextArea();
+        gameList.setEditable(false);
+        JScrollPane gameScrollPane = new JScrollPane(gameList);
+        gameScrollPane.setBorder(BorderFactory.createTitledBorder("Active games"));
+
+        // Aufteilen in einen vertikalen SplitPane
+        JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, playerScrollPane, gameScrollPane);
+        splitPane.setResizeWeight(0.5);
+        add(splitPane, BorderLayout.CENTER);
 
         JPanel bottomPanel = new JPanel();
         bottomPanel.setLayout(new BorderLayout());
 
-        toggleButton = new JButton("Server Starten");
-        toggleButton.setBackground(serverRunning ? Color.GREEN : Color.RED);
+        toggleButton = new JButton("Start Server");
+        toggleButton.setBackground(server.isRunning() ? Color.GREEN : Color.RED);
         toggleButton.setOpaque(true);
         toggleButton.setBorderPainted(false);
 
-        playerCountLabel = new JLabel("Spieler verbunden: 0", SwingConstants.CENTER);
+        playerCountLabel = new JLabel("Connected Players: 0", SwingConstants.CENTER);
 
         toggleButton.addActionListener(e -> toggleServer());
 
@@ -39,21 +52,29 @@ public class ServerGUI extends JFrame {
         setVisible(true);
     }
 
+    public void updateServerOnlineStatus(boolean isOnline) {
+        toggleButton.setText(isOnline ? "Stop Server" : "Start Server");
+        toggleButton.setBackground(isOnline ? Color.GREEN : Color.RED);
+    }
+
     private void toggleServer() {
-        if (serverRunning) {
+        if (server.isRunning()) {
             server.stopServer();
-            toggleButton.setText("Server Starten");
-            toggleButton.setBackground(Color.RED);
         } else {
             server.startServer();
-            toggleButton.setText("Server Stoppen");
-            toggleButton.setBackground(Color.GREEN);
         }
-        serverRunning = !serverRunning;
+        updateServerOnlineStatus(server.isRunning());
     }
 
     public void updatePlayerList(String players) {
         playerList.setText(players);
-        playerCountLabel.setText("Spieler verbunden: " + players.split("\n").length);
+    }
+
+    public void updatePlayerCount(int count) {
+        playerCountLabel.setText("Connected Players: " + count);
+    }
+
+    public void updateGameList(String games) {
+        gameList.setText(games);
     }
 }

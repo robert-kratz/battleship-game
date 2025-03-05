@@ -75,7 +75,9 @@ public class ClientHandler {
                             ErrorMessage errorMessage = (ErrorMessage) received;
 
                             if(errorMessage.getError().equals(ErrorType.SERVER_CLOSED)) {
-                                showError("Server closed.");
+                                //show dialog which says that the server is closed, if then ok button is pressed, exit
+                                JOptionPane.showMessageDialog(null, "Server closed.", "Fehler", JOptionPane.ERROR_MESSAGE);
+
                                 System.exit(1);
                             }
 

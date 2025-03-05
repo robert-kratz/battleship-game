@@ -32,6 +32,7 @@ public class BattleShipGame implements Game, Runnable {
     public void run() {
         sleep(1000);
 
+        // Build-Phase
         while (this.gameState.getStatus().equals(GameState.GameStatus.BUILD_GAME_BOARD)) {
 
             System.out.println("Build Game Board");
@@ -54,55 +55,53 @@ public class BattleShipGame implements Game, Runnable {
                     this.gameState.playerSubmitPlacement(playerB.getId());
                 }
 
-                this.playerA.sendMessage(new GameUpdateMessage(gameState, this.shipsPlayerA));
-                this.playerB.sendMessage(new GameUpdateMessage(gameState, this.shipsPlayerB));
+                playerA.sendMessage(new GameUpdateMessage(gameState, this.shipsPlayerA));
+                playerB.sendMessage(new GameUpdateMessage(gameState, this.shipsPlayerB));
 
-                GameState gameState = new GameState(this.getGameState());
+                GameState newState = new GameState(this.getGameState());
 
                 Date start = new Date();
                 Date end = new Date(start.getTime() + Parameters.SHOOT_TIME_IN_SECONDS * 1000);
 
-                gameState.setPlayersTurnStart(start);
-                gameState.setPlayersTurnEnd(end);
+                newState.setPlayersTurnStart(start);
+                newState.setPlayersTurnEnd(end);
 
-                gameState.setStatus(GameState.GameStatus.IN_GAME);
+                newState.setStatus(GameState.GameStatus.IN_GAME);
 
-                gameState.setNextTurn();
+                newState.setNextTurn();
 
-                this.playerA.sendMessage(new GameStateUpdateMessage(gameState));
-                this.playerB.sendMessage(new GameStateUpdateMessage(gameState));
+                playerA.sendMessage(new GameStateUpdateMessage(newState));
+                playerB.sendMessage(new GameStateUpdateMessage(newState));
 
-                this.gameState = gameState;
+                this.gameState = newState;
+                server.updateGameList();
             }
         }
 
+        // In-Game Phase
         while (gameState.getStatus().equals(GameState.GameStatus.IN_GAME)) {
 
             System.out.println();
 
-            //This triggers the next turn
             if(this.gameState.getPlayersTurnEnd().before(new Date())) {
-                GameState gameState = new GameState(this.getGameState());
+                GameState newState = new GameState(this.getGameState());
 
                 Date start = new Date();
                 Date end = new Date(start.getTime() + Parameters.SHOOT_TIME_IN_SECONDS * 1000);
 
-                gameState.setPlayersTurnStart(start);
-                gameState.setPlayersTurnEnd(end);
+                newState.setPlayersTurnStart(start);
+                newState.setPlayersTurnEnd(end);
 
-                gameState.addEnergy(gameState.isPlayerATurn() ? gameState.getPlayerA() : gameState.getPlayerB(), Parameters.ENERGY_TURN_BONUS);
+                newState.addEnergy(newState.isPlayerATurn() ? newState.getPlayerA() : newState.getPlayerB(), Parameters.ENERGY_TURN_BONUS);
 
-                gameState.setNextTurn();
+                newState.setNextTurn();
 
-                System.out.println("Changed round to " + gameState.getCurrentGameRound() + " and player " + (gameState.isPlayerATurn() ? "A" : "B") + " turn");
+                System.out.println("Changed round to " + newState.getCurrentGameRound() + " and player " + (newState.isPlayerATurn() ? "A" : "B") + " turn");
 
-                //check if player who's turn it is has submitted their move. this can be done by comparing the this.gameState.getHitsA()
-
-                //Check
                 System.out.println("Player A: " + this.gameState.getMoveA().size() + " - " + this.gameState.getCurrentGameRound());
                 System.out.println("Player B: " + this.gameState.getMoveB().size() + " - " + this.gameState.getCurrentGameRound());
 
-                MoveManager moveManager = new MoveManager(gameState);
+                MoveManager moveManager = new MoveManager(newState);
 
                 if(!moveManager.isAMoveStillPossible()) {
                     System.out.println("No more moves possible");
@@ -116,10 +115,10 @@ public class BattleShipGame implements Game, Runnable {
 
                     Move move = moveManager.makeRandomMove(playerA.getId());
 
-                    gameState.addMove(playerA.getId(), move);
-                    gameState.uncoverHitShips(this.shipsPlayerA, this.shipsPlayerB);
-                    gameState.updateHitList(this.shipsPlayerA, this.shipsPlayerB);
-                    gameState.loadRadars(this.shipsPlayerA, this.shipsPlayerB);
+                    newState.addMove(playerA.getId(), move);
+                    newState.uncoverHitShips(this.shipsPlayerA, this.shipsPlayerB);
+                    newState.updateHitList(this.shipsPlayerA, this.shipsPlayerB);
+                    newState.loadRadars(this.shipsPlayerA, this.shipsPlayerB);
 
                     System.out.println("Move: " + move.getX() + " - " + move.getY());
 
@@ -130,16 +129,17 @@ public class BattleShipGame implements Game, Runnable {
 
                     System.out.println("Move: " + move.getX() + " - " + move.getY());
 
-                    gameState.addMove(playerB.getId(), move);
-                    gameState.uncoverHitShips(this.shipsPlayerA, this.shipsPlayerB);
-                    gameState.updateHitList(this.shipsPlayerA, this.shipsPlayerB);
-                    gameState.loadRadars(this.shipsPlayerA, this.shipsPlayerB);
+                    newState.addMove(playerB.getId(), move);
+                    newState.uncoverHitShips(this.shipsPlayerA, this.shipsPlayerB);
+                    newState.updateHitList(this.shipsPlayerA, this.shipsPlayerB);
+                    newState.loadRadars(this.shipsPlayerA, this.shipsPlayerB);
                 }
 
-                this.playerA.sendMessage(new GameUpdateMessage(gameState, this.shipsPlayerA));
-                this.playerB.sendMessage(new GameUpdateMessage(gameState, this.shipsPlayerB));
+                playerA.sendMessage(new GameUpdateMessage(newState, this.shipsPlayerA));
+                playerB.sendMessage(new GameUpdateMessage(newState, this.shipsPlayerB));
 
-                this.gameState = gameState;
+                this.gameState = newState;
+                server.updateGameList();
             }
 
         }
@@ -160,35 +160,36 @@ public class BattleShipGame implements Game, Runnable {
 
     @Override
     public synchronized void addPlayer(PlayerInfo player) {
-        //ONLY TRIGGER IF GAME IS IN LOBBY WAITING
         if(!this.gameState.getStatus().equals(GameState.GameStatus.LOBBY_WAITING)) return;
 
         if (playerA == null) {
             playerA = player;
-            GameState gameState = new GameState(this.getGameState());
-            gameState.setPlayerA(playerA.getId(), playerA.getUsername());
+            GameState newState = new GameState(this.getGameState());
+            newState.setPlayerA(playerA.getId(), playerA.getUsername());
 
             System.out.println("Player A: " + playerA.getUsername());
 
-            playerA.sendMessage(new JoinGameMessage(gameState)); //First player is always A, no need to send to B
-            playerA.sendMessage(new GameStateUpdateMessage(gameState));
+            playerA.sendMessage(new JoinGameMessage(newState));
+            playerA.sendMessage(new GameStateUpdateMessage(newState));
 
-            this.gameState = gameState;
+            this.gameState = newState;
+            server.updateGameList();
         } else if (playerB == null) {
             playerB = player;
-            GameState gameState = new GameState(this.getGameState());
-            gameState.setPlayerB(playerB.getId(), playerB.getUsername());
+            GameState newState = new GameState(this.getGameState());
+            newState.setPlayerB(playerB.getId(), playerB.getUsername());
 
             System.out.println("Player B: " + playerB.getUsername());
 
-            playerB.sendMessage(new JoinGameMessage(gameState));
-            playerA.sendMessage(new GameStateUpdateMessage(gameState));
-            playerB.sendMessage(new GameStateUpdateMessage(gameState));
+            playerB.sendMessage(new JoinGameMessage(newState));
+            playerA.sendMessage(new GameStateUpdateMessage(newState));
+            playerB.sendMessage(new GameStateUpdateMessage(newState));
 
-            this.gameState = gameState;
+            this.gameState = newState;
+            server.updateGameList();
         }
 
-        if(playerA != null && playerB != null) startBuildPhase(); //START BUILD PHASE
+        if(playerA != null && playerB != null) startBuildPhase();
     }
 
     private synchronized void startBuildPhase() {
@@ -198,15 +199,16 @@ public class BattleShipGame implements Game, Runnable {
 
         Date date = new Date(System.currentTimeMillis() + Parameters.TIMER_BEFORE_LOBBY_START * 1000);
 
-        GameState gameState = new GameState(this.getGameState());
+        GameState newState = new GameState(this.getGameState());
 
-        gameState.setBuildGameBoardStarted(date);
-        gameState.setBuildGameBoardFinished(new Date(date.getTime() + (Parameters.BUILD_TIME_IN_SECONDS * 1000)));
+        newState.setBuildGameBoardStarted(date);
+        newState.setBuildGameBoardFinished(new Date(date.getTime() + (Parameters.BUILD_TIME_IN_SECONDS * 1000)));
 
-        this.gameState = gameState;
+        this.gameState = newState;
 
-        playerA.sendMessage(new GameStateUpdateMessage(gameState));
-        playerB.sendMessage(new GameStateUpdateMessage(gameState));
+        playerA.sendMessage(new GameStateUpdateMessage(newState));
+        playerB.sendMessage(new GameStateUpdateMessage(newState));
+        server.updateGameList();
     }
 
     private synchronized void endGamePhase() {
@@ -216,10 +218,11 @@ public class BattleShipGame implements Game, Runnable {
 
         Date date = new Date();
 
-        GameState gameState = new GameState(this.getGameState());
+        GameState newState = new GameState(this.getGameState());
+        // End Game-Logik
 
-        //end game logic
-
+        this.gameState = newState;
+        server.updateGameList();
     }
 
     @Override
@@ -232,19 +235,16 @@ public class BattleShipGame implements Game, Runnable {
             return;
         }
 
-        // Create a new game state copy to work on
         GameState newState = new GameState(this.getGameState());
 
         move.computeAffectedCells(this.size);
 
-        // Add the move to the game state for the current player
         if (playerA.getId().equals(player.getId())) {
             newState.addMove(playerA.getId(), move);
         } else if (playerB.getId().equals(player.getId())) {
             newState.addMove(playerB.getId(), move);
         }
 
-        // Determine if the move results in a hit by checking against the opponent’s ships
         boolean moveIsHit = MoveManager.moveHasHit(
                 player.getId().equals(playerA.getId()) ? this.shipsPlayerB : this.shipsPlayerA,
                 move
@@ -256,23 +256,20 @@ public class BattleShipGame implements Game, Runnable {
             newState.addEnergy(player.getId(), Parameters.ENERGY_SHIP_HIT);
         }
 
-        // Update the hit-related information
         newState.uncoverHitShips(this.shipsPlayerA, this.shipsPlayerB);
         newState.updateHitList(this.shipsPlayerA, this.shipsPlayerB);
         newState.loadRadars(this.shipsPlayerA, this.shipsPlayerB);
 
         newState.setPlayersTurnEnd(new Date(newState.getPlayersTurnEnd().getTime() + 1000));
 
-        // Immediately send update message with the hit result (but without changing turn)
-        this.playerA.sendMessage(new GameUpdateMessage(newState, this.shipsPlayerA));
-        this.playerB.sendMessage(new GameUpdateMessage(newState, this.shipsPlayerB));
+        playerA.sendMessage(new GameUpdateMessage(newState, this.shipsPlayerA));
+        playerB.sendMessage(new GameUpdateMessage(newState, this.shipsPlayerB));
 
-        // Schedule a delayed task (1 second delay) to switch turn and update the game state further
+        // Verzögerte Ausführung zum Wechseln des Turns
         Timer timer = new Timer();
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                // Create a new game state copy for the turn change
                 GameState stateWithTurn = new GameState(newState);
 
                 Date start = new Date();
@@ -282,7 +279,6 @@ public class BattleShipGame implements Game, Runnable {
 
                 stateWithTurn.setNextTurn();
 
-                // Recalculate hit info (if needed)
                 stateWithTurn.uncoverHitShips(shipsPlayerA, shipsPlayerB);
                 stateWithTurn.updateHitList(shipsPlayerA, shipsPlayerB);
                 stateWithTurn.loadRadars(shipsPlayerA, shipsPlayerB);
@@ -290,36 +286,37 @@ public class BattleShipGame implements Game, Runnable {
                 System.out.println("Changed round to " + stateWithTurn.getCurrentGameRound() +
                         " and player " + (stateWithTurn.isPlayerATurn() ? "A" : "B") + " turn");
 
-                // Send the update message that enforces the board switch
                 playerA.sendMessage(new GameUpdateMessage(stateWithTurn, shipsPlayerA));
                 playerB.sendMessage(new GameUpdateMessage(stateWithTurn, shipsPlayerB));
 
-                // Update the main game state reference
+                server.updateGameList();
+
                 gameState = stateWithTurn;
             }
         }, 1000);
 
-        // Immediately update the current game state to reflect the hit result.
         this.gameState = newState;
+        server.updateGameList();
     }
 
     @Override
     public void leaveGame(PlayerInfo player) {
-        GameState gameState = new GameState(this.getGameState());
+        GameState newState = new GameState(this.getGameState());
 
-        gameState.setStatus(GameState.GameStatus.GAME_OVER);
+        newState.setStatus(GameState.GameStatus.GAME_OVER);
 
         PlayerInfo winner = player.getId().equals(playerA.getId()) ? playerB : playerA;
 
-        gameState.setWinner(winner.getId());
+        newState.setWinner(winner.getId());
 
-        winner.sendMessage(new GameStateUpdateMessage(gameState));
+        winner.sendMessage(new GameStateUpdateMessage(newState));
 
-        this.gameState = gameState;
+        this.gameState = newState;
 
         player.setInGame(false);
 
         server.unregisterGame(this.gameState.getId());
+        server.updateGameList();
     }
 
     public void setPlayerShips(UUID playerId, ArrayList<Ship> ships) {
