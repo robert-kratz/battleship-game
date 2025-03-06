@@ -48,6 +48,7 @@ public class GameHandler implements GameClient {
 
         //ONLY EXECUTE IF GAME STATE HAS CHANGED
         if(gameStateUpdated) {
+            System.out.println("Game state changed: " + gameState.getStatus());
             switch (gameState.getStatus()) {
                 //Trigger when someone joins the lobby
                 case LOBBY_WAITING -> { }
@@ -72,10 +73,9 @@ public class GameHandler implements GameClient {
                     }
                 }
                 case GAME_OVER -> {
-                    if(this.clientHandler.getStageManager().gameOverScene == null) {
-                        System.out.println("Starting game over scene");
-                        this.clientHandler.getStageManager().startGameOverScene();
-                    }
+                    System.out.println("Game over scene triggered");
+                    System.out.println("Game over scene: " + this.clientHandler.getStageManager().gameOverScene);
+                    this.clientHandler.getStageManager().startGameOverScene();
                 }
             }
         }

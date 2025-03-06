@@ -108,11 +108,11 @@ public class StageManager extends JFrame {
 
     public void startGameOverScene() {
 
-        if(this.gameOverScene != null) return;
-
         try {
-            this.gameIngameSceneThread.interrupt();
+            if(this.gameBuildSceneThread != null) gameBuildSceneThread.interrupt();
+            if(this.gameIngameSceneThread != null) gameIngameSceneThread.interrupt();
         } catch (Exception e) {
+            e.printStackTrace();
         }
 
         this.gameOverScene = new GameOverScene(this.clientHandler.getGameHandler());
