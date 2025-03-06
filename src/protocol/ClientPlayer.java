@@ -1,5 +1,6 @@
 package protocol;
 
+import protocol.game.Cell;
 import protocol.game.Move;
 
 import java.io.Serializable;
@@ -39,6 +40,15 @@ public class ClientPlayer implements Serializable {
         this.moves = new ArrayList<>();
         this.uncoveredShips = new ArrayList<>();
         this.energy = 30;
+    }
+
+    public ArrayList<Cell> getAttackedCellsForPlayer() {
+        ArrayList<Cell> attackedCells = new ArrayList<>();
+        for (Move move : moves) {
+            // If you want all cells (hits and misses), simply add them all:
+            attackedCells.addAll(move.getAffectedCells());
+        }
+        return attackedCells;
     }
 
     public boolean isPlayer(UUID id) {

@@ -13,6 +13,7 @@ import protocol.game.Item;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class InGameBattleshipBoard extends AbstractBattleshipBoard {
@@ -212,20 +213,31 @@ public class InGameBattleshipBoard extends AbstractBattleshipBoard {
         double cellWidth = pixelBoardSize / (double) cols;
         double cellHeight = pixelBoardSize / (double) rows;
 
+        HashMap<Integer, Integer> takenCells = new HashMap<>();
+
         // Zeichne alle Moves (Treffer, Fehlschüsse, Radar)
         for (Move move : moves) {
-            if (move.getRadarItem() != null) {
-                Board.drawRadar(g, move.getY(), move.getX(), cellWidth, cellHeight, move.getRadarShipsIn3x3Area());
-            }
             for (Cell cell : move.getAffectedCells()) {
                 int col = cell.getX();
                 int row = cell.getY();
+
+                if(takenCells.containsKey(col) && takenCells.get(col) == row) continue;
                 if (cell.isHit()) {
-                    Board.darkenCell(g, row, col, cellWidth, cellHeight);
+                    Board.darkenCell(g, row, col, cellWidth, cellHeight, Color.RED);
                     Board.drawShipHitCell(g, row, col, cellWidth, cellHeight);
+
                 } else {
+                    Board.darkenCell(g, row, col, cellWidth, cellHeight, Color.BLACK);
                     Board.drawShipMissCell(g, row, col, cellWidth, cellHeight);
+
                 }
+                takenCells.put(col, row);
+            }
+        }
+
+        for (Move move : moves) {
+            if (move.getRadarItem() != null) {
+                Board.drawRadar(g, move.getY(), move.getX(), cellWidth, cellHeight, move.getRadarShipsIn3x3Area(), Color.WHITE);
             }
         }
 
@@ -248,7 +260,7 @@ public class InGameBattleshipBoard extends AbstractBattleshipBoard {
         for (Cell cell : affectedCells) {
             int col = cell.getX();
             int row = cell.getY();
-            Board.darkenCell(g, row, col, cellWidth, cellHeight);
+            Board.darkenCell(g, row, col, cellWidth, cellHeight, Color.BLACK);
         }
     }
 

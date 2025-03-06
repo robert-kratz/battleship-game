@@ -78,8 +78,10 @@ public class Board {
      * @param cellWidth Breite der Zelle
      * @param cellHeight Höhe der Zelle
      */
-    public static void darkenCell(Graphics g, int row, int col, double cellWidth, double cellHeight) {
-        g.setColor(new Color(0, 0, 0, 100));
+    public static void darkenCell(Graphics g, int row, int col, double cellWidth, double cellHeight, Color color) {
+        color = new Color(color.getRed(), color.getGreen(), color.getBlue(), 100);
+
+        g.setColor(color);
         int x = (int) Math.round(col * cellWidth);
         int y = (int) Math.round(row * cellHeight);
         int fillWidth = (int) Math.ceil(cellWidth);
@@ -128,13 +130,14 @@ public class Board {
      * @param cellHeight Höhe der Zelle
      * @param number Die Radarzahl
      */
-    public static void drawRadar(Graphics g, int row, int col, double cellWidth, double cellHeight, int number) {
+    public static void drawRadar(Graphics g, int row, int col, double cellWidth, double cellHeight, int number, Color color) {
         g.setColor(Color.RED);
         int centerX = (int) Math.round(col * cellWidth + cellWidth / 2);
         int centerY = (int) Math.round(row * cellHeight + cellHeight / 2);
         FontMetrics fm = g.getFontMetrics();
         String label = String.valueOf(number);
-        g.setFont(new Font("Arial", Font.BOLD, 14));
+        g.setFont(new Font("Arial", Font.BOLD, 20));
+        g.setColor(color);
         int textWidth = fm.stringWidth(label);
         // Berechne die Basislinie, sodass der Text vertikal zentriert ist
         int y = centerY + (fm.getAscent() - fm.getDescent()) / 2;

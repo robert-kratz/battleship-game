@@ -88,22 +88,6 @@ public class GameInGameScene extends JPanel implements Runnable {
                     public void onCellClick(int row, int col) {
                         System.out.println("opponentBoard clicked at: " + row + ", " + col);
 
-                        ArrayList<Cell> takenCells;
-
-                        if(gameHandler.getGameState().getPlayerA().isPlayer(gameHandler.getClientHandler().getUserId())) {
-                            takenCells = gameHandler.getGameState().getAttackedCellsForPlayerA();
-                        } else {
-                            takenCells = gameHandler.getGameState().getAttackedCellsForPlayerB();
-                        }
-
-                        //ceck if the cell is already taken
-                        for (Cell cell : takenCells) {
-                            if (cell.getX() == row && cell.getY() == col) {
-                                System.out.println("Cell already taken");
-                                return;
-                            }
-                        }
-
                         Move move;
 
                         if(opponentBoard.getSelectedItem() != null) {

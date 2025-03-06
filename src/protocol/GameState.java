@@ -275,31 +275,6 @@ public class GameState implements Serializable  {
         }
     }
 
-    /**
-     * Returns a list of all cells targeted by player A’s moves.
-     * Each Cell in the returned list carries its hit attribute (true if a ship was hit, false otherwise).
-     */
-    public ArrayList<Cell> getAttackedCellsForPlayerA() {
-        ArrayList<Cell> attackedCells = new ArrayList<>();
-        for (Move move : playerA.getMoves()) {
-            // If you want all cells (hits and misses), simply add them all:
-            attackedCells.addAll(move.getAffectedCells());
-        }
-        return attackedCells;
-    }
-
-    /**
-     * Returns a list of all cells targeted by player B’s moves.
-     * Each Cell in the returned list carries its hit attribute (true if a ship was hit, false otherwise).
-     */
-    public ArrayList<Cell> getAttackedCellsForPlayerB() {
-        ArrayList<Cell> attackedCells = new ArrayList<>();
-        for (Move move : playerB.getMoves()) {
-            attackedCells.addAll(move.getAffectedCells());
-        }
-        return attackedCells;
-    }
-
     public int getPlayerCount() {
         return (playerA != null ? 1 : 0) + (playerB != null ? 1 : 0);
     }
