@@ -375,34 +375,43 @@ public class BattleShipGame implements Game, Runnable {
 
     @Override
     public void onPlayerReadyStateChange(PlayerInfo player, boolean ready) {
+        GameState gameState = new GameState(this.getGameState());
+
         if (playerA != null && playerA.getId().equals(player.getId())) {
-            if (ShipPlacementValidator.shipsAreAllPlacedAndTheSame(this.gameState.getAvailableShips(), this.shipsPlayerA, this.size)) {
-                this.gameState.getPlayerA().setReady(ready);
+            if (ShipPlacementValidator.shipsAreAllPlacedAndTheSame(gameState.getAvailableShips(), this.shipsPlayerA, this.size)) {
+                gameState.getPlayerA().setReady(ready);
             } else {
                 player.sendMessage(new ErrorMessage(ErrorType.INVALID_PLACEMENT));
                 return;
             }
         } else if (playerB != null && playerB.getId().equals(player.getId())) {
-            if (ShipPlacementValidator.shipsAreAllPlacedAndTheSame(this.gameState.getAvailableShips(), this.shipsPlayerB, this.size)) {
-                this.gameState.getPlayerB().setReady(ready);
+            if (ShipPlacementValidator.shipsAreAllPlacedAndTheSame(gameState.getAvailableShips(), this.shipsPlayerB, this.size)) {
+                gameState.getPlayerB().setReady(ready);
             } else {
                 player.sendMessage(new ErrorMessage(ErrorType.INVALID_PLACEMENT));
                 return;
             }
         }
-        GameState newState = new GameState(this.getGameState());
 
+        System.out.println("PlayerA ready: " + gameState.getPlayerA().isReady());
+        System.out.println("PlayerB ready: " + gameState.getPlayerB().isReady());
+
+        // Statt einen neuen GameState zu erzeugen, verwende das existierende:
         if (playerA != null)
-            playerA.sendMessage(new GameUpdateMessage(newState, this.shipsPlayerA));
+            playerA.sendMessage(new GameUpdateMessage(gameState, this.shipsPlayerA));
         if (playerB != null)
-            playerB.sendMessage(new GameUpdateMessage(newState, this.shipsPlayerB));
+            playerB.sendMessage(new GameUpdateMessage(gameState, this.shipsPlayerB));
 
-        this.gameState = newState;
-
+        // Optional: Ausgabe, wenn beide Spieler ready sind
         if (gameState.getPlayerA() != null && gameState.getPlayerB() != null &&
                 gameState.getPlayerA().isReady() && gameState.getPlayerB().isReady()) {
             System.out.println("Both players are ready");
+
+            //Skip build phase if both players are ready
+            gameState.setBuildGameBoardFinished(new Date(System.currentTimeMillis() + 1000));
         }
+
+        this.gameState = gameState;
     }
 
     public int getPlayerAmount() {

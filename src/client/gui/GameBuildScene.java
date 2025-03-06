@@ -182,7 +182,7 @@ public class GameBuildScene extends JPanel implements Runnable {
                     btn.setEnabled(true);
                 }
                 randomizeButton.setEnabled(true);
-                playerStatusLabel.setText("Build Board");
+                playerStatusLabel.setText("Builds Board");
                 readyButton.setText("Ready");
                 playerStatusLabel.setForeground(Color.YELLOW);
                 gameHandler.sendPlayerReadyMessage(false);
@@ -341,6 +341,16 @@ public class GameBuildScene extends JPanel implements Runnable {
         } else {
             opponentStatusLabel.setText("Build Board");
             opponentStatusLabel.setForeground(Color.YELLOW);
+        }
+    }
+
+    public void setPlayerState(boolean ready) {
+        if (ready) {
+            playerStatusLabel.setText("Ready");
+            playerStatusLabel.setForeground(Color.GREEN);
+        } else {
+            playerStatusLabel.setText("Build Board");
+            playerStatusLabel.setForeground(Color.YELLOW);
         }
     }
 

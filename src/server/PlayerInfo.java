@@ -160,6 +160,18 @@ public class PlayerInfo implements Runnable {
 
                         break;
                     }
+                    case MessageType.PLAYER_READY -> {
+                        PlayerReadyMessage playerReadyMessage = (PlayerReadyMessage) received;
+
+                        if(game == null) {
+                            sendMessage(new ErrorMessage(ErrorType.NO_GAME_IN_PROGRESS));
+                            break;
+                        }
+
+                        System.out.println("Received a player ready message from " + this.username + " with ready state: " + playerReadyMessage.ready);
+
+                        game.onPlayerReadyStateChange(this, playerReadyMessage.ready);
+                    }
                     case MessageType.PLAYER_HOVER -> {
                         PlayerHoverMessage playerHoverMessage = (PlayerHoverMessage) received;
 

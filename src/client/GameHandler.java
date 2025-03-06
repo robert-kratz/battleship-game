@@ -1,5 +1,6 @@
 package client;
 
+import protocol.ClientPlayer;
 import protocol.ErrorType;
 import protocol.Ship;
 import protocol.game.Cell;
@@ -84,13 +85,6 @@ public class GameHandler implements GameClient {
         switch (gameState.getStatus()) {
             case LOBBY_WAITING -> {
             }
-            case BUILD_GAME_BOARD -> {
-                if(this.clientHandler.getStageManager().gameBuildScene != null) {
-                    boolean isOpponentReady = this.gameState.getOpponent(this.clientHandler.getUserId()).isReady();
-
-                    this.clientHandler.getStageManager().gameBuildScene.setOpponentState(isOpponentReady);
-                }
-            }
             case IN_GAME -> {
                 if (this.clientHandler.getStageManager().gameIngameScene != null) {
                     boolean isPlayerATurn = gameState.isPlayersTurn(this.clientHandler.getUserId());
@@ -136,6 +130,20 @@ public class GameHandler implements GameClient {
 
         System.out.println("a");
         this.playersShips = yourShips;
+
+        if(this.gameState.getStatus().equals(GameState.GameStatus.BUILD_GAME_BOARD)) {
+            System.out.println("Updated player status");
+            if(this.clientHandler.getStageManager().gameBuildScene != null) {
+                ClientPlayer player = gameState.getPlayer(this.clientHandler.getUserId());
+                ClientPlayer opponent = gameState.getOpponent(this.clientHandler.getUserId());
+
+                System.out.println("Player ready: " + player.isReady());
+                System.out.println("Opponent ready: " + opponent.isReady());
+
+                this.clientHandler.getStageManager().gameBuildScene.setPlayerState(player.isReady());
+                this.clientHandler.getStageManager().gameBuildScene.setOpponentState(opponent.isReady());
+            }
+        }
 
         boolean playerTurnHasChanged = this.gameState.isPlayersTurn(this.clientHandler.getUserId()) != gameState.isPlayersTurn(this.clientHandler.getUserId());
 
@@ -226,12 +234,6 @@ public class GameHandler implements GameClient {
     @Override
     public void sendPlayerReadyMessage(boolean ready) {
         if(gameState.getStatus() != GameState.GameStatus.BUILD_GAME_BOARD) {
-            return;
-        }
-
-        //Check if all ships are placed before sending the ready message
-        if(ready && this.playersShips != null && this.playersShips.size() != this.gameState.getAvailableShips().size()) {
-            clientHandler.showError("You have to place all ships before you can start the game.");
             return;
         }
 
