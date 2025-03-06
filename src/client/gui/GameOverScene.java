@@ -71,7 +71,7 @@ public class GameOverScene extends JPanel {
         // Statistik-Panel für Player A
         JPanel playerAPanel = new JPanel();
         playerAPanel.setLayout(new BoxLayout(playerAPanel, BoxLayout.Y_AXIS));
-        playerAPanel.setBorder(BorderFactory.createTitledBorder(gameState.getPlayerA().getName()));
+        playerAPanel.setBorder(BorderFactory.createTitledBorder(gameState.getPlayerA().getName() + " (" + (winners.stream().anyMatch(p -> p.getId().equals(gameState.getPlayerA().getId())) ? "Winner" : "Looser") + ")"));
         JLabel energyALabel = new JLabel("Energy: " + gameState.getPlayerA().getEnergy());
         energyALabel.setFont(new Font("Arial", Font.PLAIN, 18));
         energyALabel.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -87,7 +87,7 @@ public class GameOverScene extends JPanel {
         // Statistik-Panel für Player B
         JPanel playerBPanel = new JPanel();
         playerBPanel.setLayout(new BoxLayout(playerBPanel, BoxLayout.Y_AXIS));
-        playerBPanel.setBorder(BorderFactory.createTitledBorder(gameState.getPlayerB().getName()));
+        playerBPanel.setBorder(BorderFactory.createTitledBorder(gameState.getPlayerB().getName() + " (" + (winners.stream().anyMatch(p -> p.getId().equals(gameState.getPlayerB().getId())) ? "Winner" : "Looser") + ")"));
         JLabel energyBLabel = new JLabel("Energy: " + gameState.getPlayerB().getEnergy());
         energyBLabel.setFont(new Font("Arial", Font.PLAIN, 18));
         energyBLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
