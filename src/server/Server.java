@@ -159,27 +159,25 @@ public class Server {
     public synchronized BattleShipGame getGame(PlayerInfo player) {
         for (GameContainer container : games.values()) {
             BattleShipGame game = container.getGame();
-            if (game.getPlayerA().getId().equals(player.getId()) || game.getPlayerB().getId().equals(player.getId())) {
+            if (game == null) continue;
+            if (game.getPlayerA() != null && game.getPlayerA().getId().equals(player.getId())) {
+                return game;
+            }
+            if (game.getPlayerB() != null && game.getPlayerB().getId().equals(player.getId())) {
                 return game;
             }
         }
         return null;
     }
 
-    /**
-     * Removes a player from the server. If the player is in a game, the game is ended and unregistered.
-     * @param player the player leaving the server
-     */
-    public void removePlayer(PlayerInfo player) {
-        BattleShipGame game = getGame(player);
-        System.out.println("Player " + player.getUsername() + " left the server");
-
-        if (game != null) {
-            game.leaveGame(player);
+    public BattleShipGame getGameFromJoinCode(int joinCode) {
+        for (GameContainer container : games.values()) {
+            BattleShipGame game = container.getGame();
+            if (game.getGameState().getSessionCode() == joinCode) {
+                return game;
+            }
         }
-        players.remove(player);
-        updatePlayerList();
-        updateGameList();
+        return null;
     }
 
     public void addToQueue(PlayerInfo player) {
@@ -225,6 +223,9 @@ public class Server {
             int moveBCount = game.getGameState().getPlayerB() != null ? game.getGameState().getPlayerB().getMoves().size() : 0;
             String status = game.getGameState().getStatus().toString();
             sb.append("Game ID: ").append(gameId).append("\n");
+            sb.append("Size: ").append(game.getSize()).append("\n");
+            sb.append("Join Code: ").append(game.getGameState().getSessionCode()).append("\n");
+            sb.append("Game ID: ").append(gameId).append("\n");
             sb.append("Current Turn: ").append(game.getGameState().getCurrentTurnPlayer() != null ? game.getGameState().getCurrentTurnPlayer().getName() : "-").append("\n");
             sb.append("Player A: ").append(playerAName).append(" (Moves: ").append(moveACount).append(")\n");
             sb.append("Player B: ").append(playerBName).append(" (Moves: ").append(moveBCount).append(")\n");
@@ -251,6 +252,22 @@ public class Server {
      */
     public ArrayList<BattleShipGame> getGames() {
         return new ArrayList<>(games.values().stream().map(GameContainer::getGame).collect(Collectors.toList()));
+    }
+
+    /**
+     * Removes a player from the server. If the player is in a game, the game is ended and unregistered.
+     * @param player the player leaving the server
+     */
+    public void removePlayer(PlayerInfo player) {
+        BattleShipGame game = getGame(player);
+        System.out.println("Player " + player.getUsername() + " left the server");
+
+        if (game != null) {
+            game.leaveGame(player);
+        }
+        players.remove(player);
+        updatePlayerList();
+        updateGameList();
     }
 
     /**

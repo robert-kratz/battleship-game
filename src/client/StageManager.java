@@ -72,6 +72,9 @@ public class StageManager extends JFrame {
     }
 
     public void startBuildScene() {
+
+        if(this.clientHandler.getGameHandler() == null) return; //In case a player leaves the game before the build scene is created
+
         if(!this.clientHandler.getGameHandler().getGameState().getStatus().equals(GameState.GameStatus.BUILD_GAME_BOARD)) return;
 
         if(this.gameBuildScene != null) return; //Allow only one build scene being initialized
@@ -110,7 +113,6 @@ public class StageManager extends JFrame {
         try {
             this.gameIngameSceneThread.interrupt();
         } catch (Exception e) {
-            e.printStackTrace();
         }
 
         this.gameOverScene = new GameOverScene(this.clientHandler.getGameHandler());
@@ -157,8 +159,9 @@ public class StageManager extends JFrame {
     private void removeScene(Stage stage) {
         try {
             scenes.remove(stage);
-            mainPanel.remove(scenes.get(stage));
+            if(scenes.get(stage) != null) mainPanel.remove(scenes.get(stage));
         } catch (Exception e) {
+            System.err.println("Unable to remove scene: " + stage);
             e.printStackTrace();
         }
     }

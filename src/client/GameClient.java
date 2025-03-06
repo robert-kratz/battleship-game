@@ -61,7 +61,13 @@ public interface GameClient {
      * This submits a placement of ships to the server, each time the client places a ship
      * @param ships The ships to be placed
      */
-    void sendSubmitPlacementEvent(ArrayList<Ship> ships);
+    void sendUpdateBuildBoardMessage(ArrayList<Ship> ships);
+
+    /**
+     * This method is called when the user is ready to start the game
+     * @param ready The ready state of the player
+     */
+    void sendPlayerReadyMessage(boolean ready);
 
     /**
      * This method is called when the user makes a move

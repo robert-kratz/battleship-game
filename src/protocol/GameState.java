@@ -87,15 +87,6 @@ public class GameState implements Serializable  {
         }
     }
 
-    public GameState removePlayer(UUID player) {
-        if(playerA.isPlayer(player)) {
-            playerA = null;;
-        } else if(playerB.isPlayer(player)) {
-            playerB = null;
-        }
-        return this;
-    }
-
     public boolean setPlayerReady(UUID player, boolean ready) {
         if(playerA.isPlayer(player)) {
             playerA.setReady(ready);
@@ -401,6 +392,8 @@ public class GameState implements Serializable  {
     }
 
     public ClientPlayer getCurrentTurnPlayer() {
+        if(playerA == null || playerB == null) return null;
+
         if(playerA.isTurn()) {
             return playerA;
         } else if(playerB.isTurn()) {
@@ -422,6 +415,8 @@ public class GameState implements Serializable  {
     }
 
     public void setWinner(UUID winner) {
+        if(playerA == null || playerB == null) return;
+
         if(playerA.isPlayer(winner)) {
             playerA.setWinner(true);
         } else if(playerB.isPlayer(winner)) {
@@ -434,11 +429,11 @@ public class GameState implements Serializable  {
 
         ArrayList<ClientPlayer> winners = new ArrayList<>();
 
-        if(playerA.isWinner()) {
+        if(playerA != null && playerA.isWinner()) {
             winners.add(playerA);
         }
 
-        if(playerB.isWinner()) {
+        if(playerB != null && playerB.isWinner()) {
             winners.add(playerB);
         }
 
@@ -450,11 +445,11 @@ public class GameState implements Serializable  {
 
         ArrayList<ClientPlayer> losers = new ArrayList<>();
 
-        if(!playerA.isWinner()) {
+        if(playerA != null && !playerA.isWinner()) {
             losers.add(playerA);
         }
 
-        if(!playerB.isWinner()) {
+        if(playerB != null && !playerB.isWinner()) {
             losers.add(playerB);
         }
 

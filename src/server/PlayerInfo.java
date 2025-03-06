@@ -42,18 +42,29 @@ public class PlayerInfo implements Runnable {
 
             sendMessage(new RegisterMessage(username, id, server.getQueue().size()));
             sendMessage(new QueueUpdateMessage(server.getQueue().size(), false));
+
             while (socket.isConnected()) {
                 Message received = (Message) in.readObject();
+
+                BattleShipGame game = server.getGame(this);
 
                 System.out.println("Received: " + received.getClass().getSimpleName());
 
                 switch (received.getType()) {
                     case MessageType.JOIN_QUEUE -> {
+                        //Check if the player is already in a game
+
+                        if(game != null) {
+                            //remove player from game
+                            sendMessage(new ErrorMessage(ErrorType.ALREADY_IN_GAME));
+                            break;
+                        }
+
                         // Check if player is already in queue
-                        /**if(server.getQueue().contains(this)) {
+                        if(server.getQueue().contains(this)) {
                             sendMessage(new ErrorMessage(ErrorType.ALREADY_IN_QUEUE));
                             break;
-                        }**/
+                        }
 
                         // Add player to queue
                         server.addToQueue(this);
@@ -61,12 +72,8 @@ public class PlayerInfo implements Runnable {
                         // Notify all players in queue
                         for (PlayerInfo player : server.getPlayers()) {
                             boolean isInQueue = server.getQueue().contains(player);
-                            System.out.println("Player " + player.getUsername() + " is in queue: " + isInQueue);
                             player.sendMessage(new QueueUpdateMessage(server.getQueue().size(), isInQueue));
                         }
-
-                        System.out.println("Player " + username + " joined the queue");
-                        System.out.println("Queue size: " + server.getQueue().size());
 
                         // Check if there are enough players in queue to start a game
                         if(server.getQueue().size() >= 2) {
@@ -80,10 +87,17 @@ public class PlayerInfo implements Runnable {
                         }
                     }
                     case MessageType.LEAVE_QUEUE -> {
-                        /**if(!server.getQueue().contains(this)) {
+                        if(game != null) {
+                            game.leaveGame(this);
+                            sendMessage(new ErrorMessage(ErrorType.ALREADY_IN_GAME));
+                            break;
+                        }
+
+                        if(!server.getQueue().contains(this)) {
                             sendMessage(new ErrorMessage(ErrorType.NOT_IN_QUEUE));
                             break;
-                        }**/
+                        }
+
                         server.removeFromQueue(this.getId());
 
                         for (PlayerInfo player : server.getPlayers()) {
@@ -92,78 +106,62 @@ public class PlayerInfo implements Runnable {
                             player.sendMessage(new QueueUpdateMessage(server.getQueue().size(), isInQueue));
                         }
                     }
-                    case MessageType.JOIN_GAME_WITH_CODE -> {
-                        JoinGameWithCodeMessage joinGameWithCodeMessage = (JoinGameWithCodeMessage) received;
-                        this.isInGame = true;
-
-                        BattleShipGame targetGame = null;
-
-                        for (BattleShipGame game : server.getGames()) {
-                            System.out.println("Game session code: " + game.getGameState().getSessionCode() +
-                                    " | Join session code: " + joinGameWithCodeMessage.getSessionCode());
-                            if (game.getGameState().getSessionCode() == joinGameWithCodeMessage.getSessionCode()) {
-                                targetGame = game;
-                            }
-                        }
-
-                        System.out.println("Player " + username + " joined game with code: " + joinGameWithCodeMessage.getSessionCode());
-
-                        if (targetGame == null) {
-                            sendMessage(new ErrorMessage(ErrorType.INVALID_SESSION_CODE));
-                            break;
-                        }
-
-                        targetGame.addPlayer(this);
-                        System.out.println("Player B joined the game");
-                    }
                     case MessageType.CREATE_GAME -> {
                         CreateGameMessage createGameMessage = (CreateGameMessage) received;
-                        this.isInGame = true;
 
                         if(createGameMessage.getSize() < 5 || createGameMessage.getSize() > 20) {
                             sendMessage(new ErrorMessage(ErrorType.INVALID_GAME_SIZE));
-                            break;
+                            return;
                         }
 
                         createGame(createGameMessage.getSize());
-                        System.out.println("Player A created a game");
-                    }
-                    case MessageType.UPDATE_BUILD_BOARD -> {
-                        UpdateBuildBoardMessage updateBuildBoardMessage = (UpdateBuildBoardMessage) received;
 
-                        BattleShipGame game = server.getGame(this);
+                        this.isInGame = true;
+                    }
+                    case MessageType.JOIN_GAME_WITH_CODE -> {
+                        JoinGameWithCodeMessage joinGameWithCodeMessage = (JoinGameWithCodeMessage) received;
+
+                        BattleShipGame targetGame = server.getGameFromJoinCode(joinGameWithCodeMessage.getSessionCode());
+
+                        if (targetGame == null) {
+                            sendMessage(new ErrorMessage(ErrorType.INVALID_SESSION_CODE));
+                            return;
+                        }
+
+                        targetGame.addPlayer(this);
+
+                        this.isInGame = true;
+                    }
+                    case MessageType.LEAVE_GAME -> {
+                        LeaveGameMessage leaveGameMessage = (LeaveGameMessage) received;
 
                         if(game == null) {
                             sendMessage(new ErrorMessage(ErrorType.NO_GAME_IN_PROGRESS));
                             break;
                         }
 
-                        System.out.println("Received placement from player " + username);
+                        System.out.println("Player " + this.username + " left game " + game.getGameState().getId());
+                        System.out.println("Playeramount: " + game.getPlayerAmount());
 
-                        for (Ship ship : updateBuildBoardMessage.getShips()) {
-                            System.out.println("Ship: " + ship);
+                        game.leaveGame(this);
+
+                    }
+                    case MessageType.UPDATE_BUILD_BOARD -> {
+                        //Wir gehen davon aus, dass jedes mal wenn ein Schiff platziert wird, auch die gesamte Liste der Schiffe
+
+                        UpdateBuildBoardMessage updateBuildBoardMessage = (UpdateBuildBoardMessage) received;
+
+                        if(game == null) {
+                            sendMessage(new ErrorMessage(ErrorType.NO_GAME_IN_PROGRESS));
+                            break;
                         }
 
-                        // TODO: VALIDATE PLACEMENT
+                        game.onPlayerPlaceShips(this, updateBuildBoardMessage.getShips());
 
-                        game.setPlayerShips(this.getId(), updateBuildBoardMessage.getShips());
-
-                        System.out.println("Submitted placement");
-                        for (Ship ship : updateBuildBoardMessage.getShips()) {
-                            System.out.println("Ship: " + ship);
-                        }
-
-                        GameState gameState = new GameState(game.getGameState());
-
-                        game.getPlayerA().sendMessage(new GameStateUpdateMessage(gameState));
-                        game.getPlayerB().sendMessage(new GameStateUpdateMessage(gameState));
-
-                        System.out.println("Player " + username + " submitted placement");
+                        break;
                     }
                     case MessageType.PLAYER_HOVER -> {
                         PlayerHoverMessage playerHoverMessage = (PlayerHoverMessage) received;
-
-                        BattleShipGame game = server.getGame(this);
 
                         if(game == null) {
                             sendMessage(new ErrorMessage(ErrorType.NO_GAME_IN_PROGRESS));
@@ -180,8 +178,6 @@ public class PlayerInfo implements Runnable {
                     }
                     case MessageType.PLAYER_MOVE -> {
                         PlayerMoveMessage playerMoveMessage = (PlayerMoveMessage) received;
-
-                        BattleShipGame game = server.getGame(this);
 
                         if(game == null) {
                             sendMessage(new ErrorMessage(ErrorType.NO_GAME_IN_PROGRESS));

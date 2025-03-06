@@ -107,13 +107,14 @@ public class ClientHandler {
                         case MessageType.GAME_STATE_UPDATE -> {
                             GameStateUpdateMessage gameStateUpdateMessage = (GameStateUpdateMessage) received;
 
-                            System.out.println("Game state updated: " + gameStateUpdateMessage.getGameState().getStatus());
+                            System.out.println("Game state updated1: " + gameStateUpdateMessage.getGameState().getStatus());
+                            System.out.println("GameHandler: " + gameHandler);
 
                             if(this.gameHandler == null) return;
 
                             this.lobbyHandler.setInQueue(false);
 
-                            System.out.println("Player A: " + gameStateUpdateMessage.getGameState().getPlayerA().getName());
+                            //System.out.println("Player A: " + gameStateUpdateMessage.getGameState().getPlayerA().getName());
                             //System.out.println("Player B: " + gameStateUpdateMessage.getGameState().getPlayerB().getName());
 
                             gameHandler.onGameStateUpdate(gameStateUpdateMessage);

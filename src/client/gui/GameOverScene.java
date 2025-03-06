@@ -44,13 +44,19 @@ public class GameOverScene extends JPanel {
         resultLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         // Gewinner-Klarname unterhalb der Überschrift (kleiner dargestellt)
-        JLabel winnerLabel = new JLabel("Winner: " + winnerNames);
+        String winnerText = "Winner: " + winnerNames;
+
+        if(winners.stream().anyMatch(player -> player.getId().equals(currentUserId))) {
+            winnerText += " (You)";
+        }
+
+        JLabel winnerLabel = new JLabel(winnerText);
         winnerLabel.setFont(new Font("Arial", Font.PLAIN, 24));
         winnerLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         // Verlierer-Anzeige – wenn der User verloren hat, wird "(You)" angehängt
         String loserText = "Loser: " + loserNames;
-        if (!loosers.stream().anyMatch(player -> player.getId().equals(currentUserId))) {
+        if (loosers.stream().anyMatch(player -> player.getId().equals(currentUserId))) {
             loserText += " (You)";
         }
         JLabel loserLabel = new JLabel(loserText);

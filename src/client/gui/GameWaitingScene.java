@@ -124,7 +124,8 @@ public class GameWaitingScene extends JPanel {
         backButton.addActionListener(e -> {
             animationTimer.stop();
             // Stoppe auch den Countdown, falls er läuft
-            gameHandler.sendLeaveGame(); // Beim Verlassen des Wartebildschirms das Spiel beenden
+            gameHandler.sendLeaveGame();
+            gameHandler.getClientHandler().endCurrentGame(); // Beim Verlassen des Wartebildschirms das Spiel beenden
         });
         return backButton;
     }

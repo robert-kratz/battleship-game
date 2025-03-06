@@ -1,5 +1,6 @@
 package client;
 
+import protocol.ErrorType;
 import protocol.Ship;
 import protocol.game.Cell;
 import protocol.game.Move;
@@ -182,6 +183,10 @@ public class GameHandler implements GameClient {
     @Override
     public void onGameError(ErrorMessage message) {
         clientHandler.showError(message.getError().getMessage());
+        if(message.getError().equals(ErrorType.NO_GAME_IN_PROGRESS)) {
+            sendLeaveGame();
+            this.clientHandler.getStageManager().exitGameScene();
+        }
     }
 
     /**
@@ -210,13 +215,27 @@ public class GameHandler implements GameClient {
      * @param ships The ships to be placed
      */
     @Override
-    public void sendSubmitPlacementEvent(ArrayList<Ship> ships) {
+    public void sendUpdateBuildBoardMessage(ArrayList<Ship> ships) {
         if(gameState.getStatus() != GameState.GameStatus.BUILD_GAME_BOARD) {
-            clientHandler.showError("Game is not in build phase.");
             return;
         }
 
         clientHandler.sendMessage(new UpdateBuildBoardMessage(ships));
+    }
+
+    @Override
+    public void sendPlayerReadyMessage(boolean ready) {
+        if(gameState.getStatus() != GameState.GameStatus.BUILD_GAME_BOARD) {
+            return;
+        }
+
+        //Check if all ships are placed before sending the ready message
+        if(ready && this.playersShips != null && this.playersShips.size() != this.gameState.getAvailableShips().size()) {
+            clientHandler.showError("You have to place all ships before you can start the game.");
+            return;
+        }
+
+        clientHandler.sendMessage(new PlayerReadyMessage(ready));
     }
 
     /**
@@ -238,19 +257,23 @@ public class GameHandler implements GameClient {
     @Override
     public void sendLeaveGame() {
         clientHandler.sendMessage(new LeaveGameMessage());
+        this.isInGame = false;
         this.clientHandler.endCurrentGame(); //Removes the game handler from the client handler and switch scene to lobby
     }
 
     public void startBuildPhase() {
-        if(this.gameState.getStatus() == GameState.GameStatus.IN_GAME) return;
+
+        if(this.gameState.getStatus() == GameState.GameStatus.IN_GAME || this.gameState.getStatus() == GameState.GameStatus.GAME_OVER) return;
 
         this.getClientHandler().getStageManager().startBuildScene();
 
         boolean isOpponentReady = this.getGameState().getOpponent(this.getClientHandler().getUserId()).isReady();
 
-        this.getClientHandler().getStageManager().gameBuildScene.setOpponentState(isOpponentReady);
+        if(clientHandler.getStageManager().gameBuildScene != null) {
+            this.getClientHandler().getStageManager().gameBuildScene.setOpponentState(isOpponentReady);
 
-        this.isInGame = true;
+            this.isInGame = true;
+        }
     }
 
     public ArrayList<Ship> getPlayersShips() {

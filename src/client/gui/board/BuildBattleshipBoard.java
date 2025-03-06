@@ -19,14 +19,14 @@ public class BuildBattleshipBoard extends AbstractBattleshipBoard {
     private final Color HOVER_COLOR = new Color(175, 175, 175, 150);
     private final Color COLLISION_COLOR = new Color(255, 89, 94, 150);
 
-    private ShipPlacementValidator validator;
+    private final int boardSize;
+
     private BuildBoardListener listener;
 
-    public BuildBattleshipBoard(int boardSize, List<Ship> placedShips, BoardPainter boardPainter,
-                                ShipPlacementValidator validator, BuildBoardListener listener) {
+    public BuildBattleshipBoard(int boardSize, List<Ship> placedShips, BoardPainter boardPainter, BuildBoardListener listener) {
         super(boardSize, placedShips, boardPainter);
-        this.validator = validator;
         this.listener = listener;
+        this.boardSize = boardSize;
         initializeBoard();
         bindRotationKey();
     }
@@ -146,7 +146,7 @@ public class BuildBattleshipBoard extends AbstractBattleshipBoard {
         // Zeichne das "Ghost-Ship" (Vorschau) falls vorhanden
         if (selectedShip != null && lastHoveredRow != null && lastHoveredCol != null) {
             java.util.List<Point> ghostCells = selectedShip.getOccupiedCellsAt(lastHoveredCol, lastHoveredRow);
-            boolean collision = validator.isCollision(selectedShip, lastHoveredRow, lastHoveredCol, placedShips);
+            boolean collision = ShipPlacementValidator.isCollision(selectedShip, this.boardSize, lastHoveredRow, lastHoveredCol, placedShips);
             g.setColor(collision ? COLLISION_COLOR : HOVER_COLOR);
             int fillWidth = (int) Math.ceil(cellWidth);
             int fillHeight = (int) Math.ceil(cellHeight);
