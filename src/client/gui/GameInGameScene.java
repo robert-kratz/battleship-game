@@ -8,6 +8,7 @@ import client.gui.painter.BoardPainter;
 import client.gui.painter.InGameBoardPainter;
 import protocol.GameState;
 import protocol.Ship;
+import protocol.ShipPlacementValidator;
 import protocol.game.Cell;
 import protocol.game.Move;
 import protocol.game.items.AirStrikeItem;
@@ -38,6 +39,7 @@ public class GameInGameScene extends JPanel implements Runnable {
     private JButton bombButton;
     private JButton radarButton;
     private JButton airStrikeButton;
+    private JButton giveUpButton;
 
     public GameInGameScene(GameHandler gameHandler, ArrayList<Ship> placedShips) {
         this.gameHandler = gameHandler;
@@ -295,6 +297,17 @@ public class GameInGameScene extends JPanel implements Runnable {
         rightPanel.add(Box.createVerticalStrut(10));
         rightPanel.add(new JSeparator(SwingConstants.HORIZONTAL));
         rightPanel.add(Box.createVerticalStrut(10));
+
+        giveUpButton = new JButton("Give Up");
+        giveUpButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        giveUpButton.setMaximumSize(new Dimension(Integer.MAX_VALUE, 60));
+        giveUpButton.setBackground(Color.RED);
+        giveUpButton.setOpaque(true);
+        giveUpButton.addActionListener(e -> {
+            this.gameHandler.sendLeaveGame();
+            this.gameHandler.getClientHandler().endCurrentGame();
+        });
+        rightPanel.add(giveUpButton);
 
         setLayout(new BorderLayout());
         add(leftPanel, BorderLayout.WEST);
