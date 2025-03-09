@@ -2,14 +2,14 @@ package protocol.messages;
 
 import protocol.GameState;
 
-public class GameStartingMessage extends Message {
+public class BuildingPhaseStartMessage extends Message {
 
     private static final long serialVersionUID = 1L;
 
     private GameState gameState;
 
-    public GameStartingMessage(GameState gameState) {
-        super(MessageType.GAME_STARTING);
+    public BuildingPhaseStartMessage(GameState gameState) {
+        super(MessageType.BUILDING_PHASE_STARTS);
         this.gameState = gameState;
     }
 

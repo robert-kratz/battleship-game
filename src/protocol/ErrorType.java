@@ -11,7 +11,8 @@ public enum ErrorType {
     ALREADY_IN_QUEUE("Already in queue"),
     ALREADY_IN_GAME("Already in game"),
     NOT_IN_QUEUE("Not in queue"),
-    INVALID_MOVE("Invalid move");
+    INVALID_MOVE("Invalid move"),
+    GAME_ALREADY_STARTED("Game already started");
 
     private final String message;
 

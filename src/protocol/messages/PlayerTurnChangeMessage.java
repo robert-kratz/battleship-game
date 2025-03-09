@@ -2,13 +2,15 @@ package protocol.messages;
 
 import protocol.GameState;
 
-public class GameStateUpdateMessage extends Message {
+public class PlayerTurnChangeMessage extends Message {
 
     private static final long serialVersionUID = 1L;
-    private GameState gameState;
 
-    public GameStateUpdateMessage(GameState gameState) {
-        super(MessageType.GAME_STATE_UPDATE);
+    private final GameState gameState;
+
+    public PlayerTurnChangeMessage(GameState gameState) {
+        super(MessageType.TURN_CHANGE);
+
         this.gameState = gameState;
     }
 

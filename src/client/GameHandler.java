@@ -31,70 +31,49 @@ public class GameHandler implements GameClient {
         this.gameState = gameState;
     }
 
-    /**
-     * Game logic
-     */
 
     @Override
-    public void onGameStateUpdate(GameStateUpdateMessage gameStateUpdateMessage) {
+    public void onBuildPhaseStarts(BuildingPhaseStartMessage gameStartMessage) {
+        this.gameState = gameStartMessage.getGameState();
 
-        boolean gameStateUpdated = gameStateUpdateMessage.getGameState().getStatus() != gameState.getStatus();
+        System.out.println("onGameStartingEvent.state: " + gameStartMessage.getGameState().getStatus());
 
-        this.gameState = gameStateUpdateMessage.getGameState();
+        if(!this.gameState.getStatus().equals(GameState.GameStatus.BUILD_GAME_BOARD)) return;
 
-        System.out.println("Game state updated: " + gameState.getStatus());
+        if(!isInGame) {
+            if(this.gameState.getPlayerCount() == 2) {
+                UUID userId = this.clientHandler.getUserId();
+                String opponentName = this.gameState.getOpponent(userId).getName();
 
-        System.out.println("Player A ready: " + gameState.getPlayerA().isReady());
-        System.out.println("Player B ready: " + gameState.getPlayerA().isReady());
-
-        //ONLY EXECUTE IF GAME STATE HAS CHANGED
-        if(gameStateUpdated) {
-            System.out.println("Game state changed: " + gameState.getStatus());
-            switch (gameState.getStatus()) {
-                //Trigger when someone joins the lobby
-                case LOBBY_WAITING -> { }
-                //Trigger when game build phase starts
-                case BUILD_GAME_BOARD -> {
-
-                    if(!isInGame) {
-                        if(this.gameState.getPlayerCount() == 2) {
-                            UUID userId = this.clientHandler.getUserId();
-                            String opponentName = this.gameState.getOpponent(userId).getName();
-
-                            this.clientHandler.getStageManager().gameWaitingScene.setOpponentName(opponentName);
-                        }
-
-                        this.clientHandler.getStageManager().gameWaitingScene.setGameStartTime(this.gameState.getBuildGameBoardStarted());
-                    }
-                }
-                case IN_GAME -> {
-                    if(this.clientHandler.getStageManager().gameIngameScene == null) {
-                        System.out.println("Starting in game scene");
-                        this.clientHandler.getStageManager().startInGameScene(this.playersShips);
-                    }
-                }
-                case GAME_OVER -> {
-                    System.out.println("Game over scene triggered");
-                    System.out.println("Game over scene: " + this.clientHandler.getStageManager().gameOverScene);
-                    this.clientHandler.getStageManager().startGameOverScene();
-                }
+                this.clientHandler.getStageManager().gameWaitingScene.setOpponentName(opponentName);
             }
+
+            this.clientHandler.getStageManager().gameWaitingScene.setGameStartTime(this.gameState.getBuildGameBoardStarted());
         }
+    }
 
-        //ALWAYS EXECUTE
-        switch (gameState.getStatus()) {
-            case LOBBY_WAITING -> {
-            }
-            case IN_GAME -> {
-                if (this.clientHandler.getStageManager().gameIngameScene != null) {
-                    boolean isPlayerATurn = gameState.isPlayersTurn(this.clientHandler.getUserId());
+    @Override
+    public void onGameInGameStarts(GameInGameStartMessage gameInGameStartMessage) {
+        this.gameState = gameInGameStartMessage.getGameState();
 
-                    this.clientHandler.getStageManager().gameIngameScene.toggleTurn(isPlayerATurn);
-                    this.clientHandler.getStageManager().gameIngameScene.extendCurrentTurn(gameState.getPlayersTurnEnd());
-                    this.clientHandler.getStageManager().gameIngameScene.setPlayerEnergy(gameState.getPlayer(this.clientHandler.getUserId()).getEnergy());
-                }
-            }
+        System.out.println("onGameInGameStarts.state: " + gameInGameStartMessage.getGameState().getStatus());
+
+        if(!this.gameState.getStatus().equals(GameState.GameStatus.IN_GAME)) return;
+
+        this.playersShips = gameInGameStartMessage.getYourShips();
+
+        if(this.clientHandler.getStageManager().gameIngameScene == null) {
+            this.clientHandler.getStageManager().startInGameScene(this.playersShips);
         }
+    }
+
+    @Override
+    public void onGameOver(GameOverMessage gameOverMessage) {
+        this.gameState = gameOverMessage.getGameState();
+
+        System.out.println("Game over scene triggered");
+        System.out.println("Game over scene: " + this.clientHandler.getStageManager().gameOverScene);
+        this.clientHandler.getStageManager().startGameOverScene();
     }
 
     /**
@@ -107,81 +86,47 @@ public class GameHandler implements GameClient {
             return;
         }
 
-        System.out.println("Player hover event received");
-
         //Forward the hover event to the game scene only if the uuid in the message is the opponent's
         boolean isPlayersTurn = gameState.isPlayersTurn(this.clientHandler.getUserId());
 
         if(isPlayersTurn) return;
 
-        System.out.println("Setting opponent hover");
-
         clientHandler.getStageManager().gameIngameScene.setOpponentHover(playerHoverMessage.getX(), playerHoverMessage.getY(), playerHoverMessage.getAffectedFields());
     }
 
-    /**
-     * Update the game state during the in-game phase
-     * @param gameState The updated game state
-     * @param yourShips The ships of the player
-     */
     @Override
-    public void onGameUpdate(GameState gameState, ArrayList<Ship> yourShips) {
-        //TODO: Implement in game logic
+    public void onTurnChange(PlayerTurnChangeMessage playerTurnChangeMessage) {
 
-        System.out.println("a");
-        this.playersShips = yourShips;
+        boolean playerTurnHasChanged = this.gameState.isPlayersTurn(this.clientHandler.getUserId()) != playerTurnChangeMessage.getGameState().isPlayersTurn(this.clientHandler.getUserId());
 
-        if(this.gameState.getStatus().equals(GameState.GameStatus.BUILD_GAME_BOARD)) {
-            System.out.println("Updated player status");
-            if(this.clientHandler.getStageManager().gameBuildScene != null) {
-                ClientPlayer player = gameState.getPlayer(this.clientHandler.getUserId());
-                ClientPlayer opponent = gameState.getOpponent(this.clientHandler.getUserId());
-
-                System.out.println("Player ready: " + player.isReady());
-                System.out.println("Opponent ready: " + opponent.isReady());
-
-                this.clientHandler.getStageManager().gameBuildScene.setPlayerState(player.isReady());
-                this.clientHandler.getStageManager().gameBuildScene.setOpponentState(opponent.isReady());
-            }
-        }
-
-        boolean playerTurnHasChanged = this.gameState.isPlayersTurn(this.clientHandler.getUserId()) != gameState.isPlayersTurn(this.clientHandler.getUserId());
+        this.gameState = playerTurnChangeMessage.getGameState();
 
         System.out.println("PlayerTurn: " + this.gameState.isPlayersTurn(this.clientHandler.getUserId()));
-
         System.out.println("Player turn has changed: " + playerTurnHasChanged);
 
-        boolean isPlayersTurn = gameState.isPlayersTurn(this.clientHandler.getUserId());
+        boolean isPlayersTurn = this.gameState.isPlayersTurn(this.clientHandler.getUserId());
 
         if(this.getClientHandler().getStageManager().gameIngameScene != null) {
             this.clientHandler.getStageManager().gameIngameScene.toggleTurn(isPlayersTurn);
-            this.clientHandler.getStageManager().gameIngameScene.extendCurrentTurn(gameState.getPlayersTurnEnd());
-            this.clientHandler.getStageManager().gameIngameScene.setPlayerEnergy(gameState.getPlayer(this.clientHandler.getUserId()).getEnergy());
+            this.clientHandler.getStageManager().gameIngameScene.extendCurrentTurn(this.gameState.getPlayersTurnEnd());
+            this.clientHandler.getStageManager().gameIngameScene.setPlayerEnergy(this.gameState.getPlayer(this.clientHandler.getUserId()).getEnergy());
         }
+    }
 
-        //Check weather a move has been made
+    @Override
+    public void onMoveMade(MoveMadeMessage moveMadeMessage) {
+        this.gameState = moveMadeMessage.getGameState();
 
-        boolean moveMade = gameState.getPlayerA().getMoves().size() != this.gameState.getPlayerA().getMoves().size() || gameState.getPlayerB().getMoves().size() != this.gameState.getPlayerB().getMoves().size();
+        if(!this.gameState.getStatus().equals(GameState.GameStatus.IN_GAME)) return;
 
-        if (moveMade) {
-            System.out.println("Move GUI Update");
-            // Prüfe, ob der lokale Spieler Spieler A ist:
-            if (clientHandler.getUserId().equals(gameState.getPlayerA().getId())) {
-                // Spieler A:
-                // - Das Player Board zeigt die Züge des Gegners (moveB, da diese auf A's Schiffe zielen)
-                // - Das Opponent Board zeigt die eigenen Züge (moveA)
-                clientHandler.getStageManager().gameIngameScene.playerBoard.setMoves(gameState.getPlayerB().getMoves());
-                clientHandler.getStageManager().gameIngameScene.opponentBoard.setMoves(gameState.getPlayerA().getMoves());
-            } else {
-                // Andernfalls (lokaler Spieler ist Spieler B):
-                // - Das Player Board zeigt die Züge des Gegners (moveA, da diese auf B's Schiffe zielen)
-                // - Das Opponent Board zeigt die eigenen Züge (moveB)
-                clientHandler.getStageManager().gameIngameScene.playerBoard.setMoves(gameState.getPlayerA().getMoves());
-                clientHandler.getStageManager().gameIngameScene.opponentBoard.setMoves(gameState.getPlayerB().getMoves());
-            }
+        //Show the move on the board
+        if (clientHandler.getUserId().equals(gameState.getPlayerA().getId())) {
+            clientHandler.getStageManager().gameIngameScene.playerBoard.setMoves(gameState.getPlayerB().getMoves());
+            clientHandler.getStageManager().gameIngameScene.opponentBoard.setMoves(gameState.getPlayerA().getMoves());
+        } else {
+            clientHandler.getStageManager().gameIngameScene.playerBoard.setMoves(gameState.getPlayerA().getMoves());
+            clientHandler.getStageManager().gameIngameScene.opponentBoard.setMoves(gameState.getPlayerB().getMoves());
         }
-
-        this.gameState = gameState;
     }
 
     /**
@@ -263,18 +208,29 @@ public class GameHandler implements GameClient {
         this.clientHandler.endCurrentGame(); //Removes the game handler from the client handler and switch scene to lobby
     }
 
-    public void startBuildPhase() {
+    @Override
+    public void onBuildReadyStateChange(BuildReadyStateChange buildReadyStateChange) {
+        if(!this.gameState.getStatus().equals(GameState.GameStatus.BUILD_GAME_BOARD)) return;
 
-        if(this.gameState.getStatus() == GameState.GameStatus.IN_GAME || this.gameState.getStatus() == GameState.GameStatus.GAME_OVER) return;
+        this.gameState = buildReadyStateChange.getGameState();
+        updateOpponentReadyState();
+    }
+
+    @Override
+    public void showBuildPhase() {
+        if(this.gameState.getStatus().equals(GameState.GameStatus.LOBBY_WAITING)) return;
+
+        this.isInGame = true;
 
         this.getClientHandler().getStageManager().startBuildScene();
+    }
 
-        boolean isOpponentReady = this.getGameState().getOpponent(this.getClientHandler().getUserId()).isReady();
-
-        if(clientHandler.getStageManager().gameBuildScene != null) {
-            this.getClientHandler().getStageManager().gameBuildScene.setOpponentState(isOpponentReady);
-
-            this.isInGame = true;
+    private void updateOpponentReadyState() {
+        if(this.clientHandler.getStageManager().gameBuildScene != null) {
+            ClientPlayer player = this.gameState.getPlayer(this.clientHandler.getUserId());
+            ClientPlayer opponent = this.gameState.getOpponent(this.clientHandler.getUserId());
+            this.clientHandler.getStageManager().gameBuildScene.setPlayerState(player.isReady());
+            this.clientHandler.getStageManager().gameBuildScene.setOpponentState(opponent.isReady());
         }
     }
 

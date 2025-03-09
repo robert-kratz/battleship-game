@@ -13,10 +13,12 @@ public enum MessageType {
     CREATE_GAME,
     //CLIENT -> SERVER
     JOIN_GAME_WITH_CODE,
+    //SERVER -> CLIENT
+    BUILD_READY_STATE_CHANGE,
     //SERVER -> CLIENT (player moved to game)
     JOIN_GAME,
     //SERVER -> CLIENT
-    GAME_UPDATE,
+    GAME_IN_GAME_STARTS,
     //CLIENT -> SERVER
     PLAYER_READY,
     //CLIENT -> SERVER
@@ -24,13 +26,15 @@ public enum MessageType {
     //SERVER -> CLIENT
     QUEUE_UPDATE,
     //SERVER -> CLIENT
-    GAME_STARTING,
+    BUILDING_PHASE_STARTS,
+    //SERVER -> CLIENT
+    MOVE_MADE,
     //CLIENT -> SERVER
     UPDATE_BUILD_BOARD,
     //SERVER -> CLIENT
-    GAME_STARTED,
+    TURN_CHANGE,
     //SERVER -> CLIENT
-    GAME_STATE_UPDATE,
+    GAME_END,
     //CLIENT -> SERVER
     GAME_STATE_REQUEST,
     //SERVER -> CLIENT

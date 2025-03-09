@@ -1,7 +1,6 @@
 package server;
 
 import protocol.GameState;
-import protocol.Ship;
 import protocol.messages.ErrorMessage;
 import protocol.ErrorType;
 import protocol.messages.*;
@@ -48,7 +47,7 @@ public class PlayerInfo implements Runnable {
 
                 BattleShipGame game = server.getGame(this);
 
-                System.out.println("Received: " + received.getClass().getSimpleName());
+                if(!received.getClass().getSimpleName().equals("PlayerHoverMessage")) System.out.println("Received: " + received.getClass().getSimpleName());
 
                 switch (received.getType()) {
                     case MessageType.JOIN_QUEUE -> {
@@ -70,25 +69,13 @@ public class PlayerInfo implements Runnable {
                         server.addToQueue(this);
 
                         // Notify all players in queue
-                        for (PlayerInfo player : server.getPlayers()) {
-                            boolean isInQueue = server.getQueue().contains(player);
-                            player.sendMessage(new QueueUpdateMessage(server.getQueue().size(), isInQueue));
-                        }
+                        broadcastQueueStateUpdate();
 
-                        // Check if there are enough players in queue to start a game
-                        if(server.getQueue().size() >= 2) {
-                            PlayerInfo playerA = server.getQueue().get(0);
-                            PlayerInfo playerB = server.getQueue().get(1);
-
-                            server.getQueue().remove(playerA);
-                            server.getQueue().remove(playerB);
-
-                            createGame(10, playerA, playerB);
-                        }
+                        checkQueueForPossibleGame();
                     }
                     case MessageType.LEAVE_QUEUE -> {
                         if(game != null) {
-                            game.leaveGame(this);
+                            game.removePlayer(this);
                             sendMessage(new ErrorMessage(ErrorType.ALREADY_IN_GAME));
                             break;
                         }
@@ -100,11 +87,7 @@ public class PlayerInfo implements Runnable {
 
                         server.removeFromQueue(this.getId());
 
-                        for (PlayerInfo player : server.getPlayers()) {
-                            boolean isInQueue = server.getQueue().contains(player);
-                            System.out.println("Player " + player.getUsername() + " is in queue: " + isInQueue);
-                            player.sendMessage(new QueueUpdateMessage(server.getQueue().size(), isInQueue));
-                        }
+                        broadcastQueueStateUpdate();
                     }
                     case MessageType.CREATE_GAME -> {
                         CreateGameMessage createGameMessage = (CreateGameMessage) received;
@@ -128,6 +111,11 @@ public class PlayerInfo implements Runnable {
                             return;
                         }
 
+                        if(!targetGame.getGameState().getStatus().equals(GameState.GameStatus.LOBBY_WAITING)) {
+                            sendMessage(new ErrorMessage(ErrorType.GAME_ALREADY_STARTED));
+                            return;
+                        }
+
                         targetGame.addPlayer(this);
 
                         this.isInGame = true;
@@ -140,15 +128,11 @@ public class PlayerInfo implements Runnable {
                             break;
                         }
 
-                        System.out.println("Player " + this.username + " left game " + game.getGameState().getId());
-                        System.out.println("Playeramount: " + game.getPlayerAmount());
+                        game.removePlayer(this);
 
-                        game.leaveGame(this);
-
+                        this.isInGame = false;
                     }
                     case MessageType.UPDATE_BUILD_BOARD -> {
-                        //Wir gehen davon aus, dass jedes mal wenn ein Schiff platziert wird, auch die gesamte Liste der Schiffe
-
                         UpdateBuildBoardMessage updateBuildBoardMessage = (UpdateBuildBoardMessage) received;
 
                         if(game == null) {
@@ -198,7 +182,7 @@ public class PlayerInfo implements Runnable {
 
                         if(!game.getGameState().getStatus().equals(GameState.GameStatus.IN_GAME)) return;
 
-                        game.playerMove(this, playerMoveMessage.getMove());
+                        game.onPlayerAttemptMove(this, playerMoveMessage.getMove());
                     }
                 }
             }
@@ -206,6 +190,26 @@ public class PlayerInfo implements Runnable {
             System.out.println("Lost connection to player " + username);
             server.removePlayer(this);
             server.removeFromQueue(this.getId());
+        }
+    }
+
+    private void broadcastQueueStateUpdate() {
+        for (PlayerInfo player : server.getPlayers()) {
+            boolean isInQueue = server.getQueue().contains(player);
+            player.sendMessage(new QueueUpdateMessage(server.getQueue().size(), isInQueue));
+        }
+    }
+
+    private void checkQueueForPossibleGame() {
+        // Check if there are enough players in queue to start a game
+        if(server.getQueue().size() >= 2) {
+            PlayerInfo playerA = server.getQueue().get(0);
+            PlayerInfo playerB = server.getQueue().get(1);
+
+            server.getQueue().remove(playerA);
+            server.getQueue().remove(playerB);
+
+            createGame(10, playerA, playerB);
         }
     }
 
@@ -232,9 +236,6 @@ public class PlayerInfo implements Runnable {
         System.out.println("Game created with player A: " + playerA.getUsername() +
                 " and player B: " + playerB.getUsername());
 
-        playerA.setInGame(true);
-        playerB.setInGame(true);
-
         game.addPlayer(playerA);
         game.addPlayer(playerB);
 
@@ -243,7 +244,7 @@ public class PlayerInfo implements Runnable {
 
     public void sendMessage(Message message) {
         try {
-            System.out.println("Sending: " + message.getClass().getSimpleName());
+            if(!message.getClass().getSimpleName().equals("PlayerHoverMessage")) System.out.println("Sending: " + message.getClass().getSimpleName());
             out.writeObject(message);
             out.flush();
         } catch (IOException e) {

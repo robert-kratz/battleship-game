@@ -8,7 +8,7 @@ import java.util.Random;
 /**
  * Validiert die Platzierung von Schiffen auf einem Spielbrett.
  */
-public class ShipPlacementValidator {
+public class ShipPlacementHelper {
 
     /**
      * Prüft, ob beim Platzieren des übergebenen Schiffs an (startRow, startCol) eine Kollision entsteht.

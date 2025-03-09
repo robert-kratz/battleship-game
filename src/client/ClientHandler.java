@@ -1,7 +1,6 @@
 package client;
 
 import protocol.ErrorType;
-import protocol.GameState;
 import protocol.Ship;
 import protocol.messages.*;
 
@@ -100,37 +99,61 @@ public class ClientHandler {
 
                             gameHandler = new GameHandler(this, joinGameMessage.getGameState());
                             this.getStageManager().startWaitingLobbyScene(); //Start waiting lobby scene
-                            this.lobbyHandler.setInQueue(false);
-                            //If no GameHandler is present, create one
-
-                        }
-                        case MessageType.GAME_STATE_UPDATE -> {
-                            GameStateUpdateMessage gameStateUpdateMessage = (GameStateUpdateMessage) received;
-
-                            System.out.println("Game state updated1: " + gameStateUpdateMessage.getGameState().getStatus());
-                            System.out.println("GameHandler: " + gameHandler);
-
-                            if(this.gameHandler == null) return;
 
                             this.lobbyHandler.setInQueue(false);
 
-                            //System.out.println("Player A: " + gameStateUpdateMessage.getGameState().getPlayerA().getName());
-                            //System.out.println("Player B: " + gameStateUpdateMessage.getGameState().getPlayerB().getName());
-
-                            gameHandler.onGameStateUpdate(gameStateUpdateMessage);
                         }
-                        case MessageType.GAME_UPDATE -> {
-                            GameUpdateMessage gameUpdateMessage = (GameUpdateMessage) received;
+                        case MessageType.BUILDING_PHASE_STARTS -> {
+                            BuildingPhaseStartMessage gameStartedMessage = (BuildingPhaseStartMessage) received;
 
                             if(this.gameHandler == null) return;
 
-                            System.out.println("Game update received");
+                            this.gameHandler.onBuildPhaseStarts(gameStartedMessage);
+                        }
+                        case MessageType.GAME_IN_GAME_STARTS -> {
+                            GameInGameStartMessage gameInGameStartMessage = (GameInGameStartMessage) received;
 
-                            for (Ship ship : gameUpdateMessage.getShips()) {
-                                System.out.println("Ship: " + ship);
-                            }
+                            if(this.gameHandler == null) return;
 
-                            gameHandler.onGameUpdate(gameUpdateMessage.getGameState(), gameUpdateMessage.getShips());
+                            System.out.println("Game in game starts: " + gameInGameStartMessage.getGameState().getStatus());
+
+                            this.gameHandler.onGameInGameStarts(gameInGameStartMessage);
+                        }
+                        case MessageType.GAME_END -> {
+                            GameOverMessage gameOverMessage = (GameOverMessage) received;
+
+                            if(this.gameHandler == null) return;
+
+                            System.out.println("Game over: " + gameOverMessage.getGameState().getStatus());
+
+                            this.gameHandler.onGameOver(gameOverMessage);
+                        }
+                        case MessageType.MOVE_MADE -> {
+                            MoveMadeMessage moveMadeMessage = (MoveMadeMessage) received;
+
+                            if(this.gameHandler == null) return;
+
+                            System.out.println("Move made: " + moveMadeMessage.getGameState().getStatus());
+
+                            this.gameHandler.onMoveMade(moveMadeMessage);
+                        }
+                        case MessageType.BUILD_READY_STATE_CHANGE -> {
+                            BuildReadyStateChange buildReadyStateChange = (BuildReadyStateChange) received;
+
+                            if(this.gameHandler == null) return;
+
+                            System.out.println("Building ready state change: " + buildReadyStateChange.getGameState().getStatus());
+
+                            this.gameHandler.onBuildReadyStateChange(buildReadyStateChange);
+                        }
+                        case MessageType.TURN_CHANGE -> {
+                            PlayerTurnChangeMessage playerTurnChangeMessage = (PlayerTurnChangeMessage) received;
+
+                            if(this.gameHandler == null) return;
+
+                            System.out.println("Turn change: " + playerTurnChangeMessage.getGameState().getStatus());
+
+                            this.gameHandler.onTurnChange(playerTurnChangeMessage);
                         }
                         case MessageType.PLAYER_HOVER -> {
                             PlayerHoverMessage playerHoverMessage = (PlayerHoverMessage) received;
@@ -165,7 +188,7 @@ public class ClientHandler {
      * Sends a message to the server.
      * @param message The message to send.
      */
-    public void sendMessage(Message message) {
+    public synchronized void sendMessage(Message message) {
         try {
             out.writeObject(message);
             out.flush();

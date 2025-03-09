@@ -263,7 +263,7 @@ public class Server {
         System.out.println("Player " + player.getUsername() + " left the server");
 
         if (game != null) {
-            game.leaveGame(player);
+            game.removePlayer(player);
         }
         players.remove(player);
         updatePlayerList();

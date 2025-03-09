@@ -7,7 +7,7 @@ import client.gui.board.BuildBattleshipBoard;
 import client.gui.painter.BoardPainter;
 import client.gui.painter.BuildBoardPainter;
 import protocol.Ship;
-import protocol.ShipPlacementValidator;
+import protocol.ShipPlacementHelper;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -18,7 +18,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class GameBuildScene extends JPanel implements Runnable {
     private int height, width;
@@ -72,7 +71,7 @@ public class GameBuildScene extends JPanel implements Runnable {
                         buildBoard.setSelectedShip(placed);
                     } else {
                         // Prüfe, ob an dieser Position eine Kollision entsteht
-                        if (ShipPlacementValidator.isCollision(selectedShip, gameHandler.getGameState().getBoardSize(), row, col, buildBoard.getPlacedShips())) {
+                        if (ShipPlacementHelper.isCollision(selectedShip, gameHandler.getGameState().getBoardSize(), row, col, buildBoard.getPlacedShips())) {
                             System.out.println("Cannot place ship here due to collision.");
                             return;
                         }
@@ -241,7 +240,7 @@ public class GameBuildScene extends JPanel implements Runnable {
         opponentNameLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         rightPanel.add(opponentNameLabel);
 
-        opponentStatusLabel = new JLabel("Build Board");
+        opponentStatusLabel = new JLabel("Builds Board");
         opponentStatusLabel.setForeground(Color.YELLOW);
         opponentStatusLabel.setFont(new Font("Arial", Font.BOLD, 12));
         opponentStatusLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -260,7 +259,7 @@ public class GameBuildScene extends JPanel implements Runnable {
             int boardSize = gameHandler.getGameState().getBoardSize();
             System.out.println("Randomizing ships");
 
-            ArrayList<Ship> randomizedShips = ShipPlacementValidator.createRandomizedGameBoard(boardSize, new ArrayList<>(allShips), new ArrayList<>());
+            ArrayList<Ship> randomizedShips = ShipPlacementHelper.createRandomizedGameBoard(boardSize, new ArrayList<>(allShips), new ArrayList<>());
             buildBoard.getPlacedShips().clear();
             buildBoard.getPlacedShips().addAll(randomizedShips);
             buildBoard.repaint();
@@ -339,7 +338,7 @@ public class GameBuildScene extends JPanel implements Runnable {
             opponentStatusLabel.setText("Ready");
             opponentStatusLabel.setForeground(Color.GREEN);
         } else {
-            opponentStatusLabel.setText("Build Board");
+            opponentStatusLabel.setText("Builds Board");
             opponentStatusLabel.setForeground(Color.YELLOW);
         }
     }
@@ -349,7 +348,7 @@ public class GameBuildScene extends JPanel implements Runnable {
             playerStatusLabel.setText("Ready");
             playerStatusLabel.setForeground(Color.GREEN);
         } else {
-            playerStatusLabel.setText("Build Board");
+            playerStatusLabel.setText("Builds Board");
             playerStatusLabel.setForeground(Color.YELLOW);
         }
     }

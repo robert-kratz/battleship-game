@@ -19,15 +19,6 @@ public interface GameClient {
     //SERVER -> CLIENT
 
     /**
-     * This method is called when:
-     * - Times change
-     * - Game State change
-     * - Player State change
-     * @param gameStateUpdateMessage The message containing the updated game state
-     */
-    void onGameStateUpdate(GameStateUpdateMessage gameStateUpdateMessage);
-
-    /**
      * This method is called when the opponent hovers a tile
      * @param playerHoverMessage The message containing the player's hover information
      */
@@ -35,18 +26,27 @@ public interface GameClient {
 
     /**
      * This method is called when:
-     * - Move from opponent
-     * Every action in the game regarding game logic
-     * @param gameState The updated game state
-     * @param yourShips The ships of the player
+     * @param buildingPhaseStartMessage The message containing the game starting information
      */
-    void onGameUpdate(GameState gameState, ArrayList<Ship> yourShips);
+    void onBuildPhaseStarts(BuildingPhaseStartMessage buildingPhaseStartMessage);
+
+    void onGameInGameStarts(GameInGameStartMessage gameInGameStartMessage);
+
+    void onGameOver(GameOverMessage gameOverMessage);
+
+    void onTurnChange(PlayerTurnChangeMessage playerTurnChangeMessage);
+
+    void onMoveMade(MoveMadeMessage moveMadeMessage);
+
+    void onBuildReadyStateChange(BuildReadyStateChange buildReadyStateChange);
 
     /**
      * This method is called when an error occurs in the game
      * @param message The error message
      */
     void onGameError(ErrorMessage message);
+
+    void showBuildPhase();
 
     //CLIENT -> SERVER
 

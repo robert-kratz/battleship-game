@@ -6,9 +6,7 @@ import client.SoundType;
 import client.gui.board.InGameBattleshipBoard;
 import client.gui.painter.BoardPainter;
 import client.gui.painter.InGameBoardPainter;
-import protocol.GameState;
 import protocol.Ship;
-import protocol.ShipPlacementValidator;
 import protocol.game.Cell;
 import protocol.game.Move;
 import protocol.game.items.AirStrikeItem;
@@ -21,6 +19,7 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Map;
 
 public class GameInGameScene extends JPanel implements Runnable {
 
@@ -86,7 +85,7 @@ public class GameInGameScene extends JPanel implements Runnable {
                 new InGameBattleshipBoard.InGameBoardListener() {
                     @Override
                     public void onCellClick(int row, int col) {
-                        System.out.println("opponentBoard clicked at: " + row + ", " + col);
+                        //System.out.println("opponentBoard clicked at: " + row + ", " + col);
 
                         Move move;
 
@@ -120,8 +119,6 @@ public class GameInGameScene extends JPanel implements Runnable {
 
                     @Override
                     public void onHover(int row, int col, ArrayList<protocol.game.Cell> affectedCells) {
-                        System.out.println("opponentBoard hovered at: " + row + ", " + col + ". Affected cells: " + affectedCells);
-                        // Sende das Hover-Event an den Server
                         gameHandler.sendPlayerHoverEvent(row, col, affectedCells);
                     }
 

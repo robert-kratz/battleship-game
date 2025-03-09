@@ -191,6 +191,7 @@ public class InGameBattleshipBoard extends AbstractBattleshipBoard {
 
     public void setMoves(ArrayList<Move> moves) {
         this.moves = moves;
+        System.out.println("Moves: " + moves.size() + " (InGameBattleshipBoard) repainting");
         repaint();
     }
 

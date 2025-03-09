@@ -162,7 +162,7 @@ public class GameWaitingScene extends JPanel {
                 timerLabel.setText("00:00");
                 countdownTimer.stop();
 
-                this.gameHandler.startBuildPhase(); // Starte die Build-Phase
+                this.gameHandler.showBuildPhase(); // Starte die Build-Phase
             } else {
                 int seconds = (int) (diff / 1000);
                 int minutes = seconds / 60;

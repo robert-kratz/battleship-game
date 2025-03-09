@@ -2,7 +2,7 @@ package client.gui.board;
 
 import client.gui.painter.BoardPainter;
 import protocol.Ship;
-import protocol.ShipPlacementValidator;
+import protocol.ShipPlacementHelper;
 
 import javax.swing.*;
 import java.awt.*;
@@ -146,7 +146,7 @@ public class BuildBattleshipBoard extends AbstractBattleshipBoard {
         // Zeichne das "Ghost-Ship" (Vorschau) falls vorhanden
         if (selectedShip != null && lastHoveredRow != null && lastHoveredCol != null) {
             java.util.List<Point> ghostCells = selectedShip.getOccupiedCellsAt(lastHoveredCol, lastHoveredRow);
-            boolean collision = ShipPlacementValidator.isCollision(selectedShip, this.boardSize, lastHoveredRow, lastHoveredCol, placedShips);
+            boolean collision = ShipPlacementHelper.isCollision(selectedShip, this.boardSize, lastHoveredRow, lastHoveredCol, placedShips);
             g.setColor(collision ? COLLISION_COLOR : HOVER_COLOR);
             int fillWidth = (int) Math.ceil(cellWidth);
             int fillHeight = (int) Math.ceil(cellHeight);
