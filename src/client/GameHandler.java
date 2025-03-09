@@ -122,6 +122,8 @@ public class GameHandler implements GameClient {
             this.clientHandler.getStageManager().gameIngameScene.extendCurrentTurn(this.gameState.getPlayersTurnEnd());
             this.clientHandler.getStageManager().gameIngameScene.setPlayerEnergy(this.gameState.getPlayer(this.clientHandler.getUserId()).getEnergy());
         }
+
+        updateMoves();
     }
 
     @Override
@@ -139,6 +141,10 @@ public class GameHandler implements GameClient {
         this.clientHandler.getStageManager().gameIngameScene.setPlayerEnergy(this.gameState.getPlayer(this.clientHandler.getUserId()).getEnergy());
 
         //Show the move on the board
+        updateMoves();
+    }
+
+    private void updateMoves() {
         if (clientHandler.getUserId().equals(gameState.getPlayerA().getId())) {
             clientHandler.getStageManager().gameIngameScene.playerBoard.setMoves(gameState.getPlayerB().getMoves());
             clientHandler.getStageManager().gameIngameScene.opponentBoard.setMoves(gameState.getPlayerA().getMoves());

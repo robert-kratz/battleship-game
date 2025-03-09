@@ -69,6 +69,10 @@ public class Move implements Serializable {
         }
     }
 
+    public boolean isItemMove() {
+        return this.seaBombItem != null || this.airStrikeItem != null || this.radarItem != null;
+    }
+
     /**
      * Gibt die Liste der betroffenen Zellen zurück.
      */

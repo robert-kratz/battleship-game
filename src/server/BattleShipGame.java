@@ -23,6 +23,8 @@ public class BattleShipGame implements Game, Runnable {
 
     private final ArrayList<Ship> availableShips = new ArrayList<>();
 
+    private boolean playerTurnMadeMove = false;
+
     private ArrayList<Ship> shipsPlayerA = new ArrayList<>();
     private ArrayList<Ship> shipsPlayerB = new ArrayList<>();
 
@@ -248,6 +250,7 @@ public class BattleShipGame implements Game, Runnable {
 
     @Override
     public void sendTurnChangeEvent() {
+
         GameState newState = new GameState(this.getGameState());
 
         Date start = new Date();
@@ -269,28 +272,24 @@ public class BattleShipGame implements Game, Runnable {
             return;
         }
 
-        //ACHTUNG:!!!! HIER MUSS GLEICH EINE ANDERE PRÜFUNG FÜR DIE MOVES IMPLEMENTIERT WERDEN. NUR WENN DER USER KEIN MOVE
-        //NUR WENN DER PLAYER KEINEN MOVE GEMACHT HAT
 
         if (gameState.getPlayerA() != null && gameState.getPlayerA().isTurn() &&
-                gameState.getPlayerA().getMoves().size() < gameState.getCurrentGameRound()) {
+                !this.playerTurnMadeMove) {
             System.out.println("Player A did not submit move");
 
             Move move = moveManager.makeRandomMove(playerA.getId());
             newState.addMove(playerA.getId(), move);
-            newState.uncoverHitShips(this.shipsPlayerA, this.shipsPlayerB);
-            newState.updateHitList(this.shipsPlayerA, this.shipsPlayerB);
-            newState.loadRadars(this.shipsPlayerA, this.shipsPlayerB);
         } else if (gameState.getPlayerB() != null && gameState.getPlayerB().isTurn() &&
-                gameState.getPlayerB().getMoves().size() < gameState.getCurrentGameRound()) {
+                !this.playerTurnMadeMove) {
             System.out.println("Player B did not submit move");
 
             Move move = moveManager.makeRandomMove(playerB.getId());
             newState.addMove(playerB.getId(), move);
-            newState.uncoverHitShips(this.shipsPlayerA, this.shipsPlayerB);
-            newState.updateHitList(this.shipsPlayerA, this.shipsPlayerB);
-            newState.loadRadars(this.shipsPlayerA, this.shipsPlayerB);
         }
+
+        newState.uncoverHitShips(this.shipsPlayerA, this.shipsPlayerB);
+        newState.updateHitList(this.shipsPlayerA, this.shipsPlayerB);
+        newState.loadRadars(this.shipsPlayerA, this.shipsPlayerB);
 
         if (gameState.getPlayerA() != null)
             playerA.sendMessage(new PlayerTurnChangeMessage(newState));
@@ -299,13 +298,13 @@ public class BattleShipGame implements Game, Runnable {
 
         this.gameState = newState;
         server.updateGameList();
+
+        this.playerTurnMadeMove = false;
     }
 
     @Override
     public void sendGameOverEvent(GameOverReason reason) {
         gameState.setStatus(GameState.GameStatus.GAME_OVER);
-
-        //TODO: Change GameStateUpdateMessage to GameEnd
 
         switch (reason) {
             case PLAYER_LEFT_IN_GAME -> {
@@ -376,6 +375,8 @@ public class BattleShipGame implements Game, Runnable {
             newState.addMove(playerB.getId(), move);
         }
 
+        this.playerTurnMadeMove = true;
+
         boolean moveIsHit = MoveManager.moveHasHit(
                 player.getId().equals(playerA.getId()) ? this.shipsPlayerB : this.shipsPlayerA,
                 move
@@ -393,31 +394,13 @@ public class BattleShipGame implements Game, Runnable {
             System.out.println("Extending turn time by " + Parameters.HIT_BONUS_TIME_IN_SECONDS + " seconds");
             System.out.println("New turn end: " + newState.getPlayersTurnEnd().toString());
         } else {
+            newState.setPlayersTurnEnd(new Date(newState.getPlayersTurnEnd().getTime() + 1000));
+
             Timer timer = new Timer();
             timer.schedule(new TimerTask() {
                 @Override
                 public void run() {
-                    GameState stateWithTurn = new GameState(newState);
-
-                    Date start = new Date();
-                    Date end = new Date(start.getTime() + Parameters.SHOOT_TIME_IN_SECONDS * 1000);
-                    stateWithTurn.setPlayersTurnStart(start);
-                    stateWithTurn.setPlayersTurnEnd(end);
-
-                    stateWithTurn.setNextTurn();
-
-                    stateWithTurn.uncoverHitShips(shipsPlayerA, shipsPlayerB);
-                    stateWithTurn.updateHitList(shipsPlayerA, shipsPlayerB);
-                    stateWithTurn.loadRadars(shipsPlayerA, shipsPlayerB);
-
-                    if (playerA != null)
-                        playerA.sendMessage(new PlayerTurnChangeMessage(stateWithTurn));
-                    if (playerB != null)
-                        playerB.sendMessage(new PlayerTurnChangeMessage(stateWithTurn));
-
-                    server.updateGameList();
-
-                    gameState = stateWithTurn;
+                    sendTurnChangeEvent(); // Send turn change event after the timer expires
                 }
             }, 1000);
         }
