@@ -194,7 +194,7 @@ public class BattleShipGame implements Game, Runnable {
             System.out.println("Both players are ready");
 
             //Skip build phase if both players are ready
-            gameState.setBuildGameBoardFinished(new Date(System.currentTimeMillis() + 1000));
+            gameState.setBuildGameBoardFinished(new Date(System.currentTimeMillis() + 500));
         }
 
         this.gameState = gameState;

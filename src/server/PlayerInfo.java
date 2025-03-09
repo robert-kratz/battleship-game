@@ -65,13 +65,13 @@ public class PlayerInfo implements Runnable {
                         if(game != null) {
                             //remove player from game
                             sendMessage(new ErrorMessage(ErrorType.ALREADY_IN_GAME));
-                            break;
+                            return;
                         }
 
                         // Check if player is already in queue
                         if(server.getQueue().contains(this)) {
-                            sendMessage(new ErrorMessage(ErrorType.ALREADY_IN_QUEUE));
-                            break;
+                            broadcastQueueStateUpdate();
+                            return;
                         }
 
                         // Add player to queue
@@ -86,12 +86,12 @@ public class PlayerInfo implements Runnable {
                         if(game != null) {
                             game.removePlayer(this);
                             sendMessage(new ErrorMessage(ErrorType.ALREADY_IN_GAME));
-                            break;
+                            return;
                         }
 
                         if(!server.getQueue().contains(this)) {
-                            sendMessage(new ErrorMessage(ErrorType.NOT_IN_QUEUE));
-                            break;
+                            broadcastQueueStateUpdate();
+                            return;
                         }
 
                         server.removeFromQueue(this.getId());
@@ -134,7 +134,7 @@ public class PlayerInfo implements Runnable {
 
                         if(game == null) {
                             sendMessage(new ErrorMessage(ErrorType.NO_GAME_IN_PROGRESS));
-                            break;
+                            return;
                         }
 
                         game.removePlayer(this);
@@ -146,19 +146,17 @@ public class PlayerInfo implements Runnable {
 
                         if(game == null) {
                             sendMessage(new ErrorMessage(ErrorType.NO_GAME_IN_PROGRESS));
-                            break;
+                            return;
                         }
 
                         game.onPlayerPlaceShips(this, updateBuildBoardMessage.getShips());
-
-                        break;
                     }
                     case MessageType.PLAYER_READY -> {
                         PlayerReadyMessage playerReadyMessage = (PlayerReadyMessage) received;
 
                         if(game == null) {
                             sendMessage(new ErrorMessage(ErrorType.NO_GAME_IN_PROGRESS));
-                            break;
+                            return;
                         }
 
                         System.out.println("Received a player ready message from " + this.username + " with ready state: " + playerReadyMessage.ready);
@@ -170,7 +168,7 @@ public class PlayerInfo implements Runnable {
 
                         if(game == null) {
                             sendMessage(new ErrorMessage(ErrorType.NO_GAME_IN_PROGRESS));
-                            break;
+                            return;
                         }
 
                         if(!game.getGameState().getStatus().equals(GameState.GameStatus.IN_GAME)) return;
@@ -186,7 +184,7 @@ public class PlayerInfo implements Runnable {
 
                         if(game == null) {
                             sendMessage(new ErrorMessage(ErrorType.NO_GAME_IN_PROGRESS));
-                            break;
+                            return;
                         }
 
                         if(!game.getGameState().getStatus().equals(GameState.GameStatus.IN_GAME)) return;
@@ -251,7 +249,7 @@ public class PlayerInfo implements Runnable {
         server.registerGame(game);
     }
 
-    public void sendMessage(Message message) {
+    public synchronized void sendMessage(Message message) {
         try {
             if(!message.getClass().getSimpleName().equals("PlayerHoverMessage")) System.out.println("Sending: " + message.getClass().getSimpleName());
             out.writeObject(message);

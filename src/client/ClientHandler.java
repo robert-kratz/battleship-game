@@ -197,7 +197,7 @@ public class ClientHandler {
      * Sends a message to the server.
      * @param message The message to send.
      */
-    public synchronized void sendMessage(Message message) {
+    public void sendMessage(Message message) {
         try {
             out.writeObject(message);
             out.flush();
