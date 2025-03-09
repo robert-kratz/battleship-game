@@ -24,6 +24,7 @@ public class BattleShipGame implements Game, Runnable {
     private final ArrayList<Ship> availableShips = new ArrayList<>();
 
     private boolean playerTurnMadeMove = false;
+    private boolean allowAnotherMove = true;
 
     private ArrayList<Ship> shipsPlayerA = new ArrayList<>();
     private ArrayList<Ship> shipsPlayerB = new ArrayList<>();
@@ -252,6 +253,7 @@ public class BattleShipGame implements Game, Runnable {
 
     @Override
     public void sendTurnChangeEvent() {
+        this.allowAnotherMove = true;
 
         GameState newState = new GameState(this.getGameState());
 
@@ -400,6 +402,9 @@ public class BattleShipGame implements Game, Runnable {
     public void onPlayerAttemptMove(PlayerInfo player, Move move) {
         if (!this.gameState.getStatus().equals(GameState.GameStatus.IN_GAME)) return;
 
+        if(playerTurnMadeMove && !allowAnotherMove) return;
+        this.allowAnotherMove = false;
+
         MoveManager moveManager = new MoveManager(gameState);
         if (!moveManager.isPlayerMoveMoveValid(player.getId(), move)) {
             player.sendMessage(new ErrorMessage(ErrorType.INVALID_MOVE));
@@ -434,7 +439,10 @@ public class BattleShipGame implements Game, Runnable {
             newState.setPlayersTurnEnd(new Date(buffer + lastDate.getTime()));
             System.out.println("Extending turn time by " + Parameters.HIT_BONUS_TIME_IN_SECONDS + " seconds");
             System.out.println("New turn end: " + newState.getPlayersTurnEnd().toString());
+            this.allowAnotherMove = true;
         } else {
+            this.allowAnotherMove = false;
+
             newState.setPlayersTurnEnd(new Date(newState.getPlayersTurnEnd().getTime() + 1000));
 
             turnDelayTimer = new Timer();
@@ -485,6 +493,21 @@ public class BattleShipGame implements Game, Runnable {
                 public void run() {
                     System.out.println("Game Ended by player win");
                     sendGameOverEvent(GameOverReason.PLAYER_WON);
+                }
+            }, 500);
+        }
+
+        boolean noMovePossibleA = this.gameState.noMoreMovesPossible(this.gameState.getPlayerA(), this.shipsPlayerB);
+        boolean noMovePossibleB = this.gameState.noMoreMovesPossible(this.gameState.getPlayerB(), this.shipsPlayerA);
+
+        if(noMovePossibleA || noMovePossibleB) {
+            gameOverTimer = new Timer();
+
+            gameOverTimer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    System.out.println("Game Ended by no moves possible");
+                    sendGameOverEvent(GameOverReason.NO_MORE_MOVES);
                 }
             }, 500);
         }

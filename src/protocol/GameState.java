@@ -235,6 +235,29 @@ public class GameState implements Serializable  {
         return (sunkenShips.size() == this.availableShips.size());
     }
 
+    /**
+     * Überprüft, ob keine Züge mehr möglich sind.
+     * @param player The player who made the move
+     * @param targetShips The opponent's ships
+     * @return true, if no more moves are possible
+     */
+    public boolean noMoreMovesPossible(ClientPlayer player, ArrayList<Ship> targetShips) {
+        ArrayList<Point> totalHitCells = new ArrayList<>();
+
+        for(Move move : player.getMoves()) {
+            move.computeAffectedCells(this.getBoardSize());
+            ArrayList<Cell> affectedCells = move.getAffectedCells();
+
+            for (Cell cell : affectedCells) {
+                totalHitCells.add(new Point(cell.getX(), cell.getY()));
+            }
+        }
+
+        int boardSizeAmount = this.getBoardSize() * this.getBoardSize();
+
+        return totalHitCells.size() >= boardSizeAmount;
+    }
+
     public int getPlayerCount() {
         return (playerA != null ? 1 : 0) + (playerB != null ? 1 : 0);
     }
