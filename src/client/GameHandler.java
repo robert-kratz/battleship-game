@@ -126,9 +126,17 @@ public class GameHandler implements GameClient {
 
     @Override
     public void onMoveMade(MoveMadeMessage moveMadeMessage) {
+        if(!this.gameState.getStatus().equals(GameState.GameStatus.IN_GAME)) return;
+
+        boolean extendedTime = moveMadeMessage.getGameState().getPlayersTurnEnd().equals(this.gameState.getPlayersTurnEnd());
+
         this.gameState = moveMadeMessage.getGameState();
 
-        if(!this.gameState.getStatus().equals(GameState.GameStatus.IN_GAME)) return;
+        System.out.println("this.gameState.getPlayersTurnEnd()" + this.gameState.getPlayersTurnEnd());
+
+        if(!extendedTime) this.clientHandler.getStageManager().gameIngameScene.extendCurrentTurn(this.gameState.getPlayersTurnEnd());
+
+        this.clientHandler.getStageManager().gameIngameScene.setPlayerEnergy(this.gameState.getPlayer(this.clientHandler.getUserId()).getEnergy());
 
         //Show the move on the board
         if (clientHandler.getUserId().equals(gameState.getPlayerA().getId())) {

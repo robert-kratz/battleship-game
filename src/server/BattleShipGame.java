@@ -385,6 +385,41 @@ public class BattleShipGame implements Game, Runnable {
 
         if (moveIsHit) {
             newState.getCurrentTurnPlayer().addEnergy(Parameters.ENERGY_SHIP_HIT);
+
+            long buffer =  (Parameters.HIT_BONUS_TIME_IN_SECONDS * 1000);
+            Date lastDate = newState.getPlayersTurnEnd().after(new Date()) ? (newState.getPlayersTurnEnd()) : new Date();
+
+            newState.setPlayersTurnEnd(new Date(buffer + lastDate.getTime()));
+            System.out.println("Extending turn time by " + Parameters.HIT_BONUS_TIME_IN_SECONDS + " seconds");
+            System.out.println("New turn end: " + newState.getPlayersTurnEnd().toString());
+        } else {
+            Timer timer = new Timer();
+            timer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    GameState stateWithTurn = new GameState(newState);
+
+                    Date start = new Date();
+                    Date end = new Date(start.getTime() + Parameters.SHOOT_TIME_IN_SECONDS * 1000);
+                    stateWithTurn.setPlayersTurnStart(start);
+                    stateWithTurn.setPlayersTurnEnd(end);
+
+                    stateWithTurn.setNextTurn();
+
+                    stateWithTurn.uncoverHitShips(shipsPlayerA, shipsPlayerB);
+                    stateWithTurn.updateHitList(shipsPlayerA, shipsPlayerB);
+                    stateWithTurn.loadRadars(shipsPlayerA, shipsPlayerB);
+
+                    if (playerA != null)
+                        playerA.sendMessage(new PlayerTurnChangeMessage(stateWithTurn));
+                    if (playerB != null)
+                        playerB.sendMessage(new PlayerTurnChangeMessage(stateWithTurn));
+
+                    server.updateGameList();
+
+                    gameState = stateWithTurn;
+                }
+            }, 1000);
         }
 
         newState.uncoverHitShips(this.shipsPlayerA, this.shipsPlayerB);
@@ -397,35 +432,6 @@ public class BattleShipGame implements Game, Runnable {
             playerA.sendMessage(new MoveMadeMessage(newState));
         if (playerB != null)
             playerB.sendMessage(new MoveMadeMessage(newState));
-
-        // Verzögerte Ausführung zum Wechseln des Turns
-        Timer timer = new Timer();
-        timer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                GameState stateWithTurn = new GameState(newState);
-
-                Date start = new Date();
-                Date end = new Date(start.getTime() + Parameters.SHOOT_TIME_IN_SECONDS * 1000);
-                stateWithTurn.setPlayersTurnStart(start);
-                stateWithTurn.setPlayersTurnEnd(end);
-
-                stateWithTurn.setNextTurn();
-
-                stateWithTurn.uncoverHitShips(shipsPlayerA, shipsPlayerB);
-                stateWithTurn.updateHitList(shipsPlayerA, shipsPlayerB);
-                stateWithTurn.loadRadars(shipsPlayerA, shipsPlayerB);
-
-                if (playerA != null)
-                    playerA.sendMessage(new PlayerTurnChangeMessage(stateWithTurn));
-                if (playerB != null)
-                    playerB.sendMessage(new PlayerTurnChangeMessage(stateWithTurn));
-
-                server.updateGameList();
-
-                gameState = stateWithTurn;
-            }
-        }, 1000);
 
         this.gameState = newState;
         server.updateGameList();
