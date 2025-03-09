@@ -28,6 +28,8 @@ public class BattleShipGame implements Game, Runnable {
     private ArrayList<Ship> shipsPlayerA = new ArrayList<>();
     private ArrayList<Ship> shipsPlayerB = new ArrayList<>();
 
+    private Timer turnDelayTimer;
+
     public BattleShipGame(Server server, int size) {
         this.server = server;
         this.size = size;
@@ -306,21 +308,44 @@ public class BattleShipGame implements Game, Runnable {
     public void sendGameOverEvent(GameOverReason reason) {
         gameState.setStatus(GameState.GameStatus.GAME_OVER);
 
+        System.out.println("Sending game over event " + reason);
+
+        if(this.turnDelayTimer != null) {
+            this.turnDelayTimer.cancel();
+            this.turnDelayTimer = null;
+        }
+
+        this.playerA.setInGame(false);
+        this.playerB.setInGame(false);
+
         switch (reason) {
             case PLAYER_LEFT_IN_GAME -> {
+                System.out.println("Recived player left in game");
                 GameState newState = new GameState(this.getGameState());
-                if(playerA != null && playerA.isInGame()) {
+
+                System.out.println("Player A: " + playerA.getUsername());
+                System.out.println("null: " + playerA == null);
+                System.out.println("Is in game: " + playerA.isInGame());
+
+                System.out.println("Player B: " + playerB.getUsername());
+                System.out.println("null: " + playerB == null);
+                System.out.println("Is in game: " + playerB.isInGame());
+
+                if(playerA != null && this.gameState.getPlayerA().isInGame()) {
                     newState.setWinner(playerA.getId());
+                    System.out.println("Player A won");
                     playerA.sendMessage(new GameOverMessage(newState));
                 }
-                if(playerB != null && playerB.isInGame()) {
+                if(playerB != null && this.gameState.getPlayerB().isInGame()) {
                     newState.setWinner(playerB.getId());
+                    System.out.println("Player B won");
                     playerB.sendMessage(new GameOverMessage(newState));
                 }
 
                 this.gameState = newState;
             }
             case NO_MORE_MOVES -> {
+                System.out.println("Recived no more moves");
                 GameState newState = new GameState(this.getGameState());
 
                 if (playerA != null && playerA.isInGame()) {
@@ -332,6 +357,7 @@ public class BattleShipGame implements Game, Runnable {
                 this.gameState = newState;
             }
             case TIMEOUT -> {
+                System.out.println("Recived timeout");
                 GameState newState = new GameState(this.getGameState());
 
                 if (playerA != null && playerA.isInGame()) {
@@ -396,8 +422,8 @@ public class BattleShipGame implements Game, Runnable {
         } else {
             newState.setPlayersTurnEnd(new Date(newState.getPlayersTurnEnd().getTime() + 1000));
 
-            Timer timer = new Timer();
-            timer.schedule(new TimerTask() {
+            turnDelayTimer = new Timer();
+            turnDelayTimer.schedule(new TimerTask() {
                 @Override
                 public void run() {
                     sendTurnChangeEvent(); // Send turn change event after the timer expires

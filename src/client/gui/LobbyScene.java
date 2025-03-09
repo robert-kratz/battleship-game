@@ -110,11 +110,17 @@ public class LobbyScene extends JPanel {
 
             System.out.println("Queue clicked" + this.clientHandler.getLobbyHandler().isInQueue());
 
-            if (!this.clientHandler.getLobbyHandler().isInQueue()) {
-                System.out.println("Joining queue");
-                this.clientHandler.getLobbyHandler().sendJoinQueueEvent();
-            } else {
-                this.clientHandler.getLobbyHandler().sendLeaveQueueEvent();
+            try {
+                if (!this.clientHandler.getLobbyHandler().isInQueue()) {
+                    System.out.println("Joining queue");
+                    this.clientHandler.getLobbyHandler().sendJoinQueueEvent();
+                } else {
+                    this.clientHandler.getLobbyHandler().sendLeaveQueueEvent();
+                }
+            } catch (Exception ex) {
+                SwingUtilities.invokeLater(() -> {
+                    JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                });
             }
         });
 

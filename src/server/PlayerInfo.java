@@ -249,9 +249,9 @@ public class PlayerInfo implements Runnable {
         server.registerGame(game);
     }
 
-    public synchronized void sendMessage(Message message) {
+    public void sendMessage(Message message) {
         try {
-            if(!message.getClass().getSimpleName().equals("PlayerHoverMessage")) System.out.println("Sending: " + message.getClass().getSimpleName());
+            System.out.println("Sending: " + message.getClass().getSimpleName());
             out.writeObject(message);
             out.flush();
         } catch (IOException e) {

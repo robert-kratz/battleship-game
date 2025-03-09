@@ -89,14 +89,11 @@ public class ClientHandler {
                                 System.exit(1);
                             }
 
-                            //During game forward to gameHandler
-                            if(gameHandler != null) {
+                            if (gameHandler != null) {
                                 gameHandler.onGameError(errorMessage);
-                                return;
+                            } else {
+                                lobbyHandler.onLobbyError(errorMessage);
                             }
-
-                            //During lobby forward to lobbyHandler
-                            lobbyHandler.onLobbyError(errorMessage);
                         }
                         //Game messages
                         case MessageType.JOIN_GAME -> {
@@ -108,6 +105,8 @@ public class ClientHandler {
 
                             gameHandler = new GameHandler(this, joinGameMessage.getGameState());
                             this.getStageManager().startWaitingLobbyScene(); //Start waiting lobby scene
+
+                            System.out.println("Game state: " + joinGameMessage.getGameState().getStatus());
 
                             this.lobbyHandler.setInQueue(false);
 
@@ -199,6 +198,7 @@ public class ClientHandler {
      */
     public void sendMessage(Message message) {
         try {
+            out.reset();
             out.writeObject(message);
             out.flush();
         } catch (IOException e) {

@@ -48,7 +48,7 @@ public class LobbyHandler implements LobbyClient {
      */
     @Override
     public void sendJoinQueueEvent() {
-        if(inQueue) throw new IllegalStateException("Already in queue.");
+        //if(inQueue) throw new IllegalStateException("Already in queue.");
         this.clientHandler.sendMessage(new JoinQueueMessage());
     }
 
@@ -57,7 +57,7 @@ public class LobbyHandler implements LobbyClient {
      */
     @Override
     public void sendLeaveQueueEvent() {
-        if(!inQueue) throw new IllegalStateException("Not in queue.");
+        //if(!inQueue) throw new IllegalStateException("Not in queue.");
         this.clientHandler.sendMessage(new QuitQueueMessage());
     }
 
