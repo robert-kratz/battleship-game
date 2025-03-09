@@ -43,8 +43,15 @@ public class GameState implements Serializable  {
     private GameStatus status = GameStatus.LOBBY_WAITING;
 
     public GameState(GameState gameState) {
-        if(gameState.playerA != null) this.playerA = new ClientPlayer(gameState.playerA);
-        if(gameState.playerB != null) this.playerB = new ClientPlayer(gameState.playerB);
+        if(gameState.playerA != null) {
+            this.playerA = new ClientPlayer(gameState.playerA);
+            // Stelle sicher, dass die uncoveredShips übertragen werden:
+            this.playerA.setUncoveredShips(new ArrayList<>(gameState.playerA.getUncoveredShips()));
+        }
+        if(gameState.playerB != null) {
+            this.playerB = new ClientPlayer(gameState.playerB);
+            this.playerB.setUncoveredShips(new ArrayList<>(gameState.playerB.getUncoveredShips()));
+        }
         this.sessionCode = gameState.sessionCode;
         this.created = gameState.created;
         this.lastUpdated = gameState.lastUpdated;
@@ -177,102 +184,55 @@ public class GameState implements Serializable  {
     }
 
     /**
-     * Prüft für beide Spieler, ob Schiffe komplett getroffen wurden.
-     * Für Spieler A (eigene Schiffe, angegriffen von Spieler B) werden alle
-     * Schiffe, deren alle belegt Zellen getroffen wurden, in uncoveredShipsFromB
-     * aufgenommen – da diese für den Gegner (Spieler B) sichtbar sein sollen.
-     * Analog werden für Spieler B alle vollständig getroffenen Schiffe in
-     * uncoveredShipsFromA aufgenommen.
-     *
-     * Es wird darauf geachtet, dass kein Schiff doppelt hinzugefügt wird.
-     *
-     * @param shipsA Liste der Schiffe von Spieler A
-     * @param shipsB Liste der Schiffe von Spieler B
+     * Überprüft, ob ein Schiff versenkt wurde.
+     * @param player The player who made the move
+     * @param targetShips The opponent's ships
+     * @return An ArrayList of sunken ships
      */
-    public void uncoverHitShips(ArrayList<Ship> shipsA, ArrayList<Ship> shipsB) {
-        // Prüfe Schiffe von Spieler A (wird vom Gegner, also Spieler B, angegriffen)
-        for (Ship ship : shipsA) {
-            // Falls das Schiff bereits als aufgedeckt in uncoveredShipsFromB vorhanden ist, überspringen
-            boolean alreadyUncovered = false;
-            for (Ship s : playerB.getUncoveredShips()) {
-                if (s.getId() == ship.getId()) {
-                    alreadyUncovered = true;
-                    break;
-                }
-            }
-            if (alreadyUncovered) continue;
+    public ArrayList<Ship> getSunkenShips(ClientPlayer player, ArrayList<Ship> targetShips) {
 
-            boolean fullyHit = true;
-            // Hole alle Zellen, die dieses Schiff belegt
-            java.util.List<Point> occupiedCells = ship.getOccupiedCells();
-            // Für jede belegte Zelle wird geprüft, ob es in einem Move von Spieler B
-            // (also in moveB) eine betroffene Zelle gibt, die als hit markiert wurde.
-            for (Point p : occupiedCells) {
-                boolean cellHit = false;
-                for (Move move : playerB.getMoves()) {
-                    // Stelle sicher, dass für den Move die affectedCells berechnet wurden
-                    move.computeAffectedCells(getBoardSize());
-                    for (protocol.game.Cell cell : move.getAffectedCells()) {
-                        if (cell.getX() == p.x && cell.getY() == p.y && cell.isHit()) {
-                            cellHit = true;
-                            break;
-                        }
-                    }
-                    if (cellHit) break;
-                }
-                if (!cellHit) {
-                    fullyHit = false;
-                    break;
-                }
-            }
-            // Wenn alle Zellen getroffen wurden, wird das Schiff zur Liste hinzugefügt
-            if (fullyHit) {
-                playerB.getUncoveredShips().add(ship);
+        ArrayList<Ship> sunkenShips = new ArrayList<>();
+        ArrayList<Point> totalHitCells = new ArrayList<>();
+
+        for(Move move : player.getMoves()) {
+            move.computeAffectedCells(this.getBoardSize());
+            ArrayList<Cell> affectedCells = move.getAffectedCells();
+
+            for (Cell cell : affectedCells) {
+                totalHitCells.add(new Point(cell.getX(), cell.getY()));
             }
         }
 
-        // Prüfe Schiffe von Spieler B (wird vom Gegner, also Spieler A, angegriffen)
-        for (Ship ship : shipsB) {
-            boolean alreadyUncovered = false;
-            for (Ship s : playerA.getUncoveredShips()) {
-                if (s.getId() == ship.getId()) {
-                    alreadyUncovered = true;
-                    break;
-                }
-            }
-            if (alreadyUncovered) continue;
-
-            boolean fullyHit = true;
-            java.util.List<Point> occupiedCells = ship.getOccupiedCells();
-            for (Point p : occupiedCells) {
-                boolean cellHit = false;
-                for (Move move : playerA.getMoves()) {
-                    move.computeAffectedCells(getBoardSize());
-                    for (protocol.game.Cell cell : move.getAffectedCells()) {
-                        if (cell.getX() == p.x && cell.getY() == p.y && cell.isHit()) {
-                            cellHit = true;
-                            break;
-                        }
+        for (Ship ship : targetShips) {
+            ArrayList<Point> hitCells = new ArrayList<>();
+            for (Point p : ship.getOccupiedCells()) {
+                for (Point c : totalHitCells) {
+                    if (p.x == c.x && p.y == c.y) {
+                        hitCells.add(p);
+                        break;
                     }
-                    if (cellHit) break;
-                }
-                if (!cellHit) {
-                    fullyHit = false;
-                    break;
                 }
             }
-            if (fullyHit) {
-                playerA.getUncoveredShips().add(ship);
+
+            if (hitCells.size() == ship.getOccupiedCells().size()) {
+                System.out.println("Ship sunken: " + ship.getId());
+                sunkenShips.add(ship);
             }
         }
+
+        return sunkenShips;
     }
 
-    public void addUncoveredShip(UUID player, Ship ship) {
-        if(playerA.isPlayer(player)) {
-            playerA.getUncoveredShips().add(ship);
-        } else if(playerB.isPlayer(player)) {
-            playerB.getUncoveredShips().add(ship);
-        }
+    /**
+     * Überprüft, ob alle Schiffe eines Spielers versenkt wurden.
+     * @param player The player who made the move
+     * @param targetShips The opponent's ships
+     * @return true, if all ships are sunk
+     */
+    public boolean hasPlayerSunkAllShips(ClientPlayer player, ArrayList<Ship> targetShips) {
+        ArrayList<Ship> sunkenShips = getSunkenShips(player, targetShips);
+
+        return (sunkenShips.size() == this.availableShips.size());
     }
 
     public int getPlayerCount() {

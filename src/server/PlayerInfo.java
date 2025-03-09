@@ -251,7 +251,7 @@ public class PlayerInfo implements Runnable {
 
     public void sendMessage(Message message) {
         try {
-            System.out.println("Sending: " + message.getClass().getSimpleName());
+            if(!message.getClass().getSimpleName().equals("PlayerHoverMessage"))System.out.println("Sending: " + message.getClass().getSimpleName());
             out.writeObject(message);
             out.flush();
         } catch (IOException e) {

@@ -118,6 +118,11 @@ public class InGameBattleshipBoard extends AbstractBattleshipBoard {
         });
     }
 
+    @Override
+    public void setPlacedShips(List<Ship> placedShips) {
+        super.setPlacedShips(placedShips);
+    }
+
     private Point getCellFromMouseEvent(MouseEvent e) {
         int panelWidth = getWidth();
         int panelHeight = getHeight();

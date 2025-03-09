@@ -138,7 +138,15 @@ public class GameHandler implements GameClient {
 
         if(!extendedTime) this.clientHandler.getStageManager().gameIngameScene.extendCurrentTurn(this.gameState.getPlayersTurnEnd());
 
-        this.clientHandler.getStageManager().gameIngameScene.setPlayerEnergy(this.gameState.getPlayer(this.clientHandler.getUserId()).getEnergy());
+        ClientPlayer player = this.gameState.getPlayer(this.clientHandler.getUserId());
+        ClientPlayer opponent = this.gameState.getOpponent(this.clientHandler.getUserId());
+
+        System.out.println("Player Uncovered ships: " + player.getUncoveredShips().size());
+        System.out.println("Opponent Uncovered ships: " + opponent.getUncoveredShips().size());
+
+        this.clientHandler.getStageManager().gameIngameScene.opponentBoard.setPlacedShips(player.getUncoveredShips());
+        //this.clientHandler.getStageManager().gameIngameScene.playerBoard.setPlacedShips(this.playersShips);
+        this.clientHandler.getStageManager().gameIngameScene.setPlayerEnergy(player.getEnergy());
 
         //Show the move on the board
         updateMoves();

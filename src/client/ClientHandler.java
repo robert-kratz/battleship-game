@@ -89,6 +89,8 @@ public class ClientHandler {
                                 System.exit(1);
                             }
 
+                            System.out.println("Received error: " + errorMessage.getError());
+
                             if (gameHandler != null) {
                                 gameHandler.onGameError(errorMessage);
                             } else {

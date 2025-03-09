@@ -274,22 +274,32 @@ public class BattleShipGame implements Game, Runnable {
             return;
         }
 
-
         if (gameState.getPlayerA() != null && gameState.getPlayerA().isTurn() &&
                 !this.playerTurnMadeMove) {
             System.out.println("Player A did not submit move");
 
             Move move = moveManager.makeRandomMove(playerA.getId());
             newState.addMove(playerA.getId(), move);
+            //this.onPlayerAttemptMove(playerA, move);
         } else if (gameState.getPlayerB() != null && gameState.getPlayerB().isTurn() &&
                 !this.playerTurnMadeMove) {
             System.out.println("Player B did not submit move");
 
             Move move = moveManager.makeRandomMove(playerB.getId());
             newState.addMove(playerB.getId(), move);
+            //this.onPlayerAttemptMove(playerB, move);
         }
 
-        newState.uncoverHitShips(this.shipsPlayerA, this.shipsPlayerB);
+        ArrayList<Ship> uncoveredShipsA = newState.getSunkenShips(newState.getPlayerA(), this.shipsPlayerB);
+        ArrayList<Ship> uncoveredShipsB = newState.getSunkenShips(newState.getPlayerB(), this.shipsPlayerA);
+
+        System.out.println("Player A: " + uncoveredShipsA.size());
+        System.out.println("Player B: " + uncoveredShipsB.size());
+
+        newState.getPlayerA().setUncoveredShips(uncoveredShipsA);
+        newState.getPlayerB().setUncoveredShips(uncoveredShipsB);
+
+        //newState.uncoverHitShips(this.shipsPlayerA, this.shipsPlayerB);
         newState.updateHitList(this.shipsPlayerA, this.shipsPlayerB);
         newState.loadRadars(this.shipsPlayerA, this.shipsPlayerB);
 
@@ -298,10 +308,12 @@ public class BattleShipGame implements Game, Runnable {
         if (gameState.getPlayerB() != null)
             playerB.sendMessage(new PlayerTurnChangeMessage(newState));
 
+        this.playerTurnMadeMove = false;
+
         this.gameState = newState;
         server.updateGameList();
 
-        this.playerTurnMadeMove = false;
+        checkForWinner();
     }
 
     @Override
@@ -320,16 +332,7 @@ public class BattleShipGame implements Game, Runnable {
 
         switch (reason) {
             case PLAYER_LEFT_IN_GAME -> {
-                System.out.println("Recived player left in game");
                 GameState newState = new GameState(this.getGameState());
-
-                System.out.println("Player A: " + playerA.getUsername());
-                System.out.println("null: " + playerA == null);
-                System.out.println("Is in game: " + playerA.isInGame());
-
-                System.out.println("Player B: " + playerB.getUsername());
-                System.out.println("null: " + playerB == null);
-                System.out.println("Is in game: " + playerB.isInGame());
 
                 if(playerA != null && this.gameState.getPlayerA().isInGame()) {
                     newState.setWinner(playerA.getId());
@@ -345,7 +348,6 @@ public class BattleShipGame implements Game, Runnable {
                 this.gameState = newState;
             }
             case NO_MORE_MOVES -> {
-                System.out.println("Recived no more moves");
                 GameState newState = new GameState(this.getGameState());
 
                 if (playerA != null && playerA.isInGame()) {
@@ -357,7 +359,6 @@ public class BattleShipGame implements Game, Runnable {
                 this.gameState = newState;
             }
             case TIMEOUT -> {
-                System.out.println("Recived timeout");
                 GameState newState = new GameState(this.getGameState());
 
                 if (playerA != null && playerA.isInGame()) {
@@ -369,9 +370,23 @@ public class BattleShipGame implements Game, Runnable {
             }
             case PLAYER_WON -> {
 
-                //TODO: CHECK IF A PLAYER HAS WON BY GAME DESIGN
+                GameState newState = new GameState(this.getGameState());
 
-                //this.gameState = newState;
+                boolean hasPlayerAWon = this.gameState.hasPlayerSunkAllShips(newState.getPlayerA(), this.shipsPlayerB);
+                boolean hasPlayerBWon = this.gameState.hasPlayerSunkAllShips(newState.getPlayerB(), this.shipsPlayerA);
+
+                if(hasPlayerAWon) {
+                    System.out.println("Player A won");
+                    newState.setWinner(playerA.getId());
+                } else if(hasPlayerBWon) {
+                    System.out.println("Player B won");
+                    newState.setWinner(playerB.getId());
+                }
+
+                playerA.sendMessage(new GameOverMessage(newState));
+                playerB.sendMessage(new GameOverMessage(newState));
+
+                this.gameState = newState;
             }
             case PLAYER_LEFT_LOBBY -> {
                 //No action needed, the game will be unregistered automatically because the game status is set to GAME_OVER
@@ -431,7 +446,16 @@ public class BattleShipGame implements Game, Runnable {
             }, 1000);
         }
 
-        newState.uncoverHitShips(this.shipsPlayerA, this.shipsPlayerB);
+        ArrayList<Ship> uncoveredShipsA = newState.getSunkenShips(newState.getPlayerA(), this.shipsPlayerB);
+        ArrayList<Ship> uncoveredShipsB = newState.getSunkenShips(newState.getPlayerB(), this.shipsPlayerA);
+
+        System.out.println("Player A: " + uncoveredShipsA.size());
+        System.out.println("Player B: " + uncoveredShipsB.size());
+
+        newState.getPlayerA().setUncoveredShips(uncoveredShipsA);
+        newState.getPlayerB().setUncoveredShips(uncoveredShipsB);
+
+        //newState.uncoverHitShips(this.shipsPlayerA, this.shipsPlayerB);
         newState.updateHitList(this.shipsPlayerA, this.shipsPlayerB);
         newState.loadRadars(this.shipsPlayerA, this.shipsPlayerB);
 
@@ -444,6 +468,19 @@ public class BattleShipGame implements Game, Runnable {
 
         this.gameState = newState;
         server.updateGameList();
+
+        checkForWinner();
+    }
+
+    private void checkForWinner() {
+        // Check if the game is over
+        boolean hasPlayerAWon = this.gameState.hasPlayerSunkAllShips(this.gameState.getPlayerA(), this.shipsPlayerB);
+        boolean hasPlayerBWon = this.gameState.hasPlayerSunkAllShips(this.gameState.getPlayerB(), this.shipsPlayerA);
+
+        if(hasPlayerAWon || hasPlayerBWon) {
+            System.out.println("Game Over");
+            sendGameOverEvent(GameOverReason.PLAYER_WON);
+        }
     }
 
     public int getPlayerAmount() {
