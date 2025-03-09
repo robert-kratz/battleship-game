@@ -1,6 +1,8 @@
-package protocol.messages;
+package protocol.messages.game.ingame;
 
 import protocol.game.Cell;
+import protocol.messages.Message;
+import protocol.messages.MessageType;
 
 import java.util.ArrayList;
 import java.util.UUID;

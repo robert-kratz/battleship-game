@@ -3,6 +3,13 @@ package server;
 import protocol.*;
 import protocol.game.Move;
 import protocol.messages.*;
+import protocol.messages.game.BuildingPhaseStartMessage;
+import protocol.messages.game.GameInGameStartMessage;
+import protocol.messages.game.GameOverMessage;
+import protocol.messages.game.JoinGameMessage;
+import protocol.messages.game.building.BuildReadyStateChange;
+import protocol.messages.game.ingame.MoveMadeMessage;
+import protocol.messages.game.ingame.PlayerTurnChangeMessage;
 
 import java.util.*;
 

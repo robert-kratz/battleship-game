@@ -1,7 +1,9 @@
-package protocol.messages;
+package protocol.messages.game;
 
 import protocol.GameState;
 import protocol.Ship;
+import protocol.messages.Message;
+import protocol.messages.MessageType;
 
 import java.util.ArrayList;
 

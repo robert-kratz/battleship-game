@@ -1,4 +1,7 @@
-package protocol.messages;
+package protocol.messages.game;
+
+import protocol.messages.Message;
+import protocol.messages.MessageType;
 
 public class LeaveGameMessage extends Message {
 

@@ -1,9 +1,8 @@
-package protocol.messages;
+package protocol.messages.game.building;
 
 import protocol.GameState;
-import protocol.Ship;
-
-import java.util.ArrayList;
+import protocol.messages.Message;
+import protocol.messages.MessageType;
 
 public class BuildReadyStateChange extends Message {
 

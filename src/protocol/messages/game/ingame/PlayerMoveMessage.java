@@ -1,6 +1,8 @@
-package protocol.messages;
+package protocol.messages.game.ingame;
 
 import protocol.game.Move;
+import protocol.messages.Message;
+import protocol.messages.MessageType;
 
 public class PlayerMoveMessage extends Message {
 

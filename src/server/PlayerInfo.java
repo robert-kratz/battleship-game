@@ -4,6 +4,15 @@ import protocol.GameState;
 import protocol.messages.ErrorMessage;
 import protocol.ErrorType;
 import protocol.messages.*;
+import protocol.messages.game.LeaveGameMessage;
+import protocol.messages.game.building.PlayerReadyMessage;
+import protocol.messages.game.building.UpdateBuildBoardMessage;
+import protocol.messages.RegisterMessage;
+import protocol.messages.game.ingame.PlayerHoverMessage;
+import protocol.messages.game.ingame.PlayerMoveMessage;
+import protocol.messages.lobby.CreateGameMessage;
+import protocol.messages.lobby.JoinGameWithCodeMessage;
+import protocol.messages.lobby.QueueUpdateMessage;
 import utils.Usernames;
 
 import java.io.*;

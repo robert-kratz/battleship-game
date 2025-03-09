@@ -1,6 +1,8 @@
-package protocol.messages;
+package protocol.messages.game;
 
 import protocol.GameState;
+import protocol.messages.Message;
+import protocol.messages.MessageType;
 
 public class JoinGameMessage extends Message {
 

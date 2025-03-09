@@ -1,10 +1,16 @@
 package client;
 
-import protocol.GameState;
 import protocol.Ship;
 import protocol.game.Cell;
 import protocol.game.Move;
 import protocol.messages.*;
+import protocol.messages.game.BuildingPhaseStartMessage;
+import protocol.messages.game.GameInGameStartMessage;
+import protocol.messages.game.GameOverMessage;
+import protocol.messages.game.building.BuildReadyStateChange;
+import protocol.messages.game.ingame.MoveMadeMessage;
+import protocol.messages.game.ingame.PlayerHoverMessage;
+import protocol.messages.game.ingame.PlayerTurnChangeMessage;
 
 import java.util.ArrayList;
 

@@ -1,6 +1,7 @@
 package client;
 
 import protocol.messages.*;
+import protocol.messages.lobby.*;
 
 public class LobbyHandler implements LobbyClient {
 

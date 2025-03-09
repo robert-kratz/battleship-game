@@ -3,6 +3,7 @@ package server;
 import protocol.GameState;
 import protocol.messages.ErrorMessage;
 import protocol.ErrorType;
+import protocol.messages.lobby.QueueUpdateMessage;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -182,13 +183,13 @@ public class Server {
 
     public void addToQueue(PlayerInfo player) {
         queue.add(player);
-        player.sendMessage(new protocol.messages.QueueUpdateMessage(queue.size(), true));
+        player.sendMessage(new QueueUpdateMessage(queue.size(), true));
     }
 
     public void removeFromQueue(UUID id) {
         queue.removeIf(player -> {
             if (player.getId().equals(id)) {
-                player.sendMessage(new protocol.messages.QueueUpdateMessage(queue.size(), false));
+                player.sendMessage(new QueueUpdateMessage(queue.size(), false));
                 return true;
             }
             return false;

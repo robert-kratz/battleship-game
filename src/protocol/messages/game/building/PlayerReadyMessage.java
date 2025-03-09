@@ -1,4 +1,7 @@
-package protocol.messages;
+package protocol.messages.game.building;
+
+import protocol.messages.Message;
+import protocol.messages.MessageType;
 
 public class PlayerReadyMessage extends Message {
 

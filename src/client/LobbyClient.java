@@ -1,7 +1,7 @@
 package client;
 
 import protocol.messages.ErrorMessage;
-import protocol.messages.QueueUpdateMessage;
+import protocol.messages.lobby.QueueUpdateMessage;
 
 /**
  * Important naming convention: The methods in this interface should be named as follows:
