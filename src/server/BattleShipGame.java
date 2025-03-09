@@ -28,7 +28,7 @@ public class BattleShipGame implements Game, Runnable {
     private ArrayList<Ship> shipsPlayerA = new ArrayList<>();
     private ArrayList<Ship> shipsPlayerB = new ArrayList<>();
 
-    private Timer turnDelayTimer;
+    private Timer turnDelayTimer, gameOverTimer;
 
     public BattleShipGame(Server server, int size) {
         this.server = server;
@@ -478,8 +478,15 @@ public class BattleShipGame implements Game, Runnable {
         boolean hasPlayerBWon = this.gameState.hasPlayerSunkAllShips(this.gameState.getPlayerB(), this.shipsPlayerA);
 
         if(hasPlayerAWon || hasPlayerBWon) {
-            System.out.println("Game Over");
-            sendGameOverEvent(GameOverReason.PLAYER_WON);
+            gameOverTimer = new Timer();
+
+            gameOverTimer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    System.out.println("Game Ended by player win");
+                    sendGameOverEvent(GameOverReason.PLAYER_WON);
+                }
+            }, 500);
         }
     }
 

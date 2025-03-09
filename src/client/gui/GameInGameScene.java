@@ -6,6 +6,8 @@ import client.SoundType;
 import client.gui.board.InGameBattleshipBoard;
 import client.gui.painter.BoardPainter;
 import client.gui.painter.InGameBoardPainter;
+import protocol.ClientPlayer;
+import protocol.MoveManager;
 import protocol.Ship;
 import protocol.game.Cell;
 import protocol.game.Move;
@@ -112,9 +114,21 @@ public class GameInGameScene extends JPanel implements Runnable {
                             move = new Move(col, row);
                         }
 
-                        System.out.println("Sending move: " + move);
+                        MoveManager moveManager = new MoveManager(gameHandler.getGameState());
 
-                        gameHandler.sendGameMoveEvent(move);
+                        ClientPlayer player = gameHandler.getGameState().getPlayer(gameHandler.getClientHandler().getUserId());
+
+                        move.computeAffectedCells(gameHandler.getGameState().getBoardSize());
+
+                        if(moveManager.isPlayerMoveMoveValid(player.getId(), move)) {
+                            System.out.println("Sending move: " + move);
+
+                            gameHandler.sendGameMoveEvent(move);
+                        } else {
+                            System.out.println("Invalid move: " + move);
+                            //JOptionPane.showMessageDialog(null, "Invalid move!", "Error", JOptionPane.ERROR_MESSAGE);
+                            return;
+                        }
                     }
 
                     @Override
