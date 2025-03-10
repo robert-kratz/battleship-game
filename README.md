@@ -2,7 +2,7 @@
 
 # Network-Based Battleship
 
-<img src="https://raw.githubusercontent.com/robert-kratz/battleship-game/fe8ee47b24cbdbf348aa2b1d02f404d0bce8b43e/resource/battle_ships_landing.gif" style="width: 100%" alt="Logo"/>
+<img src="https://raw.githubusercontent.com/robert-kratz/battleship-game/fe8ee47b24cbdbf348aa2b1d02f404d0bce8b43e/resource/battle_ships_landing.gif" width="70%" style="max-width: 200px; text-align: center" alt="Logo"/>
 
 Network-Based Battleship is a fully featured, real-time multiplayer game inspired by the classic Battleship. Built using Java with a robust client/server architecture based on threads and sockets, this project supports both matchmaking and private games with customizable game settings. The project was developed as part of a programming practicum to demonstrate advanced network programming, multithreading, and interactive GUI design.
 
@@ -194,7 +194,7 @@ The communication between the client and server is facilitated by a series of se
    git clone https://github.com/robert-kratz/battleship-game.git
    cd battleship-game
    ```
-   
+
 2.	Server Setup:
 -	Import the project into Eclipse (or your preferred Java IDE).
 -	Run the main method in the Server class.
