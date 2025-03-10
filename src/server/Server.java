@@ -260,7 +260,6 @@ public class Server {
     /**
      * Main method to start the server
      * -p <port> to specify the port
-     * --autostart to start the server automatically
      * @param args command line arguments
      */
     public static void main(String[] args) {
@@ -270,9 +269,6 @@ public class Server {
             }
         }
         instance = new Server();
-
-        if (args.length >= 1 && args[0].contains("--autostart")) {
-            instance.startServer();
-        }
+        instance.startServer();
     }
 }
