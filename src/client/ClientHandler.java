@@ -34,6 +34,11 @@ public class ClientHandler {
     private ObjectOutputStream out;
     private ObjectInputStream in;
 
+    /**
+     * Creates a new ClientHandler instance.
+     * @param serverAddress The address of the server.
+     * @param port The port of the server.
+     */
     public ClientHandler(String serverAddress, int port) {
         try {
             socket = new Socket(serverAddress, port);
@@ -45,7 +50,7 @@ public class ClientHandler {
 
             listenForMessages();
         } catch (IOException e) {
-            JOptionPane.showMessageDialog(null, "Verbindung zum Server fehlgeschlagen.", "Fehler", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(null, "Connection to server failed.", "Error", JOptionPane.ERROR_MESSAGE);
             System.exit(1);
         }
     }
@@ -60,7 +65,7 @@ public class ClientHandler {
                     Object received = in.readObject();
                     Message message = (Message) received;
 
-                    System.out.println("Received: " + received.getClass().getSimpleName());
+                    System.out.println("Received message: " + message.getType());
 
                     switch (message.getType()) {
                         //Lobby messages
@@ -83,7 +88,6 @@ public class ClientHandler {
                             ErrorMessage errorMessage = (ErrorMessage) received;
 
                             if(errorMessage.getError().equals(ErrorType.SERVER_CLOSED)) {
-                                //show dialog which says that the server is closed, if then ok button is pressed, exit
                                 JOptionPane.showMessageDialog(null, "Server closed.", "Fehler", JOptionPane.ERROR_MESSAGE);
 
                                 System.exit(1);
@@ -125,16 +129,12 @@ public class ClientHandler {
 
                             if(this.gameHandler == null) return;
 
-                            System.out.println("Game in game starts: " + gameInGameStartMessage.getGameState().getStatus());
-
                             this.gameHandler.onGameInGameStarts(gameInGameStartMessage);
                         }
                         case MessageType.GAME_END -> {
                             GameOverMessage gameOverMessage = (GameOverMessage) received;
 
                             if(this.gameHandler == null) return;
-
-                            System.out.println("Game over: " + gameOverMessage.getGameState().getStatus());
 
                             this.gameHandler.onGameOver(gameOverMessage);
                         }
@@ -143,16 +143,12 @@ public class ClientHandler {
 
                             if(this.gameHandler == null) return;
 
-                            System.out.println("Move made: " + moveMadeMessage.getGameState().getStatus());
-
                             this.gameHandler.onMoveMade(moveMadeMessage);
                         }
                         case MessageType.BUILD_READY_STATE_CHANGE -> {
                             BuildReadyStateChange buildReadyStateChange = (BuildReadyStateChange) received;
 
                             if(this.gameHandler == null) return;
-
-                            System.out.println("Building ready state change: " + buildReadyStateChange.getGameState().getStatus());
 
                             this.gameHandler.onBuildReadyStateChange(buildReadyStateChange);
                         }
@@ -161,16 +157,12 @@ public class ClientHandler {
 
                             if(this.gameHandler == null) return;
 
-                            System.out.println("Turn change: " + playerTurnChangeMessage.getGameState().getStatus());
-
                             this.gameHandler.onTurnChange(playerTurnChangeMessage);
                         }
                         case MessageType.PLAYER_HOVER -> {
                             PlayerHoverMessage playerHoverMessage = (PlayerHoverMessage) received;
 
                             if(this.gameHandler == null) return;
-
-                            System.out.println(playerHoverMessage.getAffectedFields() != null ? "Affected fields: " + playerHoverMessage.getAffectedFields().size() : "No affected fields");
 
                             gameHandler.onPlayerHoverEvent(playerHoverMessage);
                         }
@@ -208,28 +200,52 @@ public class ClientHandler {
         }
     }
 
+    /**
+     * returns the game handler
+     * @return the game handler, if the game is running
+     */
     public GameHandler getGameHandler() {
         return gameHandler;
     }
 
+    /**
+     * returns the lobby handler
+     * @return the lobby handler
+     */
     public LobbyHandler getLobbyHandler() {
         return lobbyHandler;
     }
 
+    /**
+     * Gets the stage manager.
+     * @return The stage manager.
+     */
     public StageManager getStageManager() {
         return stageManager;
     }
 
+    /**
+     * Shows an error message dialog.
+     * @param message The error message to display.
+     */
     public void showError(String message) {
         SwingUtilities.invokeLater(() ->
                 JOptionPane.showMessageDialog(this.stageManager.getContentPane(), message, "Error", JOptionPane.ERROR_MESSAGE)
         );
     }
 
+    /**
+     * Gets the username of the client.
+     * @return The username of the client.
+     */
     public String getUsername() {
         return username;
     }
 
+    /**
+     * Gets the user ID of the client.
+     * @return The user ID of the client.
+     */
     public UUID getUserId() {
         return userId;
     }

@@ -10,6 +10,10 @@ public class MoveMadeMessage extends Message {
 
     private final GameState gameState;
 
+    /**
+     * Creates a new MoveMadeMessage instance.
+     * @param gameState The game state of the game that has started.
+     */
     public MoveMadeMessage(GameState gameState) {
         super(MessageType.MOVE_MADE);
         this.gameState = gameState;

@@ -17,54 +17,65 @@ public class Move implements Serializable {
 
     private int radarShipsIn3x3Area = -1;
 
-    // Neues Feld: Liste der von diesem Move betroffenen Zellen
     private ArrayList<Cell> affectedCells = new ArrayList<>();
 
+    /**
+     * Creates a new Move instance.
+     * @param x The x coordinate of the move.
+     * @param y The y coordinate of the move.
+     */
     public Move(int x, int y) {
         this.x = x;
         this.y = y;
-        // affectedCells wird später durch computeAffectedCells(boardSize) gesetzt
     }
 
+    /**
+     * Creates a new Move instance for a sea bomb item.
+     * @param seaBombItem The sea bomb item to be used.
+     * @param seaBombX The x coordinate of the sea bomb item.
+     * @param seaBombY The y coordinate of the sea bomb item.
+     */
     public Move(SeaBombItem seaBombItem, int seaBombX, int seaBombY) {
         this.x = seaBombX;
         this.y = seaBombY;
         this.seaBombItem = seaBombItem;
-        // affectedCells wird später gesetzt
     }
 
+    /**
+     * Creates a new Move instance for an air strike item.
+     * @param airStrikeItem The air strike item to be used.
+     * @param rowOrColumn The row or column to be affected by the air strike.
+     */
     public Move(AirStrikeItem airStrikeItem, int rowOrColumn) {
         this.rowOrColumn = rowOrColumn;
         this.airStrikeItem = airStrikeItem;
-        // affectedCells wird später gesetzt
     }
 
+    /**
+     * Creates a new Move instance for a radar item.
+     * @param radarItem The radar item to be used.
+     * @param radarX the x coordinate of the radar item.
+     * @param radarY the y coordinate of the radar item.
+     */
     public Move(RadarItem radarItem, int radarX, int radarY) {
         this.x = radarX;
         this.y = radarY;
         this.radarItem = radarItem;
-        // affectedCells wird später gesetzt
     }
 
     /**
-     * Berechnet und speichert die betroffenen Zellen (affectedCells) dieses Moves,
-     * basierend auf der aktuellen Boardgröße.
-     *
-     * @param boardSize Die Größe des Spielbretts (Anzahl der Zellen pro Seite)
+     * Computes the affected cells based on the selected item.
+     * @param boardSize The size of the board (number of cells per side)
      */
     public void computeAffectedCells(int boardSize) {
         if (this.seaBombItem != null) {
             this.affectedCells = new ArrayList<>(this.seaBombItem.getAffectedFields(this.x, this.y, boardSize));
         } else if (this.airStrikeItem != null) {
-            // Bei AirStrike wird die betroffene Reihe/Spalte anhand der Orientierung berechnet
-            System.out.println("AirStrikeItem: " + this.airStrikeItem.getOrientation());
-            System.out.println("x: " + this.x);
-            System.out.println("y: " + this.y);
             this.affectedCells = new ArrayList<>(this.airStrikeItem.getAffectedFields(
                     this.rowOrColumn,
                     boardSize));
         } else if (this.radarItem != null) {
-            // Radar beeinflusst keine Treffer, daher bleibt die Liste leer
+            // Radar impacts no hits, so the list remains empty
             this.affectedCells = new ArrayList<>();
         } else {
             this.affectedCells = new ArrayList<>();
@@ -72,6 +83,10 @@ public class Move implements Serializable {
         }
     }
 
+    /**
+     * Get selected item.
+     * @return The selected item.
+     */
     public Item getSelectedItem() {
         if (this.seaBombItem != null) {
             return this.seaBombItem;
@@ -83,6 +98,10 @@ public class Move implements Serializable {
         return null;
     }
 
+    /**
+     * Checks if the move is a ship move.
+     * @return True if the move is a ship move, false otherwise.
+     */
     public boolean isItemMove() {
         return this.seaBombItem != null || this.airStrikeItem != null || this.radarItem != null;
     }

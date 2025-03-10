@@ -1,6 +1,10 @@
 package client;
 
+/**
+ * Enum representing the different stages of the game.
+ */
 public enum Stage {
+
     LOBBY_SCENE(""),
     CREATE_GAME_SCENE("Create Game"),
     GAME_WAITING_SCENE("Waiting for game to start"),

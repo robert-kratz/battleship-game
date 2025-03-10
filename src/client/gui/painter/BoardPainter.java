@@ -4,12 +4,11 @@ import java.awt.Graphics;
 
 public interface BoardPainter {
     /**
-     * Zeichnet den Hintergrund des Spielfeldes.
-     *
-     * @param g         Graphics-Objekt
-     * @param boardSize Größe (in Pixeln) des quadratischen Spielfeldes
-     * @param rows      Anzahl der Reihen
-     * @param cols      Anzahl der Spalten
+     * Paints the background of the board.
+     * @param g the Graphics object to draw on
+     * @param boardSize the size of the board (number of rows and columns)
+     * @param rows the number of rows
+     * @param cols the number of columns
      */
     void paintBackground(Graphics g, int boardSize, int rows, int cols);
 }

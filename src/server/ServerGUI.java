@@ -3,6 +3,7 @@ import javax.swing.*;
 import java.awt.*;
 
 public class ServerGUI extends JFrame {
+
     private JButton toggleButton;
     private JTextArea playerList;
     private JTextArea gameList;
@@ -10,25 +11,23 @@ public class ServerGUI extends JFrame {
     private Server server;
 
     public ServerGUI(Server server) {
+
         this.server = server;
         setTitle("BattleShip Server");
         setSize(600, 500);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        // Textbereich für die Spielerliste
         playerList = new JTextArea();
         playerList.setEditable(false);
         JScrollPane playerScrollPane = new JScrollPane(playerList);
         playerScrollPane.setBorder(BorderFactory.createTitledBorder("Players online"));
 
-        // Textbereich für die Liste der aktiven Spiele
         gameList = new JTextArea();
         gameList.setEditable(false);
         JScrollPane gameScrollPane = new JScrollPane(gameList);
         gameScrollPane.setBorder(BorderFactory.createTitledBorder("Active games"));
 
-        // Aufteilen in einen vertikalen SplitPane
         JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, playerScrollPane, gameScrollPane);
         splitPane.setResizeWeight(0.5);
         add(splitPane, BorderLayout.CENTER);
@@ -52,11 +51,18 @@ public class ServerGUI extends JFrame {
         setVisible(true);
     }
 
+    /**
+     * Updates the server online status.
+     * @param isOnline true if the server is online, false otherwise.
+     */
     public void updateServerOnlineStatus(boolean isOnline) {
         toggleButton.setText(isOnline ? "Stop Server" : "Start Server");
         toggleButton.setBackground(isOnline ? Color.GREEN : Color.RED);
     }
 
+    /**
+     * Toggles the server state between running and stopped.
+     */
     private void toggleServer() {
         if (server.isRunning()) {
             server.stopServer();
@@ -66,14 +72,26 @@ public class ServerGUI extends JFrame {
         updateServerOnlineStatus(server.isRunning());
     }
 
+    /**
+     * Updates the player list displayed in the GUI.
+     * @param players A string representation of the players currently connected to the server.
+     */
     public void updatePlayerList(String players) {
         playerList.setText(players);
     }
 
+    /**
+     * Updates the game list displayed in the GUI.
+     * @param count The number of players currently connected to the server.
+     */
     public void updatePlayerCount(int count) {
         playerCountLabel.setText("Connected Players: " + count);
     }
 
+    /**
+     * Updates the game list displayed in the GUI.
+     * @param games A string representation of the games currently active on the server.
+     */
     public void updateGameList(String games) {
         gameList.setText(games);
     }

@@ -20,17 +20,17 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class GameBuildScene extends JPanel implements Runnable {
-    private int height, width;
-    private GameHandler gameHandler;
+
+    private final GameHandler gameHandler;
 
     private BuildBattleshipBoard buildBoard;
     private JPanel leftPanel;
     private JPanel rightPanel;
     private JLabel timerLabel;
-    private JButton randomizeButton;
+    private  JButton randomizeButton;
     private JButton readyButton;
 
-    // Alle Schiffe, die im Spiel zur Verfügung stehen
+    // List of all available ships
     private ArrayList<Ship> allShips;
 
     // Mapping: Ship-ID -> Button
@@ -41,10 +41,18 @@ public class GameBuildScene extends JPanel implements Runnable {
 
     private JLabel tipLabel;
 
+    /**
+     * Returns the preferred size of the window.
+     * @return The preferred size of the window.
+     */
     public Dimension getWindowSize() {
         return new Dimension(900, 500);
     }
 
+    /**
+     * Creates a new GameBuildScene with the specified game handler.
+     * @param gameHandler The game handler to be used for this scene.
+     */
     public GameBuildScene(GameHandler gameHandler) {
         setLayout(new BorderLayout());
 
@@ -52,13 +60,13 @@ public class GameBuildScene extends JPanel implements Runnable {
 
         this.gameHandler = gameHandler;
 
-        // Alle möglichen Schiffe aus dem GameState laden
+        // Load available ships from the game state
         this.allShips = new ArrayList<>(gameHandler.getGameState().getAvailableShips());
 
-        // Zentrale Liste der platzierten Schiffe – diese wird im Board gepflegt
+        // Central placed ships
         ArrayList<Ship> centralPlacedShips = new ArrayList<>();
 
-        // Board-Painter für die Build-Phase
+        // Board-Painter for Build-Phase
         Image buildBackgroundImage = new ImageIcon("resource/background-2.png").getImage();
         BoardPainter buildPainter = new BuildBoardPainter(buildBackgroundImage);
 
@@ -66,18 +74,17 @@ public class GameBuildScene extends JPanel implements Runnable {
                 (row, col, selectedShip) -> {
                     Ship placed = buildBoard.getPlacedShipAt(row, col);
                     if (placed != null) {
-                        // Falls hier bereits ein Schiff liegt, entferne es aus der zentralen Liste
+                        //If the ship is already placed, remove it from the central list
                         buildBoard.getPlacedShips().remove(placed);
-                        // Aktualisiere den Button für dieses Schiff
+                        // Refresh the button text and color for the ship
                         JButton btn = shipButtonMap.get(placed.getId());
                         if (btn != null) {
                             btn.setText("Ship (" + placed.getWidth() + "x" + placed.getLength() + ")");
                             btn.setBackground(Color.WHITE);
                         }
-                        // Setze das entfernte Schiff als selektiertes Schiff
                         buildBoard.setSelectedShip(placed);
                     } else {
-                        // Prüfe, ob an dieser Position eine Kollision entsteht
+                        // Check for collision with other ships
                         if (ShipPlacementHelper.isCollision(selectedShip, gameHandler.getGameState().getBoardSize(), row, col, buildBoard.getPlacedShips())) {
                             System.out.println("Cannot place ship here due to collision.");
                             return;
@@ -88,20 +95,18 @@ public class GameBuildScene extends JPanel implements Runnable {
                             if (!buildBoard.getPlacedShips().contains(selectedShip)) {
                                 buildBoard.getPlacedShips().add(selectedShip);
 
-                                gameHandler.sendUpdateBuildBoardMessage(new ArrayList<>(buildBoard.getPlacedShips())); // Sende die Platzierung an den Server
+                                gameHandler.sendUpdateBuildBoardMessage(new ArrayList<>(buildBoard.getPlacedShips())); // Sends the updated list of placed ships to the server
 
                                 JButton btn = shipButtonMap.get(selectedShip.getId());
                                 if (btn != null) {
                                     btn.setText("Ship (" + selectedShip.getWidth() + "x" + selectedShip.getLength() + ") placed");
                                     btn.setBackground(Color.LIGHT_GRAY);
                                 }
-                                // Berechne die noch verfügbaren Schiffe als Differenz zwischen allShips und den platzierten Schiffen
+                                // Calculate the difference between all ships and placed ships
                                 ArrayList<Ship> availableShips = computeAvailableShips();
 
-                                System.out.println("Available ships: " + availableShips);
-
                                 if (!availableShips.isEmpty()) {
-                                    buildBoard.setSelectedShip(availableShips.get(0));
+                                    buildBoard.setSelectedShip(availableShips.getFirst());
                                 } else {
                                     buildBoard.setSelectedShip(null);
                                 }
@@ -112,7 +117,7 @@ public class GameBuildScene extends JPanel implements Runnable {
                     buildBoard.repaint();
                 });
 
-        // Linkes Panel (Titel, Schiff-Buttons, Ready-Button, Timer)
+        // Left Panel
         leftPanel = new JPanel();
         leftPanel.setPreferredSize(new Dimension(200, 804));
         leftPanel.setBackground(Color.DARK_GRAY);
@@ -128,7 +133,7 @@ public class GameBuildScene extends JPanel implements Runnable {
         leftPanel.add(new JSeparator(SwingConstants.HORIZONTAL));
         leftPanel.add(Box.createVerticalStrut(10));
 
-        // Erstelle für jedes Schiff einen Button
+        // Create a Button for each ship
         for (Ship ship : new ArrayList<>(allShips)) {
             JButton shipButton = new JButton("Ship (" + ship.getWidth() + "x" + ship.getLength() + ")");
             shipButton.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -139,7 +144,7 @@ public class GameBuildScene extends JPanel implements Runnable {
 
                 boolean shipAlreadyPlaced = buildBoard.getPlacedShips().stream().anyMatch(s -> s.getId() == ship.getId());
 
-                // Falls das Schiff bereits platziert wurde, entferne es vom Board
+                // If ship is already placed, remove it from the board
                 if (shipAlreadyPlaced) {
                     buildBoard.getPlacedShips().removeIf(s -> s.getId() == ship.getId());
                     buildBoard.removePlacedShip(ship.getId());
@@ -151,7 +156,7 @@ public class GameBuildScene extends JPanel implements Runnable {
                     buildBoard.repaint();
                     updateReadyButton();
                 } else {
-                    // Wähle das Schiff zur Platzierung aus
+                    // Set the selected ship for placement
                     buildBoard.setSelectedShip(ship);
                 }
             });
@@ -204,7 +209,7 @@ public class GameBuildScene extends JPanel implements Runnable {
         timerLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         leftPanel.add(timerLabel);
 
-        // Rechtes Panel (Spieler- und Gegnerinfos)
+        // Right Panel
         rightPanel = new JPanel();
         rightPanel.setPreferredSize(new Dimension(200, 804));
         rightPanel.setBackground(Color.DARK_GRAY);
@@ -264,7 +269,6 @@ public class GameBuildScene extends JPanel implements Runnable {
         randomizeButton.setOpaque(true);
         randomizeButton.addActionListener(e -> {
             int boardSize = gameHandler.getGameState().getBoardSize();
-            System.out.println("Randomizing ships");
 
             ArrayList<Ship> randomizedShips = ShipPlacementHelper.createRandomizedGameBoard(boardSize, new ArrayList<>(allShips), new ArrayList<>());
             buildBoard.getPlacedShips().clear();
@@ -308,7 +312,8 @@ public class GameBuildScene extends JPanel implements Runnable {
     }
 
     /**
-     * Berechnet die verfügbaren Schiffe als Differenz zwischen allShips und den im Board bereits platzierten Schiffen.
+     * Computes the available ships that are not yet placed on the board.
+     * @return A list of available ships.
      */
     private ArrayList<Ship> computeAvailableShips() {
         ArrayList<Ship> available = new ArrayList<>(allShips);
@@ -320,6 +325,9 @@ public class GameBuildScene extends JPanel implements Runnable {
         return available;
     }
 
+    /**
+     * Updates the state of the ready button based on the available ships.
+     */
     private void updateReadyButton() {
         if (computeAvailableShips().isEmpty()) {
             readyButton.setEnabled(true);
@@ -330,16 +338,10 @@ public class GameBuildScene extends JPanel implements Runnable {
         }
     }
 
-    public void updateDimensions(int width, int height) {
-        this.width = width;
-        this.height = height;
-        buildBoard.setPreferredSize(new Dimension(width - 400, height));
-        leftPanel.setPreferredSize(new Dimension(200, height));
-        rightPanel.setPreferredSize(new Dimension(200, height));
-        revalidate();
-        repaint();
-    }
-
+    /**
+     * Sets the state of the opponent.
+     * @param ready true if the opponent is ready, false otherwise.
+     */
     public void setOpponentState(boolean ready) {
         if (ready) {
             opponentStatusLabel.setText("Ready");
@@ -350,6 +352,10 @@ public class GameBuildScene extends JPanel implements Runnable {
         }
     }
 
+    /**
+     * Sets the state of the player.
+     * @param ready true if the player is ready, false otherwise.
+     */
     public void setPlayerState(boolean ready) {
         if (ready) {
             playerStatusLabel.setText("Ready");
@@ -360,10 +366,17 @@ public class GameBuildScene extends JPanel implements Runnable {
         }
     }
 
+    /**
+     * Displays a tooltip with the specified text.
+     * @param text The text to be displayed in the tooltip.
+     */
     public void showTooltip(String text) {
         tipLabel.setText(text);
     }
 
+    /**
+     * Runs the timer for the game build phase.
+     */
     @Override
     public void run() {
         while (!Thread.currentThread().isInterrupted()) {

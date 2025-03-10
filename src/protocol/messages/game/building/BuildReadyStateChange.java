@@ -10,6 +10,10 @@ public class BuildReadyStateChange extends Message {
 
     private final GameState gameState;
 
+    /**
+     * Creates a new BuildReadyStateChange instance.
+     * @param gameState The game state of the game that has started.
+     */
     public BuildReadyStateChange(GameState gameState) {
         super(MessageType.BUILD_READY_STATE_CHANGE);
         this.gameState = gameState;

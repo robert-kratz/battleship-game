@@ -6,11 +6,15 @@ import protocol.messages.lobby.*;
 
 public class LobbyHandler implements LobbyClient {
 
-    private ClientHandler clientHandler;
+    private final ClientHandler clientHandler;
 
     private boolean inQueue = false;
     private int queueLength = 0;
 
+    /**
+     * Creates a new LobbyHandler instance.
+     * @param clientHandler The client handler.
+     */
     public LobbyHandler(ClientHandler clientHandler) {
         this.clientHandler = clientHandler;
     }

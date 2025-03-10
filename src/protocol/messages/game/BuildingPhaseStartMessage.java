@@ -10,6 +10,10 @@ public class BuildingPhaseStartMessage extends Message {
 
     private GameState gameState;
 
+    /**
+     * Creates a new BuildingPhaseStartMessage instance.
+     * @param gameState The game state of the game that has started.
+     */
     public BuildingPhaseStartMessage(GameState gameState) {
         super(MessageType.BUILDING_PHASE_STARTS);
         this.gameState = gameState;

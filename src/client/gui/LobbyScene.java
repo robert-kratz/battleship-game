@@ -27,27 +27,22 @@ public class LobbyScene extends JPanel {
         this.clientHandler = clientHandler;
 
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20)); // Padding um das Panel
-        //setPreferredSize(new Dimension(320, 300));
+        setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         setPreferredSize(getWindowSize());
 
-        // Große Überschrift
         titleLabel = new JLabel("Battleships");
         titleLabel.setFont(new Font("Arial", Font.BOLD, 32));
         titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // Begrüßungstext
         welcomeLabel = new JLabel("Welcome, " + clientHandler.getUsername() + "!");
         welcomeLabel.setFont(new Font("Arial", Font.PLAIN, 16));
         welcomeLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // Button-Panel
-        buttonPanel = new JPanel(new GridLayout(1, 3, 10, 0)); // 10px Horizontalabstand zwischen Buttons
+        buttonPanel = new JPanel(new GridLayout(1, 3, 10, 0));
         queueButton = new JButton("Queue");
         createButton = new JButton("Create");
         joinButton = new JButton("Join");
 
-        // Größe der Buttons anpassen
         Dimension buttonSize = new Dimension(140, 40);
         queueButton.setPreferredSize(buttonSize);
         createButton.setPreferredSize(buttonSize);
@@ -63,7 +58,7 @@ public class LobbyScene extends JPanel {
             JLabel label = new JLabel("Enter 6-digit Game ID:");
             JTextField textField = new JTextField();
 
-            // InputVerifier für die Validierung (nur 6-stellige Zahlen)
+            // Validation of the Game ID
             textField.setInputVerifier(new InputVerifier() {
                 @Override
                 public boolean verify(JComponent input) {
@@ -88,11 +83,10 @@ public class LobbyScene extends JPanel {
                 if (result == JOptionPane.OK_OPTION) {
                     String gameId = textField.getText();
 
-                    // Validierung der Game-ID
+                    // Validation of the Game ID
                     if (gameId.matches("\\d{6}")) {
                         System.out.println("Joining game with id: " + gameId);
                         this.clientHandler.getLobbyHandler().sendJoinGameWithCodeEvent(Integer.parseInt(gameId));
-                        // Hier die Logik zum Joinen des Spiels einfügen
                         break;
                     } else {
                         JOptionPane.showMessageDialog(
@@ -103,7 +97,7 @@ public class LobbyScene extends JPanel {
                         );
                     }
                 } else {
-                    // Abbruch des Dialogs
+                    // User clicked Cancel or closed the dialog
                     break;
                 }
             } while (true);
@@ -135,21 +129,27 @@ public class LobbyScene extends JPanel {
         buttonPanel.add(joinButton);
 
         buttonPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        buttonPanel.setBorder(BorderFactory.createEmptyBorder(20, 0, 0, 0)); // Padding oberhalb der Buttons
+        buttonPanel.setBorder(BorderFactory.createEmptyBorder(20, 0, 0, 0));
 
         // Komponenten hinzufügen
         add(titleLabel);
-        add(Box.createRigidArea(new Dimension(0, 10))); // Abstand zwischen Überschrift und Begrüßungstext
+        add(Box.createRigidArea(new Dimension(0, 10)));
         add(welcomeLabel);
-        add(Box.createRigidArea(new Dimension(0, 20))); // Abstand zwischen Begrüßungstext und Buttons
+        add(Box.createRigidArea(new Dimension(0, 20)));
         add(buttonPanel);
     }
 
+    /**
+     * Update the queue button text based on the queue status.
+     */
     public void updateQueueButton() {
-
         queueButton.setText(this.clientHandler.getLobbyHandler().isInQueue() ? "Leave Queue" : "Enter Queue");
     }
 
+    /**
+     * Set the username on the welcome label.
+     * @param username The username to be displayed.
+     */
     public void setUsername(String username) {
         welcomeLabel.setText("Welcome, " + username + "!");
     }

@@ -5,13 +5,11 @@ import java.util.UUID;
 public class RegisterMessage extends Message {
     private final String username;
     private final UUID userId;
-    private final int queueLength;
 
-    public RegisterMessage(String username, UUID userId, int queueLength) {
+    public RegisterMessage(String username, UUID userId) {
         super(MessageType.REGISTER);
         this.username = username;
         this.userId = userId;
-        this.queueLength = queueLength;
     }
 
     public String getUsername() {
@@ -20,10 +18,6 @@ public class RegisterMessage extends Message {
 
     public UUID getUserId() {
         return userId;
-    }
-
-    public int getQueueLength() {
-        return queueLength;
     }
 
     @Override

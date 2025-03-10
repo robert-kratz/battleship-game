@@ -10,6 +10,10 @@ public class PlayerMoveMessage extends Message {
 
     private Move move;
 
+    /**
+     * Creates a new PlayerMoveMessage instance.
+     * @param move The move made by the player.
+     */
     public PlayerMoveMessage(Move move) {
         super(MessageType.PLAYER_MOVE);
         this.move = move;

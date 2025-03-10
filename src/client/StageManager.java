@@ -34,6 +34,10 @@ public class StageManager extends JFrame {
 
     private Stage currentStage = Stage.LOBBY_SCENE;
 
+    /**
+     * Constructor for StageManager.
+     * @param clientHandler The client handler instance to be used for communication with the server.
+     */
     public StageManager(ClientHandler clientHandler) {
         this.clientHandler = clientHandler;
 
@@ -44,7 +48,6 @@ public class StageManager extends JFrame {
         mainPanel = new JPanel(cardLayout) {
             @Override
             public Dimension getPreferredSize() {
-                // Gehe durch alle enthaltenen Komponenten und gib die PreferredSize der sichtbaren Komponente zurück
                 for (Component comp : getComponents()) {
                     if (comp.isVisible()) {
                         return comp.getPreferredSize();
@@ -70,6 +73,9 @@ public class StageManager extends JFrame {
         setVisible(true);
     }
 
+    /**
+     * Call this method to start the waiting lobby scene.
+     */
     public void startWaitingLobbyScene() {
         if(!this.clientHandler.getGameHandler().getGameState().getStatus().equals(GameState.GameStatus.LOBBY_WAITING)) return;
 
@@ -81,13 +87,16 @@ public class StageManager extends JFrame {
         switchScene(Stage.GAME_WAITING_SCENE);
     }
 
+    /**
+     * Call this method to start the build scene.
+     */
     public void startBuildScene() {
 
-        if(this.clientHandler.getGameHandler() == null) return; //In case a player leaves the game before the build scene is created
+        if(this.clientHandler.getGameHandler() == null) return; // In case a player leaves the game before the build scene is created
 
         if(!this.clientHandler.getGameHandler().getGameState().getStatus().equals(GameState.GameStatus.BUILD_GAME_BOARD)) return;
 
-        if(this.gameBuildScene != null) return; //Allow only one build scene being initialized
+        if(this.gameBuildScene != null) return; // Allow only one build scene being initialized
 
         this.gameBuildScene = new GameBuildScene(this.clientHandler.getGameHandler());
         this.gameBuildSceneThread = new Thread(gameBuildScene);
@@ -97,13 +106,13 @@ public class StageManager extends JFrame {
         this.gameBuildSceneThread.start();
     }
 
+    /**
+     * Call this method to start the in-game scene.
+     * @param playerShips The ships of the player.
+     */
     public void startInGameScene(ArrayList<Ship> playerShips) {
 
-        System.out.println("c");
-
         if(this.gameIngameScene != null) return;
-
-        System.out.println("d");
 
         this.gameBuildSceneThread.interrupt();
 
@@ -116,6 +125,9 @@ public class StageManager extends JFrame {
         this.gameIngameSceneThread.start();
     }
 
+    /**
+     * Call this method to start the game over scene.
+     */
     public void startGameOverScene() {
 
         try {
@@ -161,11 +173,20 @@ public class StageManager extends JFrame {
         adaptScreenSize();
     }
 
+    /**
+     * Adds a scene to the stage manager.
+     * @param stage The stage to be added.
+     * @param panel The panel to be added.
+     */
     private void addScene(Stage stage, JPanel panel) {
         scenes.put(stage, panel);
         mainPanel.add(panel, stage.toString());
     }
 
+    /**
+     * Removes a scene from the stage manager.
+     * @param stage The stage to be removed.
+     */
     private void removeScene(Stage stage) {
         try {
             scenes.remove(stage);
@@ -181,61 +202,52 @@ public class StageManager extends JFrame {
      */
     public void adaptScreenSize() {
 
-        System.out.println("Adapting screen size for stage: " + currentStage);
-
-        System.out.println("Old size: " + getSize());
-
         setResizable(false);
 
         switch (currentStage) {
             case LOBBY_SCENE:
-                System.out.println("Lobby scene:" + this.lobbyScene.getWindowSize());
-
                 this.lobbyScene.setPreferredSize(this.lobbyScene.getWindowSize());
 
                 setSize(this.lobbyScene.getWindowSize());
                 setMinimumSize(this.lobbyScene.getWindowSize());
                 break;
             case CREATE_GAME_SCENE:
-
                 this.createGameScene.setPreferredSize(this.createGameScene.getWindowSize());
 
                 setSize(this.createGameScene.getWindowSize());
                 setMinimumSize(this.createGameScene.getWindowSize());
                 break;
             case GAME_WAITING_SCENE:
-
                 this.gameWaitingScene.setPreferredSize(this.gameWaitingScene.getWindowSize());
 
                 setSize(this.gameWaitingScene.getWindowSize());
                 setMinimumSize(this.gameWaitingScene.getWindowSize());
                 break;
             case GAME_BUILD_SCENE:
-
                 this.gameBuildScene.setPreferredSize(this.gameBuildScene.getWindowSize());
 
                 setSize(this.gameBuildScene.getWindowSize());
                 setMinimumSize(this.gameBuildScene.getWindowSize());
                 break;
             case GAME_IN_GAME_SCENE:
-
                 this.gameIngameScene.setPreferredSize(this.gameIngameScene.getWindowSize());
 
                 setSize(this.gameIngameScene.getWindowSize());
                 setMinimumSize(this.gameIngameScene.getWindowSize());
                 break;
             case GAME_END_SCENE:
-
                 this.gameOverScene.setPreferredSize(this.gameOverScene.getWindowSize());
 
                 setSize(this.gameOverScene.getWindowSize());
                 setMinimumSize(this.gameOverScene.getWindowSize());
                 break;
         }
-
-        System.out.println("New size: " + getSize());
     }
 
+    /**
+     * Switches the current scene to the specified stage.
+     * @param stage The stage to switch to.
+     */
     public void switchScene(Stage stage) {
         if (scenes.containsKey(stage)) {
             cardLayout.show(mainPanel, stage.toString());
@@ -248,13 +260,5 @@ public class StageManager extends JFrame {
         } else {
             System.err.println("Unable to switch to scene: " + stage);
         }
-    }
-
-    public int getWindowsWidth() {
-        return getWidth();
-    }
-
-    public int getWindowsHeight() {
-        return getHeight();
     }
 }

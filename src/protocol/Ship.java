@@ -25,16 +25,21 @@ public class Ship implements Serializable {
         }
     }
 
-    private int id;
-    private int x, y; // Ankerpunkt (abhängig von der Orientierung)
+    private final int id;
+    private int x, y; // Initial position of the ship
     private boolean isPlaced;
     private Orientation orientation;
-    private int length, width;
+    private final int length, width;
     private boolean isSunk;
     private int hits;
-    private String icon;
 
-    // Bestehender Konstruktor (nicht platziert)
+    /**
+     * Constructor for creating a ship with the given parameters.
+     * @param id the ID of the ship @unique
+     * @param orientation the orientation of the ship
+     * @param length the length of the ship
+     * @param width the width of the ship
+     */
     public Ship(int id, Orientation orientation, int length, int width) {
         this.id = id;
         this.isPlaced = false;
@@ -45,7 +50,16 @@ public class Ship implements Serializable {
         this.y = -1;
     }
 
-    // Anderer Konstruktor
+    /**
+     * Constructor for creating a ship with the given parameters.
+     * @param id the ID of the ship @unique
+     * @param x the x-coordinate of the ship
+     * @param y the y-coordinate of the ship
+     * @param orientation the orientation of the ship
+     * @param length the length of the ship
+     * @param width the width of the ship
+     * @param icon the icon of the ship
+     */
     public Ship(int id, int x, int y, Orientation orientation, int length, int width, String icon) {
         this.id = id;
         this.x = x;
@@ -54,10 +68,12 @@ public class Ship implements Serializable {
         this.orientation = orientation;
         this.length = length;
         this.width = width;
-        this.icon = icon;
     }
 
-    // Neuer Copy-Konstruktor für Deep Copy
+    /**
+     * Copy constructor for creating a ship with the same properties as another ship.
+     * @param other the ship to copy
+     */
     public Ship(Ship other) {
         this.id = other.id;
         this.x = other.x;
@@ -68,10 +84,53 @@ public class Ship implements Serializable {
         this.width = other.width;
         this.isSunk = other.isSunk;
         this.hits = other.hits;
-        this.icon = other.icon;
     }
 
-    // Getter und Setter
+    /**
+     * Returns the number of cells occupied by the ship.
+     */
+    public ArrayList<Point> getOccupiedCells() {
+        return getOccupiedCellsAt(this.x, this.y);
+    }
+
+    /**
+     * Provides the list of cells that would be occupied if the ship is placed at the anchor point (anchorX, anchorY).
+     */
+    public ArrayList<Point> getOccupiedCellsAt(int anchorX, int anchorY) {
+        ArrayList<Point> cells = new ArrayList<>();
+        switch (orientation) {
+            case EAST:
+                for (int i = 0; i < length; i++) {
+                    for (int j = 0; j < width; j++) {
+                        cells.add(new Point(anchorX + i, anchorY + j));
+                    }
+                }
+                break;
+            case WEST:
+                for (int i = 0; i < length; i++) {
+                    for (int j = 0; j < width; j++) {
+                        cells.add(new Point(anchorX - i, anchorY + j));
+                    }
+                }
+                break;
+            case SOUTH:
+                for (int i = 0; i < length; i++) {
+                    for (int j = 0; j < width; j++) {
+                        cells.add(new Point(anchorX + j, anchorY + i));
+                    }
+                }
+                break;
+            case NORTH:
+                for (int i = 0; i < length; i++) {
+                    for (int j = 0; j < width; j++) {
+                        cells.add(new Point(anchorX + j, anchorY - i));
+                    }
+                }
+                break;
+        }
+        return cells;
+    }
+
     public void setOrientation(Orientation orientation) {
         this.orientation = orientation;
     }
@@ -108,70 +167,6 @@ public class Ship implements Serializable {
 
     public int getWidth() {
         return width;
-    }
-
-    public boolean isSunk() {
-        return isSunk;
-    }
-
-    public int getHits() {
-        return hits;
-    }
-
-    public void hit() {
-        hits++;
-        if (hits >= length) {
-            isSunk = true;
-        }
-    }
-
-    public String getIcon() {
-        return icon;
-    }
-
-    /**
-     * Gibt die Liste der Zellen zurück, die von diesem Schiff belegt werden.
-     */
-    public ArrayList<Point> getOccupiedCells() {
-        return getOccupiedCellsAt(this.x, this.y);
-    }
-
-    /**
-     * Gibt die Liste der Zellen zurück, die belegt würden, wenn das Schiff am Ankerpunkt (anchorX, anchorY) platziert wird.
-     */
-    public ArrayList<Point> getOccupiedCellsAt(int anchorX, int anchorY) {
-        ArrayList<Point> cells = new ArrayList<>();
-        switch (orientation) {
-            case EAST:
-                for (int i = 0; i < length; i++) {
-                    for (int j = 0; j < width; j++) {
-                        cells.add(new Point(anchorX + i, anchorY + j));
-                    }
-                }
-                break;
-            case WEST:
-                for (int i = 0; i < length; i++) {
-                    for (int j = 0; j < width; j++) {
-                        cells.add(new Point(anchorX - i, anchorY + j));
-                    }
-                }
-                break;
-            case SOUTH:
-                for (int i = 0; i < length; i++) {
-                    for (int j = 0; j < width; j++) {
-                        cells.add(new Point(anchorX + j, anchorY + i));
-                    }
-                }
-                break;
-            case NORTH:
-                for (int i = 0; i < length; i++) {
-                    for (int j = 0; j < width; j++) {
-                        cells.add(new Point(anchorX + j, anchorY - i));
-                    }
-                }
-                break;
-        }
-        return cells;
     }
 
     @Override

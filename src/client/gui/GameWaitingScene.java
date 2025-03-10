@@ -14,23 +14,31 @@ import java.util.Date;
 import java.util.UUID;
 
 public class GameWaitingScene extends JPanel {
+
     private final JLabel waitingLabel;
     private final Timer animationTimer;
     private int dotCount = 0;
+
     private final GameHandler gameHandler;
 
     private String userName, opponentName;
-    private int gameCode;
+    private final int gameCode;
 
-    // Neues Label für den Countdown-Timer
     private final JLabel timerLabel;
-    // Timer für den Countdown
     private Timer countdownTimer;
 
+    /**
+     * Returns the size of the window.
+     * @return The size of the window as a Dimension object.
+     */
     public Dimension getWindowSize() {
         return new Dimension(900, 500);
     }
 
+    /**
+     * Creates a new GameWaitingScene.
+     * @param gameHandler The GameHandler instance used to manage the game state.
+     */
     public GameWaitingScene(GameHandler gameHandler) {
         this.gameHandler = gameHandler;
         this.gameCode = gameHandler.getGameState().getSessionCode();
@@ -41,17 +49,13 @@ public class GameWaitingScene extends JPanel {
         setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         setPreferredSize(getWindowSize());
 
-        // Überschrift mit Game-Code
-        // Hier fügen wir den MouseListener zum Kopieren hinzu
         JLabel codeLabel = new JLabel("Game Code: " + gameCode);
         codeLabel.setFont(new Font("Arial", Font.BOLD, 28));
         codeLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // MouseListener zum Kopieren des Game-Codes in die Zwischenablage
         codeLabel.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                // Game-Code in die Zwischenablage kopieren
                 StringSelection selection = new StringSelection(String.valueOf(gameCode));
                 Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
                 clipboard.setContents(selection, null);
@@ -69,17 +73,17 @@ public class GameWaitingScene extends JPanel {
         userNameLabel.setFont(new Font("Arial", Font.PLAIN, 18));
         userNameLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // "vs" Label in Fettschrift
+        // "vs" Label
         JLabel vsLabel = new JLabel("vs");
         vsLabel.setFont(new Font("Arial", Font.BOLD, 18));
         vsLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // Waiting Label: Animation oder Gegnername
+        // Waiting Label: Animation or Opponent Name
         waitingLabel = new JLabel("Waiting for players");
         waitingLabel.setFont(new Font("Arial", Font.ITALIC, 16));
         waitingLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // Timer-Animation der Punkte, wenn opponentName null ist
+        // Timer-Animation of the pointless dots, if no opponent is found
         animationTimer = new Timer(500, e -> {
             if (opponentName == null) {
                 dotCount = (dotCount + 1) % 4; // 0 bis 3 Punkte
@@ -89,15 +93,15 @@ public class GameWaitingScene extends JPanel {
         });
         animationTimer.start();
 
-        // Neues Timer-Label (initial leer)
+        // New Timer-Label
         timerLabel = new JLabel("");
         timerLabel.setFont(new Font("Arial", Font.PLAIN, 16));
         timerLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // Back-Button (volle Breite)
+        // Back-Button
         JButton backButton = getBackButton(gameHandler, animationTimer);
 
-        // Komponenten hinzufügen
+        // Add components to the panel
         add(codeLabel);
         add(Box.createRigidArea(new Dimension(0, 20)));
         add(modeLabel);
@@ -107,13 +111,12 @@ public class GameWaitingScene extends JPanel {
         add(vsLabel);
         add(Box.createRigidArea(new Dimension(0, 5)));
         add(waitingLabel);
-        // Timer-Label unter dem Gegnernamen hinzufügen
         add(Box.createRigidArea(new Dimension(0, 5)));
         add(timerLabel);
         add(Box.createVerticalGlue());
         add(backButton);
 
-        // Falls der User einem bestehenden Spiel beitritt, setze den opponentName
+        // If the game is 2-player, set the opponent name
         if(gameHandler.getGameState().getPlayerCount() == 2) {
             UUID userId = gameHandler.getClientHandler().getUserId();
             setOpponentName(gameHandler.getGameState().getOpponent(userId).getName());
@@ -127,20 +130,17 @@ public class GameWaitingScene extends JPanel {
         backButton.setFont(new Font("Arial", Font.BOLD, 14));
         backButton.addActionListener(e -> {
             animationTimer.stop();
-            // Stoppe auch den Countdown, falls er läuft
+            // kill countdownTimer
             gameHandler.sendLeaveGame();
-            gameHandler.getClientHandler().endCurrentGame(); // Beim Verlassen des Wartebildschirms das Spiel beenden
+            gameHandler.getClientHandler().endCurrentGame(); // End Game on client side
         });
         return backButton;
     }
 
-    public void stopAnimation() {
-        animationTimer.stop();
-        if (countdownTimer != null) {
-            countdownTimer.stop();
-        }
-    }
-
+    /**
+     * Sets the name of the opponent.
+     * @param opponentName The name of the opponent.
+     */
     public void setOpponentName(String opponentName) {
         this.opponentName = opponentName;
         if (opponentName != null) {
@@ -151,22 +151,22 @@ public class GameWaitingScene extends JPanel {
     }
 
     /**
-     * Setzt den Startzeitpunkt des Spiels und startet den Countdown.
-     * @param gameStartTime Das Datum, zu dem das Spiel startet.
+     * Sets the game start time and starts the countdown timer.
+     * @param gameStartTime The time when the game starts.
      */
     public void setGameStartTime(Date gameStartTime) {
-        // Vorherigen Countdown stoppen, falls vorhanden
+        // Stop timer if it is already running
         if (countdownTimer != null) {
             countdownTimer.stop();
         }
-        // Timer aktualisiert den Countdown jede Sekunde
+        // Refresh the timer label
         countdownTimer = new Timer(1000, e -> {
             long diff = gameStartTime.getTime() - System.currentTimeMillis();
             if (diff <= 0) {
                 timerLabel.setText("00:00");
                 countdownTimer.stop();
 
-                this.gameHandler.showBuildPhase(); // Starte die Build-Phase
+                this.gameHandler.showBuildPhase(); // Start the build phase
             } else {
                 int seconds = (int) (diff / 1000);
                 int minutes = seconds / 60;

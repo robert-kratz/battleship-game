@@ -9,6 +9,10 @@ public class PlayerReadyMessage extends Message {
 
     public final boolean ready;
 
+    /**
+     * Creates a new PlayerReadyMessage instance.
+     * @param ready True if the player is ready, false otherwise.
+     */
     public PlayerReadyMessage(boolean ready) {
         super(MessageType.PLAYER_READY);
         this.ready = ready;

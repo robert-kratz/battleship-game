@@ -31,6 +31,10 @@ public class BattleShipGame implements Game, Runnable {
 
     private Timer turnDelayTimer;
 
+    /**
+     * Constructor for the BattleShipGame class.
+     * @param server The server instance that manages the game.
+     */
     public BattleShipGame(Server server) {
         this.server = server;
 
@@ -44,6 +48,11 @@ public class BattleShipGame implements Game, Runnable {
         this.gameState = new GameState(gameOptions, availableShips);
     }
 
+    /**
+     * Constructor for the BattleShipGame class with custom
+     * @param server The server instance that manages the game.
+     * @param gameOptions The game options to be used for the game.
+     */
     public BattleShipGame(Server server, GameOptions gameOptions) {
         this.server = server;
         this.size = gameOptions.getBoardSize();
@@ -54,17 +63,20 @@ public class BattleShipGame implements Game, Runnable {
         this.gameState = new GameState(gameOptions, availableShips);
     }
 
+    /**
+     * Main method to run the game loop.
+     */
     @Override
     public void run() {
         while (this.gameState.getStatus().equals(GameState.GameStatus.LOBBY_WAITING)) {
             sleep(1000);
-            System.out.println("Warte auf zweiten Spieler...");
+            System.out.println("Waiting for players to join");
         }
         // Build-Phase
         while (this.gameState.getStatus().equals(GameState.GameStatus.BUILD_GAME_BOARD)) {
             sleep(1000);
 
-            System.out.println("Build Game Board");
+            System.out.println("Build Game Board in progress");
             if (this.gameState.getBuildGameBoardFinished().before(new Date())) {
 
                 System.out.println("Build Game Board Finished");
@@ -89,6 +101,10 @@ public class BattleShipGame implements Game, Runnable {
         }
     }
 
+    /**
+     * Adds a player to the game.
+     * @param player The player to add.
+     */
     @Override
     public synchronized void addPlayer(PlayerInfo player) {
         if (!this.gameState.getStatus().equals(GameState.GameStatus.LOBBY_WAITING)) return;
@@ -125,6 +141,10 @@ public class BattleShipGame implements Game, Runnable {
         if (playerA != null && playerB != null) sendGameStartingEvent();
     }
 
+    /**
+     * Removes a player from the game.
+     * @param player The player to remove.
+     */
     @Override
     public synchronized void removePlayer(PlayerInfo player) {
         this.gameState.getPlayer(player.getId()).setInGame(false);
@@ -139,6 +159,9 @@ public class BattleShipGame implements Game, Runnable {
         }
     }
 
+    /**
+     * Sends a game starting event to both players.
+     */
     @Override
     public synchronized void sendGameStartingEvent() {
         // Only start the game if the game is in the lobby phase
@@ -160,14 +183,15 @@ public class BattleShipGame implements Game, Runnable {
         this.gameState = newState;
     }
 
+    /**
+     * Handles the event when a player hovers over a tile.
+     * @param player The player who hovered over the tile.
+     * @param ships The ships that the player has.
+     */
     @Override
     public void onPlayerPlaceShips(PlayerInfo player, ArrayList<Ship> ships) {
-        System.out.println("Received placement from player " + player.getUsername());
 
-        // VALIDIERUNG DER SCHIFFSPLATZIERUNG
         boolean validatePlacement = ShipPlacementHelper.shipsAreShipsTheSame(this.gameState.getAvailableShips(), ships, this.size);
-
-        System.out.println("Validate placement: " + validatePlacement);
 
         if (!validatePlacement) {
             player.sendMessage(new ErrorMessage(ErrorType.INVALID_PLACEMENT));
@@ -179,10 +203,13 @@ public class BattleShipGame implements Game, Runnable {
         } else if (playerB != null && playerB.getId().equals(player.getId())) {
             this.shipsPlayerB = ships;
         }
-
-        System.out.println("Player " + player.getUsername() + " submitted placement");
     }
 
+    /**
+     * Handles the event when a player changes their ready state.
+     * @param player The player to check.
+     * @param ready Whether the player is ready or not.
+     */
     @Override
     public void onPlayerReadyStateChange(PlayerInfo player, boolean ready) {
         GameState gameState = new GameState(this.getGameState());
@@ -203,10 +230,6 @@ public class BattleShipGame implements Game, Runnable {
             }
         }
 
-        System.out.println("PlayerA ready: " + gameState.getPlayerA().isReady());
-        System.out.println("PlayerB ready: " + gameState.getPlayerB().isReady());
-
-        // Statt einen neuen GameState zu erzeugen, verwende das existierende:
         if (playerA != null)
             playerA.sendMessage(new BuildReadyStateChange(gameState));
         if (playerB != null)
@@ -215,7 +238,6 @@ public class BattleShipGame implements Game, Runnable {
         // Optional: Ausgabe, wenn beide Spieler ready sind
         if (gameState.getPlayerA() != null && gameState.getPlayerB() != null &&
                 gameState.getPlayerA().isReady() && gameState.getPlayerB().isReady()) {
-            System.out.println("Both players are ready");
 
             //Skip build phase if both players are ready
             gameState.setBuildGameBoardFinished(new Date(System.currentTimeMillis() + 500));
@@ -224,6 +246,9 @@ public class BattleShipGame implements Game, Runnable {
         this.gameState = gameState;
     }
 
+    /**
+     * Handles the event when a player hovers over a tile.
+     */
     @Override
     public synchronized void sendInGameStartEvent() {
         //Only start the game if the game is in the build phase
@@ -270,6 +295,9 @@ public class BattleShipGame implements Game, Runnable {
         }
     }
 
+    /**
+     * Handles the event when a player hovers over a tile.
+     */
     @Override
     public void sendTurnChangeEvent() {
         this.allowAnotherMove = true;
@@ -286,7 +314,6 @@ public class BattleShipGame implements Game, Runnable {
 
         newState.setNextTurn();
 
-        // Weitere Logik ...
         MoveManager moveManager = new MoveManager(newState);
 
         if (!moveManager.isAMoveStillPossible()) {
@@ -314,9 +341,6 @@ public class BattleShipGame implements Game, Runnable {
         ArrayList<Ship> uncoveredShipsA = newState.getSunkenShips(newState.getPlayerA(), this.shipsPlayerB);
         ArrayList<Ship> uncoveredShipsB = newState.getSunkenShips(newState.getPlayerB(), this.shipsPlayerA);
 
-        System.out.println("Player A: " + uncoveredShipsA.size());
-        System.out.println("Player B: " + uncoveredShipsB.size());
-
         newState.getPlayerA().setUncoveredShips(uncoveredShipsA);
         newState.getPlayerB().setUncoveredShips(uncoveredShipsB);
 
@@ -337,11 +361,13 @@ public class BattleShipGame implements Game, Runnable {
         checkForWinner();
     }
 
+    /**
+     * Handles the event when a game is over.
+     * @param reason The reason for the game over.
+     */
     @Override
     public void sendGameOverEvent(GameOverReason reason) {
         gameState.setStatus(GameState.GameStatus.GAME_OVER);
-
-        System.out.println("Sending game over event " + reason);
 
         if(this.turnDelayTimer != null) {
             this.turnDelayTimer.cancel();
@@ -417,6 +443,11 @@ public class BattleShipGame implements Game, Runnable {
         server.updateGameList();
     }
 
+    /**
+     * Handles the event when a player attempts to make a move.
+     * @param player The player who attempted to make a move.
+     * @param move The move object containing the move.
+     */
     @Override
     public void onPlayerAttemptMove(PlayerInfo player, Move move) {
         if (!this.gameState.getStatus().equals(GameState.GameStatus.IN_GAME)) return;
@@ -439,9 +470,6 @@ public class BattleShipGame implements Game, Runnable {
 
             ClientPlayer clientPlayer = newState.getPlayer(player.getId());
 
-            System.out.println("Item cost: " + itemCost);
-            System.out.println("Player energy: " + clientPlayer.getEnergy());
-
             if(clientPlayer.getEnergy() < itemCost) {
                 player.sendMessage(new ErrorMessage(ErrorType.NOT_ENOUGH_ENERGY));
                 return;
@@ -462,8 +490,6 @@ public class BattleShipGame implements Game, Runnable {
                 player.getId().equals(playerA.getId()) ? this.shipsPlayerB : this.shipsPlayerA,
                 move
         );
-
-        System.out.println("Move: " + move.getX() + " - " + move.getY() + " - Is a Hit: " + moveIsHit);
 
         if (moveIsHit) {
             newState.getCurrentTurnPlayer().addEnergy(newState.getGameOptions().getEnergyShipHit());
@@ -490,13 +516,9 @@ public class BattleShipGame implements Game, Runnable {
         ArrayList<Ship> uncoveredShipsA = newState.getSunkenShips(newState.getPlayerA(), this.shipsPlayerB);
         ArrayList<Ship> uncoveredShipsB = newState.getSunkenShips(newState.getPlayerB(), this.shipsPlayerA);
 
-        System.out.println("Player A: " + uncoveredShipsA.size());
-        System.out.println("Player B: " + uncoveredShipsB.size());
-
         newState.getPlayerA().setUncoveredShips(uncoveredShipsA);
         newState.getPlayerB().setUncoveredShips(uncoveredShipsB);
 
-        //newState.uncoverHitShips(this.shipsPlayerA, this.shipsPlayerB);
         newState.updateHitList(this.shipsPlayerA, this.shipsPlayerB);
         newState.loadRadars(this.shipsPlayerA, this.shipsPlayerB);
 
@@ -513,6 +535,9 @@ public class BattleShipGame implements Game, Runnable {
         checkForWinner();
     }
 
+    /**
+     * Checks if there is a winner in the game.
+     */
     private void checkForWinner() {
         // Check if the game is over
         boolean hasPlayerAWon = this.gameState.hasPlayerSunkAllShips(this.gameState.getPlayerA(), this.shipsPlayerB);
@@ -525,14 +550,13 @@ public class BattleShipGame implements Game, Runnable {
             gameOverTimer.schedule(new TimerTask() {
                 @Override
                 public void run() {
-                    System.out.println("Game Ended by player win");
                     sendGameOverEvent(GameOverReason.PLAYER_WON);
                 }
             }, 500);
         }
 
-        boolean noMovePossibleA = this.gameState.noMoreMovesPossible(this.gameState.getPlayerA(), this.shipsPlayerB);
-        boolean noMovePossibleB = this.gameState.noMoreMovesPossible(this.gameState.getPlayerB(), this.shipsPlayerA);
+        boolean noMovePossibleA = this.gameState.noMoreMovesPossible(this.gameState.getPlayerA());
+        boolean noMovePossibleB = this.gameState.noMoreMovesPossible(this.gameState.getPlayerB());
 
         if(noMovePossibleA || noMovePossibleB) {
             gameOverTimer = new Timer();
@@ -540,20 +564,16 @@ public class BattleShipGame implements Game, Runnable {
             gameOverTimer.schedule(new TimerTask() {
                 @Override
                 public void run() {
-                    System.out.println("Game Ended by no moves possible");
                     sendGameOverEvent(GameOverReason.NO_MORE_MOVES);
                 }
             }, 500);
         }
     }
 
-    public int getPlayerAmount() {
-        int playerCount = 0;
-        if (gameState.getPlayerA().isInGame()) playerCount++;
-        if (gameState.getPlayerB().isInGame()) playerCount++;
-        return playerCount;
-    }
-
+    /**
+     * Sleeps the current thread for a specified amount of time.
+     * @param time The time to sleep in milliseconds.
+     */
     private synchronized void sleep(int time) {
         try {
             Thread.sleep(time);
@@ -561,6 +581,9 @@ public class BattleShipGame implements Game, Runnable {
         }
     }
 
+    /**
+     * Initializes the available ships for the game.
+     */
     @Override
     public void initAvailableShips() {
         if (!availableShips.isEmpty()) return;
@@ -573,16 +596,19 @@ public class BattleShipGame implements Game, Runnable {
         availableShips.add(new Ship(5, Ship.Orientation.NORTH, 6, 1));
     }
 
+    /**
+     * Returns the available ships for the game.
+     * @return The list of available ships.
+     */
     @Override
     public GameState getGameState() {
         return this.gameState;
     }
 
-    @Override
-    public ArrayList<Ship> getAvailableShips() {
-        return availableShips;
-    }
-
+    /**
+     * Sets the game state for the game.
+     * @param gameState The game state to be set.
+     */
     @Override
     public void setGameState(GameState gameState) {
         this.gameState = gameState;
@@ -597,6 +623,9 @@ public class BattleShipGame implements Game, Runnable {
         if (playerB != null) playerB.sendMessage(message);
     }
 
+    /**
+     * Unregisters the game from the server.
+     */
     private synchronized void unregisterGame() {
         server.unregisterGame(this.gameState.getId());
         server.updateGameList();

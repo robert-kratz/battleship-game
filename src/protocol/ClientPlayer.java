@@ -22,6 +22,10 @@ public class ClientPlayer implements Serializable {
     private boolean turn = false;
     private boolean winner = false;
 
+    /**
+     * Copy constructor for ClientPlayer.
+     * @param clientPlayer the ClientPlayer to copy
+     */
     public ClientPlayer(ClientPlayer clientPlayer) {
         this.id = clientPlayer.id;
         this.name = clientPlayer.name;
@@ -34,21 +38,17 @@ public class ClientPlayer implements Serializable {
         this.winner = clientPlayer.winner;
     }
 
+    /**
+     * Constructor for ClientPlayer.
+     * @param id the UUID of the player
+     * @param name the name of the player
+     */
     public ClientPlayer(UUID id, String name) {
         this.id = id;
         this.name = name;
         this.ready = false;
         this.moves = new ArrayList<>();
         this.uncoveredShips = new ArrayList<>();
-    }
-
-    public ArrayList<Cell> getAttackedCellsForPlayer() {
-        ArrayList<Cell> attackedCells = new ArrayList<>();
-        for (Move move : moves) {
-            // If you want all cells (hits and misses), simply add them all:
-            attackedCells.addAll(move.getAffectedCells());
-        }
-        return attackedCells;
     }
 
     public boolean isPlayer(UUID id) {
@@ -113,18 +113,6 @@ public class ClientPlayer implements Serializable {
 
     public void removeEnergy(int energy) {
         this.energy -= energy;
-    }
-
-    public void setId(UUID id) {
-        this.id = id;
-    }
-
-    public void setMoves(ArrayList<Move> moves) {
-        this.moves = moves;
-    }
-
-    public void setName(String name) {
-        this.name = name;
     }
 
     public void setReady(boolean ready) {

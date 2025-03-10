@@ -11,10 +11,20 @@ public class MoveManager {
 
     private final GameState gameState;
 
+    /**
+     * Creates a new MoveManager with the given game state.
+     * @param gameState The game state to be managed.
+     */
     public MoveManager(GameState gameState) {
         this.gameState = gameState;
     }
 
+    /**
+     * Checks if the given move is valid for the specified player.
+     * @param player The UUID of the player.
+     * @param move The move to be checked.
+     * @return true if the move is valid, false otherwise.
+     */
     public boolean isPlayerMoveMoveValid(UUID player, Move move) {
         // Check if the move is in bounds.
         if(move.getX() < 0 || move.getX() >= gameState.getBoardSize() ||
@@ -32,6 +42,12 @@ public class MoveManager {
         }
     }
 
+    /**
+     * Checks if the given move hits any of the ships.
+     * @param ships The list of ships to check against.
+     * @param move The move to be checked.
+     * @return true if the move hits a ship, false otherwise.
+     */
     public static boolean moveHasHit(ArrayList<Ship> ships, Move move) {
         // Ensure that affectedCells are computed before checking.
         // (If not already computed, you might want to call move.computeAffectedCells(boardSize) beforehand.)
@@ -49,6 +65,12 @@ public class MoveManager {
         return false;
     }
 
+    /**
+     * Checks if the move is valid by checking if it has already been hit or if it is out of bounds.
+     * @param move The move to be checked.
+     * @param moves The list of moves already made.
+     * @return true if the move is valid, false otherwise.
+     */
     private boolean isMoveValid(Move move, ArrayList<Move> moves) {
         ArrayList<Cell> pointsAlreadyHit = new ArrayList<>();
 
@@ -84,7 +106,7 @@ public class MoveManager {
                 }
             }
         } else {
-            // Für einen normalen Hit: Sammle alle bereits betroffenen Zellen.
+            // For a normal hit: Collect all already affected cells.
             for(Move m : moves) {
                 pointsAlreadyHit.addAll(m.getAffectedCells());
             }
@@ -100,6 +122,11 @@ public class MoveManager {
         return true;
     }
 
+    /**
+     * Generates a random move for the specified player.
+     * @param player The UUID of the player.
+     * @return A valid random move.
+     */
     public Move makeRandomMove(UUID player) {
         int x = (int) (Math.random() * gameState.getBoardSize());
         int y = (int) (Math.random() * gameState.getBoardSize());
@@ -115,17 +142,15 @@ public class MoveManager {
     }
 
     /**
-     * Prüft, ob auf dem gesamten Spielbrett noch mindestens eine Zelle übrig ist,
-     * die noch nicht getroffen wurde.
-     *
-     * @return true, wenn es mindestens eine ungetroffene Zelle gibt, ansonsten false.
+     * Checks if a move is still possible.
+     * @return true if a move is still possible, false otherwise.
      */
     public boolean isAMoveStillPossible() {
         int boardSize = gameState.getBoardSize();
-        // Erstelle ein 2D-Array, um zu markieren, welche Zellen getroffen wurden.
+        // create a 2D array to track hit cells
         boolean[][] hitCells = new boolean[boardSize][boardSize];
 
-        // Markiere alle betroffenen Zellen aus den Zügen von Spieler A.
+        // This is done to check if there are any cells that are not hit yet.
         for (Move move : gameState.getPlayerA().getMoves()){
             move.computeAffectedCells(boardSize);
             for (Cell cell : move.getAffectedCells()) {
@@ -136,7 +161,7 @@ public class MoveManager {
                 }
             }
         }
-        // Markiere alle betroffenen Zellen aus den Zügen von Spieler B.
+        // Check if there are any cells that are not hit yet.
         for (Move move : gameState.getPlayerB().getMoves()){
             move.computeAffectedCells(boardSize);
             for (Cell cell : move.getAffectedCells()) {
@@ -147,7 +172,7 @@ public class MoveManager {
                 }
             }
         }
-        // Überprüfe, ob es mindestens eine Zelle gibt, die noch nicht getroffen wurde.
+        // Check weather there are any cells that are not hit yet.
         for (int x = 0; x < boardSize; x++) {
             for (int y = 0; y < boardSize; y++) {
                 if (!hitCells[x][y]) {

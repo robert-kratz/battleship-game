@@ -14,7 +14,6 @@ public class CreateGameScene extends JPanel {
     // Main Title
     private final JLabel mainTitleLabel;
 
-    // Board Size input (Radio Buttons) in einem Panel mit TitledBorder
     private final JPanel boardSizePanel;
     private final TitledBorder boardSizeBorder;
     private final ButtonGroup sizeGroup;
@@ -22,7 +21,6 @@ public class CreateGameScene extends JPanel {
     private final JRadioButton button10x10;
     private final JRadioButton button12x12;
 
-    // Slider Panels mit TitledBorders
     private final JPanel buildTimePanel;
     private final TitledBorder buildTimeBorder;
     private final JSlider buildTimeSlider;
@@ -47,23 +45,18 @@ public class CreateGameScene extends JPanel {
     private final TitledBorder energyTurnBonusBorder;
     private final JSlider energyTurnBonusSlider;
 
-    // Buttons
-    private final JButton createButton;
-    private final JButton backButton;
-
-    private final ClientHandler clientHandler;
-
     private GameOptions gameOptions = new GameOptions();
 
-    // Fenstergröße
     public Dimension getWindowSize() {
         return new Dimension(430, 730);
     }
 
+    /**
+     * Creates a new CreateGameScene with the specified client handler.
+     * @param clientHandler The client handler to be used for communication.
+     */
     public CreateGameScene(ClientHandler clientHandler) {
-        this.clientHandler = clientHandler;
 
-        // Layout und Border des Panels
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         setPreferredSize(getWindowSize());
@@ -77,7 +70,7 @@ public class CreateGameScene extends JPanel {
         boardSizePanel = new JPanel();
         boardSizePanel.setLayout(new BoxLayout(boardSizePanel, BoxLayout.Y_AXIS));
         boardSizePanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        // Default: Board Size (10) – dabei entspricht 10x10 der Standardauswahl
+        // Default: Board Size (10)
         boardSizeBorder = BorderFactory.createTitledBorder("Board Size (10x10)");
         boardSizePanel.setBorder(boardSizeBorder);
 
@@ -86,10 +79,9 @@ public class CreateGameScene extends JPanel {
         button10x10 = new JRadioButton("10x10");
         button12x12 = new JRadioButton("12x12");
 
-        // Standardauswahl: 10x10
+        // Default: 10x10
         button10x10.setSelected(true);
 
-        // ActionListener zur Aktualisierung des TitledBorders anhand der Auswahl
         ActionListener boardSizeListener = e -> {
             if (button8x8.isSelected()) {
                 boardSizeBorder.setTitle("Board Size (8x8)");
@@ -111,7 +103,6 @@ public class CreateGameScene extends JPanel {
         sizeGroup.add(button10x10);
         sizeGroup.add(button12x12);
 
-        // Inneres Panel für die Radio-Buttons (GridLayout)
         JPanel boardSizeRadioPanel = new JPanel(new GridLayout(1, 3, 10, 0));
         boardSizeRadioPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
         boardSizeRadioPanel.add(button8x8);
@@ -123,7 +114,7 @@ public class CreateGameScene extends JPanel {
         buildTimePanel = new JPanel();
         buildTimePanel.setLayout(new BoxLayout(buildTimePanel, BoxLayout.Y_AXIS));
         buildTimePanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        // Initialer Wert aus gameOptions statt direkt aus Parameters
+
         buildTimeBorder = BorderFactory.createTitledBorder("Build Time (" + gameOptions.getBuildTime() + " seconds)");
         buildTimePanel.setBorder(buildTimeBorder);
         buildTimeSlider = new JSlider(JSlider.HORIZONTAL, 10, 60, gameOptions.getBuildTime());
@@ -200,7 +191,7 @@ public class CreateGameScene extends JPanel {
         shipHitEnergyPanel = new JPanel();
         shipHitEnergyPanel.setLayout(new BoxLayout(shipHitEnergyPanel, BoxLayout.Y_AXIS));
         shipHitEnergyPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        // Hier nutzen wir ENERGY_TURN_BONUS als Stellvertreter für Ship Hit Energy
+
         shipHitEnergyBorder = BorderFactory.createTitledBorder("Ship Hit Energy (" + gameOptions.getEnergyShipHit() + " energy)");
         shipHitEnergyPanel.setBorder(shipHitEnergyBorder);
         shipHitEnergySlider = new JSlider(JSlider.HORIZONTAL, 0, 10, gameOptions.getEnergyShipHit());
@@ -237,13 +228,13 @@ public class CreateGameScene extends JPanel {
         energyTurnBonusPanel.add(energyTurnBonusSlider);
 
         // --- Buttons ---
-        createButton = new JButton("Create");
+        JButton createButton = new JButton("Create");
         createButton.setFocusPainted(false);
         createButton.setFont(new Font("Arial", Font.BOLD, 14));
         createButton.setAlignmentX(Component.LEFT_ALIGNMENT);
         createButton.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
 
-        backButton = new JButton("Back");
+        JButton backButton = new JButton("Back");
         backButton.setAlignmentX(Component.LEFT_ALIGNMENT);
         backButton.setMaximumSize(new Dimension(Integer.MAX_VALUE, 35));
 
@@ -257,13 +248,13 @@ public class CreateGameScene extends JPanel {
                 );
             } else {
                 int selectedSize = getSelectedBoardSize();
-                System.out.println("Selected board size: " + selectedSize);
                 int buildTime = buildTimeSlider.getValue();
                 int moveTime = moveTimeSlider.getValue();
                 int bonusTime = bonusTimeSlider.getValue();
                 int startEnergy = startEnergySlider.getValue();
                 int shipHitEnergy = shipHitEnergySlider.getValue();
 
+                System.out.println("Selected board size: " + selectedSize);
                 System.out.println("Build Time: " + buildTime);
                 System.out.println("Move Time: " + moveTime);
                 System.out.println("Move Bonus Time: " + bonusTime);
@@ -282,7 +273,6 @@ public class CreateGameScene extends JPanel {
             resetValues();
         });
 
-        // --- Komponenten hinzufügen in der gewünschten Reihenfolge ---
         add(mainTitleLabel);
         add(Box.createRigidArea(new Dimension(0, 10)));
         add(boardSizePanel);
@@ -310,6 +300,9 @@ public class CreateGameScene extends JPanel {
         add(buttonPanel);
     }
 
+    /**
+     * Resets the values of the sliders and game options to their default values.
+     */
     private void resetValues() {
         gameOptions = new GameOptions();
         buildTimeSlider.setValue(gameOptions.getBuildTime());
@@ -321,7 +314,8 @@ public class CreateGameScene extends JPanel {
     }
 
     /**
-     * Gibt die ausgewählte Boardgröße als int zurück.
+     * Returns the selected board size based on the selected radio button.
+     * @return The selected board size (8, 10, or 12).
      */
     private int getSelectedBoardSize() {
         if (button8x8.isSelected()) return 8;

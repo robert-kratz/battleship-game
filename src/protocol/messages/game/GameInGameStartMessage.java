@@ -14,6 +14,11 @@ public class GameInGameStartMessage extends Message {
     private GameState gameState;
     private ArrayList<Ship> yourShips;
 
+    /**
+     * Creates a new GameInGameStartMessage instance.
+     * @param gameState The game state of the game that has started.
+     * @param yourShips The ships of the player in the game.
+     */
     public GameInGameStartMessage(GameState gameState, ArrayList<Ship> yourShips) {
         super(MessageType.GAME_IN_GAME_STARTS);
         this.gameState = gameState;

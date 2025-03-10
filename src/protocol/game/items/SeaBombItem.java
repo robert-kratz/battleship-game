@@ -13,10 +13,20 @@ public class SeaBombItem extends Item implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    /**
+     * Default constructor for SeaBombItem.
+     */
     public SeaBombItem() {
         super(ItemType.SEA_BOMB, Parameters.ITEM_BOMB_COST);
     }
 
+    /**
+     * Returns the affected fields for a SeaBombItem.
+     * @param x The x coordinate of the cell.
+     * @param y The y coordinate of the cell.
+     * @param boardSize The size of the board.
+     * @return An ArrayList of affected cells.
+     */
     @Override
     public ArrayList<Cell> getAffectedFields(int x, int y, int boardSize) {
         ArrayList<Cell> affectedFields = new ArrayList<>();

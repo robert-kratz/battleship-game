@@ -10,6 +10,10 @@ public class GameOverMessage extends Message {
 
     private final GameState gameState;
 
+    /**
+     * Creates a new GameOverMessage instance.
+     * @param gameState The game state of the game that has ended.
+     */
     public GameOverMessage(GameState gameState) {
         super(MessageType.GAME_END);
         this.gameState = gameState;

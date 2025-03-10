@@ -18,20 +18,19 @@ import java.util.HashSet;
 import java.util.List;
 
 public class InGameBattleshipBoard extends AbstractBattleshipBoard {
+
     private InGameBoardListener listener;
     private ArrayList<Move> moves = new ArrayList<>();
     private final int boardSize;
 
-    // Hier speichern wir die von einem Gegner übertragenen Hover-Daten
     private ArrayList<Cell> affectedCells = new ArrayList<>();
 
+    // Currently hovered cell (for mouse hover)
     private int hoveredRow = -1;
     private int hoveredCol = -1;
 
-    // Aktuell ausgewähltes Item (z.B. Radar, SeaBomb, AirStrike)
+    // Currently selected item (e.g. AirStrikeItem, SeaBombItem, RadarItem)
     private Item selectedItem = null;
-
-    // Flag, ob das Board interaktiv ist (Maus- und Tastatureingaben werden nur verarbeitet, wenn true)
     private boolean interactive = true;
 
     public void setInteractive(boolean interactive) {
@@ -68,7 +67,6 @@ public class InGameBattleshipBoard extends AbstractBattleshipBoard {
             }
         });
 
-        // MouseListener für Mausklick und MouseExit
         addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
@@ -80,7 +78,6 @@ public class InGameBattleshipBoard extends AbstractBattleshipBoard {
             }
             @Override
             public void mouseExited(MouseEvent e) {
-                // Beim Verlassen des Boards: Hover-Daten löschen und leere Liste an den Listener senden
                 hoveredRow = -1;
                 hoveredCol = -1;
                 if (listener != null) {
@@ -90,7 +87,6 @@ public class InGameBattleshipBoard extends AbstractBattleshipBoard {
             }
         });
 
-        // MouseMotionListener: Verarbeitet Mausbewegungen
         addMouseMotionListener(new MouseMotionAdapter() {
             @Override
             public void mouseMoved(MouseEvent e) {
@@ -119,11 +115,20 @@ public class InGameBattleshipBoard extends AbstractBattleshipBoard {
         });
     }
 
+    /**
+     * Sets the listener for board events.
+     * @param placedShips The list of ships to be placed on the board.
+     */
     @Override
     public void setPlacedShips(List<Ship> placedShips) {
         super.setPlacedShips(placedShips);
     }
 
+    /**
+     * Returns the list of placed ships on the board.
+     * @param e the mouse event
+     * @return The cell position as a Point (x, y), or null if the position is out of bounds.
+     */
     private Point getCellFromMouseEvent(MouseEvent e) {
         int panelWidth = getWidth();
         int panelHeight = getHeight();
@@ -137,8 +142,10 @@ public class InGameBattleshipBoard extends AbstractBattleshipBoard {
     }
 
     /**
-     * Berechnet die Liste der von der Maus an der Zelle (row, col) betroffenen Zellen,
-     * abhängig davon, ob ein Item ausgewählt wurde.
+     * Computes the list of affected cells based on the selected item and the given cell coordinates.
+     * @param row the row of the cell
+     * @param col the column of the cell
+     * @return a list of affected cells
      */
     private ArrayList<Cell> computeAffectedCellsForSelectedItem(int row, int col) {
         ArrayList<Cell> affected = new ArrayList<>();
@@ -175,6 +182,10 @@ public class InGameBattleshipBoard extends AbstractBattleshipBoard {
         return affected;
     }
 
+    /**
+     * Sets the selected item for the board and notifies the listener.
+     * @param item The item to be selected.
+     */
     public void setSelectedItem(Item item) {
         this.selectedItem = item;
         if (listener != null) {
@@ -183,6 +194,9 @@ public class InGameBattleshipBoard extends AbstractBattleshipBoard {
         repaint();
     }
 
+    /**
+     * Clears the selected item and notifies the listener.
+     */
     public void clearSelectedItem() {
         this.selectedItem = null;
         if (listener != null) {
@@ -191,49 +205,65 @@ public class InGameBattleshipBoard extends AbstractBattleshipBoard {
         repaint();
     }
 
+    /**
+     * Returns the currently selected item.
+     * @return The currently selected item.
+     */
     public Item getSelectedItem() {
         return selectedItem;
     }
 
+    /**
+     * Sets the moves for the board and repaints it.
+     * @param moves The list of moves to be set.
+     */
     public void setMoves(ArrayList<Move> moves) {
         this.moves = moves;
-        System.out.println("Moves: " + moves.size() + " (InGameBattleshipBoard) repainting");
         repaint();
     }
 
+    /**
+     * Sets the affected cells for the opponent and repaints the board.
+     * @param affectedCells The list of affected cells.
+     */
     public void setOpponentAffectedCells(ArrayList<Cell> affectedCells) {
         this.affectedCells = affectedCells;
         repaint();
     }
 
+    /**
+     * Clears the affected cells for the opponent and repaints the board.
+     */
     public void clearOpponentAffectedCells() {
         this.affectedCells = new ArrayList<>();
         repaint();
     }
 
+    /**
+     * Paints the component.
+     * @param g the <code>Graphics</code> object to protect
+     */
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
+
         int panelWidth = getWidth();
         int panelHeight = getHeight();
         int pixelBoardSize = Math.min(panelWidth, panelHeight);
         double cellWidth = pixelBoardSize / (double) cols;
         double cellHeight = pixelBoardSize / (double) rows;
 
-        // Verwende ein HashSet, um bereits bemalte Zellen zu speichern.
-        // Der Schlüssel ist ein String in der Form "col-row".
         HashSet<String> paintedCells = new HashSet<>();
 
-        // Zeichne alle Moves (Treffer, Fehlschüsse, Radar)
+        // Paint all moves (hits and misses)
         for (Move move : moves) {
             for (Cell cell : move.getAffectedCells()) {
                 int col = cell.getX();
                 int row = cell.getY();
-                String key = col + "-" + row; // Zusammengesetzter Schlüssel
+                String key = col + "-" + row;
 
                 if (paintedCells.contains(key)) {
-                    System.out.println("DID NOT REPAINT CELL: " + col + ", " + row);
-                    continue; // Zelle wurde bereits gezeichnet
+                    continue; // Cell was already painted
                 }
 
                 paintedCells.add(key);
@@ -248,14 +278,14 @@ public class InGameBattleshipBoard extends AbstractBattleshipBoard {
             }
         }
 
-        // Zeichne alle Radar-Moves (diese dürfen doppelt eingefärbt werden)
+        // Paint all placed ships
         for (Move move : moves) {
             if (move.getRadarItem() != null) {
                 Board.drawRadar(g, move.getY(), move.getX(), cellWidth, cellHeight, move.getRadarShipsIn3x3Area());
             }
         }
 
-        // Hover-Overlay (für das aktuell im Board berechnete Hover-Event)
+        // Hover-Overlay (for the currently selected item)
         if (interactive && hoveredRow != -1 && hoveredCol != -1) {
             Graphics2D g2 = (Graphics2D) g.create();
             g2.setColor(new Color(0, 0, 0, 100));
@@ -270,7 +300,7 @@ public class InGameBattleshipBoard extends AbstractBattleshipBoard {
             g2.dispose();
         }
 
-        // Zeichne alle vom Gegner übermittelten (Hover-)Zellen
+        // Paint the opponent's affected cells by hover
         for (Cell cell : affectedCells) {
             int col = cell.getX();
             int row = cell.getY();
@@ -280,17 +310,17 @@ public class InGameBattleshipBoard extends AbstractBattleshipBoard {
 
     public interface InGameBoardListener {
         /**
-         * Wird aufgerufen, wenn im Spielfeld eine Zelle angeklickt wird.
+         * Is called when a cell is clicked.
          */
         void onCellClick(int row, int col);
 
         /**
-         * Wird aufgerufen, wenn der Mauszeiger über eine Zelle bewegt wird.
+         * Is called when the mouse hovers over a cell.
          */
         void onHover(int row, int col, ArrayList<Cell> affectedCells);
 
         /**
-         * Wird aufgerufen, wenn sich das aktuell ausgewählte Item ändert (z.B. durch Toggle).
+         * Will be called when the selected item changes.
          */
         void onSelectedItemChanged(Item newItem);
     }

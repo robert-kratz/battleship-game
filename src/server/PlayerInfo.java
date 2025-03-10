@@ -43,13 +43,16 @@ public class PlayerInfo implements Runnable {
     public String getUsername() { return username; }
     public String getIp() { return ip; }
 
+    /**
+     * This method is called when the player is registered.
+     */
     @Override
     public void run() {
         try {
             out = new ObjectOutputStream(socket.getOutputStream());
             ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
 
-            sendMessage(new RegisterMessage(username, id, server.getQueue().size()));
+            sendMessage(new RegisterMessage(username, id));
             sendMessage(new QueueUpdateMessage(server.getQueue().size(), false));
 
             while (socket.isConnected()) {
@@ -61,24 +64,19 @@ public class PlayerInfo implements Runnable {
 
                 switch (received.getType()) {
                     case MessageType.JOIN_QUEUE -> {
-                        //Check if the player is already in a game
 
                         if(game != null) {
-                            //remove player from game
                             sendMessage(new ErrorMessage(ErrorType.ALREADY_IN_GAME));
                             return;
                         }
 
-                        // Check if player is already in queue
                         if(server.getQueue().contains(this)) {
                             broadcastQueueStateUpdate();
                             return;
                         }
 
-                        // Add player to queue
                         server.addToQueue(this);
 
-                        // Notify all players in queue
                         broadcastQueueStateUpdate();
 
                         checkQueueForPossibleGame();
@@ -164,8 +162,6 @@ public class PlayerInfo implements Runnable {
                             return;
                         }
 
-                        System.out.println("Received a player ready message from " + this.username + " with ready state: " + playerReadyMessage.ready);
-
                         game.onPlayerReadyStateChange(this, playerReadyMessage.ready);
                     }
                     case MessageType.PLAYER_HOVER -> {
@@ -205,6 +201,9 @@ public class PlayerInfo implements Runnable {
         }
     }
 
+    /**
+     * Broadcasts the current queue state to all players.
+     */
     private void broadcastQueueStateUpdate() {
         for (PlayerInfo player : server.getPlayers()) {
             boolean isInQueue = server.getQueue().contains(player);
@@ -212,6 +211,9 @@ public class PlayerInfo implements Runnable {
         }
     }
 
+    /**
+     * Checks the queue for possible game creation.
+     */
     private void checkQueueForPossibleGame() {
         // Check if there are enough players in queue to start a game
         if(server.getQueue().size() >= 2) {
@@ -227,7 +229,6 @@ public class PlayerInfo implements Runnable {
 
     /**
      * Create a new game with the given size for the current player.
-     * Übergibt die gesamte Thread-Erstellung und -Logik an den Server.
      * @param gameOptions gameOptions
      */
     private void createGame(GameOptions gameOptions) {
@@ -238,7 +239,6 @@ public class PlayerInfo implements Runnable {
 
     /**
      * Create a new game with the given size for the two given players.
-     * Übergibt die gesamte Thread-Erstellung und -Logik an den Server.
      * @param playerA playerA
      * @param playerB playerB
      */
@@ -253,6 +253,10 @@ public class PlayerInfo implements Runnable {
         server.registerGame(game);
     }
 
+    /**
+     * Sends a message to the player.
+     * @param message the message to send
+     */
     public void sendMessage(Message message) {
         try {
             if(!message.getClass().getSimpleName().equals("PlayerHoverMessage"))System.out.println("Sending: " + message.getClass().getSimpleName());

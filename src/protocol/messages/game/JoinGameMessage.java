@@ -10,6 +10,10 @@ public class JoinGameMessage extends Message {
 
     private final GameState gameState;
 
+    /**
+     * Creates a new JoinGameMessage instance.
+     * @param gameState The game state of the game to join.
+     */
     public JoinGameMessage(GameState gameState) {
         super(MessageType.JOIN_GAME);
 

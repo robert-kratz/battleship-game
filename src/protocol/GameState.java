@@ -13,6 +13,9 @@ public class GameState implements Serializable  {
 
     private static final long serialVersionUID = 1L;
 
+    /**
+     * Enum representing the different game statuses.
+     */
     public enum GameStatus {
         LOBBY_WAITING,
         BUILD_GAME_BOARD,
@@ -22,10 +25,7 @@ public class GameState implements Serializable  {
 
     private final UUID id;
 
-    private int sessionCode;
-
-    private Date created = new Date();
-    private Date lastUpdated = new Date();
+    private final int sessionCode;
 
     private Date buildGameBoardStarted = null;
     private Date buildGameBoardFinished = null;
@@ -44,10 +44,13 @@ public class GameState implements Serializable  {
 
     private final GameOptions gameOptions;
 
+    /**
+     * Copy constructor for creating a new GameState from an existing one.
+     * @param gameState The GameState to copy from
+     */
     public GameState(GameState gameState) {
         if(gameState.playerA != null) {
             this.playerA = new ClientPlayer(gameState.playerA);
-            // Stelle sicher, dass die uncoveredShips übertragen werden:
             this.playerA.setUncoveredShips(new ArrayList<>(gameState.playerA.getUncoveredShips()));
         }
         if(gameState.playerB != null) {
@@ -55,8 +58,6 @@ public class GameState implements Serializable  {
             this.playerB.setUncoveredShips(new ArrayList<>(gameState.playerB.getUncoveredShips()));
         }
         this.sessionCode = gameState.sessionCode;
-        this.created = gameState.created;
-        this.lastUpdated = gameState.lastUpdated;
         this.buildGameBoardStarted = gameState.buildGameBoardStarted;
         this.buildGameBoardFinished = gameState.buildGameBoardFinished;
         this.playersTurnStart = gameState.playersTurnStart;
@@ -69,6 +70,11 @@ public class GameState implements Serializable  {
         this.gameOptions = gameState.gameOptions;
     }
 
+    /**
+     * Constructor for creating a new GameState with the given parameters.
+     * @param gameOptions The game options to be used
+     * @param ships The list of ships to be used
+     */
     public GameState(GameOptions gameOptions, ArrayList<Ship> ships) {
         this.size = gameOptions.getBoardSize();
         this.sessionCode = generateSessionCode();
@@ -89,7 +95,6 @@ public class GameState implements Serializable  {
         this.playerB = playerB;
 
         // Randomly assign turn to one of the players
-
         if(Math.random() < 0.5) {
             playerA.setTurn(true);
             playerB.setTurn(false);
@@ -99,16 +104,11 @@ public class GameState implements Serializable  {
         }
     }
 
-    public boolean setPlayerReady(UUID player, boolean ready) {
-        if(playerA.isPlayer(player)) {
-            playerA.setReady(ready);
-        } else if(playerB.isPlayer(player)) {
-            playerB.setReady(ready);
-        }
-
-        return playerA.isReady() && playerB.isReady();
-    }
-
+    /**
+     * Checks if the given player is the current player's turn.
+     * @param player The UUID of the player to check
+     * @return true if it's the player's turn, false otherwise
+     */
     public boolean isPlayersTurn(UUID player) {
         if (playerA.isPlayer(player)) {
             return playerA.isTurn();
@@ -117,6 +117,11 @@ public class GameState implements Serializable  {
         }
     }
 
+    /**
+     * Checks if the given player is the current player's turn.
+     * @param player The UUID of the player to check
+     * @return true if it's the player's turn, false otherwise
+     */
     public ArrayList<Ship> getUncoveredShips(UUID player) {
         if(playerA.isPlayer(player)) {
             return playerA.getUncoveredShips();
@@ -127,16 +132,13 @@ public class GameState implements Serializable  {
     }
 
     /**
-     * Aktualisiert die Hit-Informationen in den Moves.
-     * Für jeden Move in moveA wird überprüft, ob die betroffenen Zellen (auf dem gegnerischen Spielfeld, also shipsB)
-     * von einem Schiff belegt sind. Analog für moveB (hier werden shipsA geprüft).
-     *
-     * @param shipsA Die Liste der Schiffe von Spieler A
-     * @param shipsB Die Liste der Schiffe von Spieler B
+     * Updates the hit list for both players based on their moves and the ships of the opponent.
+     * @param shipsA the ships of player A
+     * @param shipsB the ships of player B
      */
     public void updateHitList(ArrayList<Ship> shipsA, ArrayList<Ship> shipsB) {
         int boardSize = getBoardSize();
-        // Für die Züge von Spieler A: Überprüfe gegen die Schiffe von Spieler B
+        // For each move of player A, check against the ships of player B
         for (Move move : playerA.getMoves()) {
             move.computeAffectedCells(boardSize);
             for (Cell cell : move.getAffectedCells()) {
@@ -154,7 +156,8 @@ public class GameState implements Serializable  {
                 cell.setHit(hit);
             }
         }
-        // Für die Züge von Spieler B: Überprüfe gegen die Schiffe von Spieler A
+
+        // For each move of player B, check against the ships of player A
         for (Move move : playerB.getMoves()) {
             move.computeAffectedCells(boardSize);
             for (Cell cell : move.getAffectedCells()) {
@@ -174,6 +177,11 @@ public class GameState implements Serializable  {
         }
     }
 
+    /**
+     * Loads the radar information for both players based on their moves and the ships of the opponent.
+     * @param shipsA the ships of player A
+     * @param shipsB the ships of player B
+     */
     public void loadRadars(ArrayList<Ship> shipsA, ArrayList<Ship> shipsB) {
         for (Move move : playerA.getMoves()) {
             if(move.getRadarItem() != null) {
@@ -189,10 +197,10 @@ public class GameState implements Serializable  {
     }
 
     /**
-     * Überprüft, ob ein Schiff versenkt wurde.
+     * Checks if the given player has sunk all ships of the opponent.
      * @param player The player who made the move
      * @param targetShips The opponent's ships
-     * @return An ArrayList of sunken ships
+     * @return true, if all ships are sunk
      */
     public ArrayList<Ship> getSunkenShips(ClientPlayer player, ArrayList<Ship> targetShips) {
 
@@ -220,7 +228,6 @@ public class GameState implements Serializable  {
             }
 
             if (hitCells.size() == ship.getOccupiedCells().size()) {
-                System.out.println("Ship sunken: " + ship.getId());
                 sunkenShips.add(ship);
             }
         }
@@ -229,7 +236,7 @@ public class GameState implements Serializable  {
     }
 
     /**
-     * Überprüft, ob alle Schiffe eines Spielers versenkt wurden.
+     * Checks if the given player has sunk all ships of the opponent.
      * @param player The player who made the move
      * @param targetShips The opponent's ships
      * @return true, if all ships are sunk
@@ -241,12 +248,11 @@ public class GameState implements Serializable  {
     }
 
     /**
-     * Überprüft, ob keine Züge mehr möglich sind.
+     * Checks if the given player has no more moves possible.
      * @param player The player who made the move
-     * @param targetShips The opponent's ships
      * @return true, if no more moves are possible
      */
-    public boolean noMoreMovesPossible(ClientPlayer player, ArrayList<Ship> targetShips) {
+    public boolean noMoreMovesPossible(ClientPlayer player) {
         ArrayList<Point> totalHitCells = new ArrayList<>();
 
         for(Move move : player.getMoves()) {
@@ -261,6 +267,134 @@ public class GameState implements Serializable  {
         int boardSizeAmount = this.getBoardSize() * this.getBoardSize();
 
         return totalHitCells.size() >= boardSizeAmount;
+    }
+
+    /**
+     * Checks if the given player is a player in the game.
+     * @param player The UUID of the player to check
+     * @return true if the player is in the game, false otherwise
+     */
+    public ClientPlayer getPlayer(UUID player) {
+        if(playerA.isPlayer(player)) {
+            return playerA;
+        } else if(playerB.isPlayer(player)) {
+            return playerB;
+        }
+        return null;
+    }
+
+    /**
+     * Checks if the given player is the opponent of the given player.
+     * @param player The UUID of the player to check
+     * @return the opponent player
+     */
+    public ClientPlayer getOpponent(UUID player) {
+        if(playerA.isPlayer(player)) {
+            return playerB;
+        } else if(playerB.isPlayer(player)) {
+            return playerA;
+        }
+        return null;
+    }
+
+    /**
+     * Checks if the given player is the current player's turn.
+     * @return the current turn player
+     */
+    public ClientPlayer getCurrentTurnPlayer() {
+        if(playerA == null || playerB == null) return null;
+
+        if(playerA.isTurn()) {
+            return playerA;
+        } else if(playerB.isTurn()) {
+            return playerB;
+        }
+        return null;
+    }
+
+    /**
+     * Sets the winner of the game.
+     * @param winner The UUID of the player who won
+     */
+    public void setWinner(UUID winner) {
+        if(playerA == null || playerB == null) return;
+
+        if(playerA.isPlayer(winner)) {
+            playerA.setWinner(true);
+        } else if(playerB.isPlayer(winner)) {
+            playerB.setWinner(true);
+        }
+    }
+
+    /**
+     * Returns the winner of the game.
+     * @return the winner player
+     */
+    public ArrayList<ClientPlayer> getWinner() {
+        if(this.status != GameStatus.GAME_OVER) return null;
+
+        ArrayList<ClientPlayer> winners = new ArrayList<>();
+
+        if(playerA != null && playerA.isWinner()) {
+            winners.add(playerA);
+        }
+
+        if(playerB != null && playerB.isWinner()) {
+            winners.add(playerB);
+        }
+
+        return winners;
+    }
+
+    /**
+     * Returns the loser of the game.
+     * @return the loser player
+     */
+    public ArrayList<ClientPlayer> getLoser() {
+        if(this.status != GameStatus.GAME_OVER) return null;
+
+        ArrayList<ClientPlayer> losers = new ArrayList<>();
+
+        if(playerA != null && !playerA.isWinner()) {
+            losers.add(playerA);
+        }
+
+        if(playerB != null && !playerB.isWinner()) {
+            losers.add(playerB);
+        }
+
+        return losers;
+    }
+
+    /**
+     * Sets the next player's turn.
+     */
+    public void setNextTurn() {
+        if (playerA.isTurn()) {
+            playerA.setTurn(false);
+            playerB.setTurn(true);
+        } else if (playerB.isTurn()) {
+            playerB.setTurn(false);
+            playerA.setTurn(true);
+        } else {
+            // If no one is marked as active, we set a default
+            playerA.setTurn(true);
+            playerB.setTurn(false);
+        }
+        nextGameRound();
+    }
+
+    /**
+     * Adds a move to the given player.
+     * @param player the UUID of the player to add the move to
+     * @param move the move to be added
+     */
+    public void addMove(UUID player, Move move) {
+        if(playerA.isPlayer(player)) {
+            playerA.getMoves().add(move);
+        } else if(playerB.isPlayer(player)) {
+            playerB.getMoves().add(move);
+        }
     }
 
     public int getPlayerCount() {
@@ -295,15 +429,6 @@ public class GameState implements Serializable  {
         return sessionCode;
     }
 
-    public GameState setSessionCode(int sessionCode) {
-        this.sessionCode = sessionCode;
-        return this;
-    }
-
-    public int getCurrentGameRound() {
-        return currentGameRound;
-    }
-
     private void nextGameRound() {
         currentGameRound++;
     }
@@ -314,14 +439,6 @@ public class GameState implements Serializable  {
 
     public Date getBuildGameBoardStarted() {
         return buildGameBoardStarted;
-    }
-
-    public Date getCreated() {
-        return created;
-    }
-
-    public Date getLastUpdated() {
-        return lastUpdated;
     }
 
     public Date getPlayersTurnEnd() {
@@ -336,111 +453,12 @@ public class GameState implements Serializable  {
         return size;
     }
 
-    public ClientPlayer getPlayer(UUID player) {
-        if(playerA.isPlayer(player)) {
-            return playerA;
-        } else if(playerB.isPlayer(player)) {
-            return playerB;
-        }
-        return null;
-    }
-
-    public ClientPlayer getOpponent(UUID player) {
-        if(playerA.isPlayer(player)) {
-            return playerB;
-        } else if(playerB.isPlayer(player)) {
-            return playerA;
-        }
-        return null;
-    }
-
-    public ClientPlayer getCurrentTurnPlayer() {
-        if(playerA == null || playerB == null) return null;
-
-        if(playerA.isTurn()) {
-            return playerA;
-        } else if(playerB.isTurn()) {
-            return playerB;
-        }
-        return null;
-    }
-
     public void setBuildGameBoardFinished(Date buildGameBoardFinished) {
         this.buildGameBoardFinished = buildGameBoardFinished;
     }
 
     public void setBuildGameBoardStarted(Date buildGameBoardStarted) {
         this.buildGameBoardStarted = buildGameBoardStarted;
-    }
-
-    public void setLastUpdated(Date lastUpdated) {
-        this.lastUpdated = lastUpdated;
-    }
-
-    public void setWinner(UUID winner) {
-        if(playerA == null || playerB == null) return;
-
-        if(playerA.isPlayer(winner)) {
-            playerA.setWinner(true);
-        } else if(playerB.isPlayer(winner)) {
-            playerB.setWinner(true);
-        }
-    }
-
-    public ArrayList<ClientPlayer> getWinner() {
-        if(this.status != GameStatus.GAME_OVER) return null;
-
-        ArrayList<ClientPlayer> winners = new ArrayList<>();
-
-        if(playerA != null && playerA.isWinner()) {
-            winners.add(playerA);
-        }
-
-        if(playerB != null && playerB.isWinner()) {
-            winners.add(playerB);
-        }
-
-        return winners;
-    }
-
-    public ArrayList<ClientPlayer> getLoser() {
-        if(this.status != GameStatus.GAME_OVER) return null;
-
-        ArrayList<ClientPlayer> losers = new ArrayList<>();
-
-        if(playerA != null && !playerA.isWinner()) {
-            losers.add(playerA);
-        }
-
-        if(playerB != null && !playerB.isWinner()) {
-            losers.add(playerB);
-        }
-
-        return losers;
-    }
-
-    public void setNextTurn() {
-        if (playerA.isTurn()) {
-            playerA.setTurn(false);
-            playerB.setTurn(true);
-        } else if (playerB.isTurn()) {
-            playerB.setTurn(false);
-            playerA.setTurn(true);
-        } else {
-            // Falls keiner als aktiv markiert ist, legen wir einen Standard fest
-            playerA.setTurn(true);
-            playerB.setTurn(false);
-        }
-        nextGameRound();
-    }
-
-    public void addMove(UUID player, Move move) {
-        System.out.println("Adding move: " + move);
-        if(playerA.isPlayer(player)) {
-            playerA.getMoves().add(move);
-        } else if(playerB.isPlayer(player)) {
-            playerB.getMoves().add(move);
-        }
     }
 
     public void setPlayersTurnStart(Date playersTurnStart) {

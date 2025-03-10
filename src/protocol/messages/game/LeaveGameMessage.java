@@ -7,6 +7,9 @@ public class LeaveGameMessage extends Message {
 
     private static final long serialVersionUID = 1L;
 
+    /**
+     * Creates a new LeaveGameMessage instance.
+     */
     public LeaveGameMessage() {
         super(MessageType.LEAVE_GAME);
     }

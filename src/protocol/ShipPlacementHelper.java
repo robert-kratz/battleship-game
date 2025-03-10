@@ -5,17 +5,20 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-/**
- * Validiert die Platzierung von Schiffen auf einem Spielbrett.
- */
 public class ShipPlacementHelper {
 
     /**
-     * Prüft, ob beim Platzieren des übergebenen Schiffs an (startRow, startCol) eine Kollision entsteht.
+     * Check if the ship collides with other ships or goes out of bounds.
+     * @param ship the ship to check
+     * @param boardSize the size of the board
+     * @param startRow the starting row
+     * @param startCol the starting column
+     * @param placedShips the list of already placed ships
+     * @return true if there is a collision or out of bounds, false otherwise
      */
     public static boolean isCollision(Ship ship, int boardSize, int startRow, int startCol, List<Ship> placedShips) {
         if (ship == null) return false;
-        // Beachte: Der erste Parameter ist die X-Koordinate (Spalte) und der zweite die Y-Koordinate (Zeile)
+        // x: col, y: row
         List<Point> candidateCells = ship.getOccupiedCellsAt(startCol, startRow);
         for (Point p : candidateCells) {
             if (p.x < 0 || p.x >= boardSize || p.y < 0 || p.y >= boardSize) {
@@ -32,14 +35,13 @@ public class ShipPlacementHelper {
     }
 
     /**
-     * Überprüft, ob alle Schiffe in der Liste platziert sind und ob sie die gleiche Größe, ID und Breite haben.
-     * @param availableShips Liste der verfügbaren Schiffe
-     * @param placedShips Liste der platzierten Schiffe, es müssen alle Schiffe platziert sein!
-     * @param boardSize Größe des Spielbretts
-     * @return true, wenn alle Schiffe platziert sind und die gleiche Größe, ID und Breite haben
+     * Checks if all ships are placed and have the same size, ID, and width.
+     * @param availableShips the list of available ships
+     * @param placedShips the list of placed ships
+     * @param boardSize the size of the board
+     * @return true if all ships are placed and have the same size, ID, and width
      */
     public static boolean shipsAreAllPlacedAndTheSame(ArrayList<Ship> availableShips, ArrayList<Ship> placedShips, int boardSize) {
-
         if (availableShips.size() != placedShips.size()) {
             return false;
         }
@@ -48,50 +50,42 @@ public class ShipPlacementHelper {
     }
 
     /**
-     * Überprüft, ob alle Schiffe in der Liste die gleiche Größe, ID und Breite haben.
-     * @param availableShips Liste der verfügbaren Schiffe
-     * @param placedShips Liste der platzierten Schiffe, es müssen nicht alle Schiffe platziert sein!
-     * @param boardSize Größe des Spielbretts
-     * @return true, wenn alle Schiffe die gleiche Größe, ID und Breite haben
+     * Checks if the ships are the same by comparing their IDs, widths, and lengths.
+     * @param availableShips the list of available ships
+     * @param placedShips the list of placed ships
+     * @param boardSize the size of the board
+     * @return true if the ships are the same, false otherwise
      */
     public static boolean shipsAreShipsTheSame(ArrayList<Ship> availableShips, ArrayList<Ship> placedShips, int boardSize) {
 
         boolean areShipsTheSame = true;
 
-        System.out.println("-------------------------------");
-        System.out.println("Available ships: " + availableShips.size());
-        System.out.println("Placed ships: " + placedShips.size());
-        System.out.println("Board size: " + boardSize);
-        System.out.println("-------------------------------");
-
         if (placedShips.size() > availableShips.size()) {
-            System.out.println("placedShips.size() > availableShips.size()");
+            System.out.println("Invalid number of ships");
             return false;
         }
 
         for (Ship ship : placedShips) {
             boolean found = false;
             for (Ship availableShip : availableShips) {
-                // Vergleiche ID, Breite und Länge
+                // Check if the ship IDs, widths, and lengths match
                 if (ship.getId() == availableShip.getId() &&
                         ship.getWidth() == availableShip.getWidth() &&
                         ship.getLength() == availableShip.getLength()) {
                     found = true;
                 }
 
-                // Erstelle eine Kopie der platzierten Schiffe und entferne das aktuelle Schiff
+                // Create a copy of the placed ships and remove the current ship
                 ArrayList<Ship> remainingShips = new ArrayList<>(placedShips);
                 remainingShips.removeIf(ship1 -> ship1.getId() == ship.getId());
 
-                // Achtung: Hier müssen die eigenen Koordinaten des Schiffes verwendet werden!
+                // Update the ship's position
                 if (isCollision(ship, boardSize, ship.getY(), ship.getX(), remainingShips)) {
-                    System.out.println("#Collision detected");
-                    // Je nach Logik könntest du hier auch false zurückgeben
+                    System.out.println("Collision detected");
                 }
             }
             if (!found) {
                 areShipsTheSame = false;
-                System.out.println("areShipsTheSame = false für Schiff ID " + ship.getId());
                 break;
             }
         }
@@ -100,21 +94,19 @@ public class ShipPlacementHelper {
     }
 
     /**
-     * Erzeugt ein zufällig generiertes Spielbrett, indem die übergebenen Schiffe deep copied und so platziert werden, dass
-     * keine Überlappungen oder Out-of-Bounds auftreten.
-     *
-     * @param boardSize      Die Größe des Spielbretts (Anzahl der Zellen pro Seite)
-     * @param availableShips Liste der zu platzierenden Schiffe (Prototypen)
-     * @param alreadyPlacedShips Liste bereits platzierter Schiffe
-     * @return Liste der zufällig platzierten Schiffe
+     * Creates a randomized game board with ships placed randomly.
+     * @param boardSize the size of the board
+     * @param availableShips the list of available ships
+     * @param alreadyPlacedShips the list of already placed ships
+     * @return the list of placed ships
      */
     public static ArrayList<Ship> createRandomizedGameBoard(int boardSize, ArrayList<Ship> availableShips, ArrayList<Ship> alreadyPlacedShips) {
         ArrayList<Ship> placedShips = new ArrayList<>();
         Random random = new Random();
 
-        // Für jedes Schiff in der Prototyp-Liste
+        // For each ship in the available ships
         for (Ship originalShip : availableShips) {
-            // Erzeuge eine deep copy des Schiffes
+            // Create a copy of the ship
             Ship ship = new Ship(originalShip);
             if (alreadyPlacedShips.stream().anyMatch(s -> {
                 boolean found = s.getId() == originalShip.getId();
@@ -126,20 +118,20 @@ public class ShipPlacementHelper {
 
             boolean placed = false;
             int attempts = 0;
-            // Versuche, das Schiff in maximal 1000 Durchläufen zu platzieren
+            // Try to place the ship randomly within the board size and 1000 attempts
             while (!placed && attempts < 1000) {
-                // Wähle zufällig eine Orientierung
+                // Select a random orientation
                 Ship.Orientation[] orientations = Ship.Orientation.values();
                 int orientIndex = random.nextInt(orientations.length);
                 ship.setOrientation(orientations[orientIndex]);
 
-                // Wähle zufällige Startkoordinaten innerhalb des Spielfeldes
+                // Select a random position
                 int x = random.nextInt(boardSize);
                 int y = random.nextInt(boardSize);
                 ship.setX(x);
                 ship.setY(y);
 
-                // Überprüfe, ob das Schiff an dieser Position gültig platziert werden kann
+                // Check if the ship collides with other ships or goes out of bounds
                 if (!isCollision(ship, boardSize, y, x, placedShips)) {
                     placedShips.add(ship);
                     placed = true;

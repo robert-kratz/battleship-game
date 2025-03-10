@@ -14,6 +14,9 @@ public class MediaPlayer {
         preloadSounds();
     }
 
+    /**
+     * Preloads all sound files into memory.
+     */
     private void preloadSounds() {
         for (SoundType sound : SoundType.values()) {
             try {
@@ -23,11 +26,15 @@ public class MediaPlayer {
                 clip.open(audioStream);
                 soundCache.put(sound, clip);
             } catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
-                System.out.println("Error loading sound: " + sound);
+                System.err.println("Error loading sound: " + sound);
             }
         }
     }
 
+    /**
+     * Plays the specified sound.
+     * @param sound The sound type to play.
+     */
     public void playSound(SoundType sound) {
         Clip clip = soundCache.get(sound);
         if (clip != null) {
@@ -37,10 +44,15 @@ public class MediaPlayer {
             clip.setFramePosition(0);
             clip.start();
         } else {
-            System.out.println("Invalid sound: " + sound);
+            System.err.println("Invalid sound: " + sound);
         }
     }
 
+    /**
+     * Sets the volume for the specified sound.
+     * @param sound The sound type to set the volume for.
+     * @param volume The volume level (0.0 to 1.0).
+     */
     public void setVolume(SoundType sound, float volume) {
         if (volume < 0f || volume > 1f) {
             throw new IllegalArgumentException("Volume not valid: " + volume);
@@ -55,6 +67,10 @@ public class MediaPlayer {
         }
     }
 
+    /**
+     * Stops the specified sound.
+     * @param sound The sound type to stop.
+     */
     public void stop(SoundType sound) {
         Clip clip = soundCache.get(sound);
         if (clip != null && clip.isRunning()) {

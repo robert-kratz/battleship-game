@@ -25,36 +25,22 @@ public class Server {
     private final List<PlayerInfo> players = new ArrayList<>();
     private final List<Thread> clientThreads = new ArrayList<>();
 
-    // HashMap, die sowohl das Spiel als auch den zugehörigen Thread speichert
     private final Map<UUID, GameContainer> games = new HashMap<>();
 
     private final ArrayList<PlayerInfo> queue = new ArrayList<>();
     private final ServerGUI gui;
 
-    // Innerer Container, der das BattleShipGame und den zugehörigen Thread zusammenhält
-    private static class GameContainer {
-        private final BattleShipGame game;
-        private final Thread thread;
-
-        public GameContainer(BattleShipGame game, Thread thread) {
-            this.game = game;
-            this.thread = thread;
-        }
-
-        public BattleShipGame getGame() {
-            return game;
-        }
-
-        public Thread getThread() {
-            return thread;
-        }
-    }
-
+    /**
+     * Creates a new server instance and initializes the GUI.
+     */
     public Server() {
         this.gui = new ServerGUI(this);
         instance = this;
     }
 
+    /**
+     * Starts the server and listens for incoming connections.
+     */
     public void startServer() {
         if (running) return;
 
@@ -63,11 +49,11 @@ public class Server {
                 serverSocket = new ServerSocket(PORT);
                 running = true;
                 this.gui.updateServerOnlineStatus(true);
-                System.out.println("Server gestartet auf Port " + PORT);
+                System.out.println("Starting server on port " + PORT);
 
                 while (running) {
                     Socket clientSocket = serverSocket.accept();
-                    System.out.println("Neuer Client verbunden: " + clientSocket);
+                    System.out.println("New connection from " + clientSocket.getInetAddress().getHostAddress() + ":" + clientSocket.getPort() + " (" + clientSocket.getInetAddress().getHostName() + ");");
 
                     PlayerInfo player = new PlayerInfo(clientSocket, this);
                     players.add(player);
@@ -85,19 +71,6 @@ public class Server {
     }
 
     /**
-     * Returns the players that are currently in the lobby (not in a game).
-     */
-    public ArrayList<PlayerInfo> getPlayersInLobby() {
-        ArrayList<PlayerInfo> playersInLobby = new ArrayList<>();
-        for (PlayerInfo player : players) {
-            if (!player.isInGame()) {
-                playersInLobby.add(player);
-            }
-        }
-        return playersInLobby;
-    }
-
-    /**
      * Stops the server, closes all connections and unregisters all games.
      */
     public void stopServer() {
@@ -112,7 +85,7 @@ public class Server {
             }
             if (serverSocket != null) {
                 serverSocket.close();
-                System.out.println("Server gestoppt.");
+                System.out.println("Stopping server on port " + PORT);
             }
             for (Thread t : clientThreads) {
                 t.interrupt();
@@ -171,6 +144,11 @@ public class Server {
         return null;
     }
 
+    /**
+     * Returns the game with the given id.
+     * @param joinCode the join code of the game to retrieve
+     * @return the game with the given id or null if none
+     */
     public BattleShipGame getGameFromJoinCode(int joinCode) {
         for (GameContainer container : games.values()) {
             BattleShipGame game = container.getGame();
@@ -181,11 +159,19 @@ public class Server {
         return null;
     }
 
+    /**
+     * Adds a player to the queue and sends an update message to the player.
+     * @param player the player to add to the queue
+     */
     public void addToQueue(PlayerInfo player) {
         queue.add(player);
         player.sendMessage(new QueueUpdateMessage(queue.size(), true));
     }
 
+    /**
+     * Removes a player from the queue and sends an update message to the player.
+     * @param id the id of the player to remove from the queue
+     */
     public void removeFromQueue(UUID id) {
         queue.removeIf(player -> {
             if (player.getId().equals(id)) {
@@ -196,6 +182,9 @@ public class Server {
         });
     }
 
+    /**
+     * Updates the player list in the GUI.
+     */
     private void updatePlayerList() {
         StringBuilder sb = new StringBuilder();
         for (PlayerInfo p : players) {
@@ -206,10 +195,7 @@ public class Server {
     }
 
     /**
-     * Aktualisiert in der GUI die Liste der aktiven Spiele.
-     * Für jedes Spiel werden die Game-ID (aus dem GameState), die Spielernamen,
-     * die Anzahl der Züge (Move-Arrays) und der aktuelle Status ausgegeben.
-     * Beendete Spiele (GAME_OVER) werden nicht angezeigt.
+     * Updates the game list in the GUI.
      */
     public void updateGameList() {
         StringBuilder sb = new StringBuilder();

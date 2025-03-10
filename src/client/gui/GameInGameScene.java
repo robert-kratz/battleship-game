@@ -29,23 +29,35 @@ public class GameInGameScene extends JPanel implements Runnable {
     private JPanel leftPanel;
     private JPanel rightPanel;
     private JLabel timerLabel;
+
     public InGameBattleshipBoard playerBoard, opponentBoard;
-    private boolean playersTurn;
+
+    private boolean playersTurn; // true = Players turn, false = Opponents turn
+
     private Date currentTurnStart;
     private Date currentTurnEnd;
     private JLabel playerTurnLabel;
     private JLabel opponentTurnLabel;
-    // Felder für Energieanzeige und Item-Buttons
+
     private JLabel energyLabel;
     private JButton bombButton;
     private JButton radarButton;
     private JButton airStrikeButton;
     private JButton giveUpButton;
 
+    /**
+     * Returns the size of the window.
+     * @return The size of the window as a Dimension object.
+     */
     public Dimension getWindowSize() {
         return new Dimension(900, 500);
     }
 
+    /**
+     * Creates a new GameInGameScene with the specified game handler and placed ships.
+     * @param gameHandler The game handler to be used for managing the game state.
+     * @param placedShips The list of ships that are placed on the board.
+     */
     public GameInGameScene(GameHandler gameHandler, ArrayList<Ship> placedShips) {
         this.gameHandler = gameHandler;
 
@@ -55,16 +67,11 @@ public class GameInGameScene extends JPanel implements Runnable {
         this.currentTurnStart = this.gameHandler.getGameState().getPlayersTurnStart();
         this.currentTurnEnd = this.gameHandler.getGameState().getPlayersTurnEnd();
 
-        // Board-Painter für InGame-Phase
+        // Board-Painter for InGame Phase
         Image inGameBackgroundImage = new ImageIcon("resource/background-2.png").getImage();
         BoardPainter inGamePainter = new InGameBoardPainter(inGameBackgroundImage);
 
-        System.out.println("GameInGameScene created");
-        for (Ship ship : placedShips) {
-            System.out.println("Ship: " + ship);
-        }
-
-        // Erzeuge beide Boards mit erweitertem onHover-Event und Callback, wenn sich das selektierte Item ändert.
+        // Create the player board
         playerBoard = new InGameBattleshipBoard(
                 gameHandler.getGameState().getBoardSize(),
                 placedShips,
@@ -72,12 +79,12 @@ public class GameInGameScene extends JPanel implements Runnable {
                 new InGameBattleshipBoard.InGameBoardListener() {
                     @Override
                     public void onCellClick(int row, int col) {
-                        System.out.println("playerBoard clicked at: " + row + ", " + col);
+                        // No action needed here
                     }
 
                     @Override
                     public void onHover(int row, int col, ArrayList<protocol.game.Cell> affectedCells) {
-                        System.out.println("playerBoard hovered at: " + row + ", " + col + ". Affected cells: " + affectedCells);
+                        // No action needed here
                     }
 
                     @Override
@@ -87,6 +94,7 @@ public class GameInGameScene extends JPanel implements Runnable {
                 }
         );
 
+        // Create the opponent board
         opponentBoard = new InGameBattleshipBoard(
                 gameHandler.getGameState().getBoardSize(),
                 this.gameHandler.getGameState().getUncoveredShips(this.gameHandler.getClientHandler().getUserId()),
@@ -94,29 +102,38 @@ public class GameInGameScene extends JPanel implements Runnable {
                 new InGameBattleshipBoard.InGameBoardListener() {
                     @Override
                     public void onCellClick(int row, int col) {
-                        //System.out.println("opponentBoard clicked at: " + row + ", " + col);
+                        ClientPlayer player = gameHandler.getGameState().getPlayer(gameHandler.getClientHandler().getUserId());
 
+                        Move move = getMove(row, col);
+                        MoveManager moveManager = new MoveManager(gameHandler.getGameState());
+
+                        move.computeAffectedCells(gameHandler.getGameState().getBoardSize());
+
+                        if(moveManager.isPlayerMoveMoveValid(player.getId(), move)) {
+                            opponentBoard.setSelectedItem(null);
+                            gameHandler.sendGameMoveEvent(move);
+                        } else {
+                            System.err.println("Invalid move: " + move);
+                            //JOptionPane.showMessageDialog(null, "Invalid move!", "Error", JOptionPane.ERROR_MESSAGE);
+                            return;
+                        }
+                    }
+
+                    private Move getMove(int row, int col) {
                         Move move;
 
                         if(opponentBoard.getSelectedItem() != null) {
                             move = switch (opponentBoard.getSelectedItem().getClass().getSimpleName()) {
                                 case "SeaBombItem" -> {
                                     SeaBombItem seaBombItem = (SeaBombItem) opponentBoard.getSelectedItem();
-
                                     yield new Move(seaBombItem, col, row);
                                 }
                                 case "RadarItem" -> {
                                     RadarItem radarItem = (RadarItem) opponentBoard.getSelectedItem();
-
                                     yield new Move(radarItem, col, row);
                                 }
                                 case "AirStrikeItem" -> {
                                     AirStrikeItem airStrikeItem = (AirStrikeItem) opponentBoard.getSelectedItem();
-
-                                    System.out.println("AirStrikeItem selected");
-                                    System.out.println("X: " + col);
-                                    System.out.println("Y: " + row);
-
                                     yield new Move(airStrikeItem, airStrikeItem.getOrientation() == AirStrikeItem.Orientation.HORIZONTAL ? row : col);
                                 }
                                 default -> new Move(col, row);
@@ -124,24 +141,7 @@ public class GameInGameScene extends JPanel implements Runnable {
                         } else {
                             move = new Move(col, row);
                         }
-
-                        MoveManager moveManager = new MoveManager(gameHandler.getGameState());
-
-                        ClientPlayer player = gameHandler.getGameState().getPlayer(gameHandler.getClientHandler().getUserId());
-
-                        move.computeAffectedCells(gameHandler.getGameState().getBoardSize());
-
-                        if(moveManager.isPlayerMoveMoveValid(player.getId(), move)) {
-                            System.out.println("Sending move: " + move);
-
-                            opponentBoard.setSelectedItem(null);
-
-                            gameHandler.sendGameMoveEvent(move);
-                        } else {
-                            System.out.println("Invalid move: " + move);
-                            //JOptionPane.showMessageDialog(null, "Invalid move!", "Error", JOptionPane.ERROR_MESSAGE);
-                            return;
-                        }
+                        return move;
                     }
 
                     @Override
@@ -172,7 +172,7 @@ public class GameInGameScene extends JPanel implements Runnable {
         leftPanel.add(new JSeparator(SwingConstants.HORIZONTAL));
         leftPanel.add(Box.createVerticalStrut(10));
 
-        // Energieanzeige
+        // Energy
         int energy = this.gameHandler.getGameState().getPlayer(this.gameHandler.getClientHandler().getUserId()).getEnergy();
         energyLabel = new JLabel("Energy: " + energy);
         energyLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -243,14 +243,14 @@ public class GameInGameScene extends JPanel implements Runnable {
         leftPanel.add(airStrikeButton);
         leftPanel.add(Box.createVerticalStrut(10));
 
-        // Aktivierung der Buttons abhängig von der aktuellen Energie
+        // Activate/Deactivate Item Buttons for given energy
         updateItemButtons(energy);
 
         leftPanel.add(Box.createVerticalStrut(10));
         leftPanel.add(new JSeparator(SwingConstants.HORIZONTAL));
         leftPanel.add(Box.createVerticalStrut(10));
 
-        // Timer-Anzeige
+        // Timer
         timerLabel = new JLabel("00:00");
         timerLabel.setForeground(Color.WHITE);
         timerLabel.setFont(new Font("Arial", Font.BOLD, 18));
@@ -258,7 +258,7 @@ public class GameInGameScene extends JPanel implements Runnable {
         timerLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         leftPanel.add(timerLabel);
 
-        // Rechtes Panel (Spieler- und Gegnerinfos)
+        // Right Panel
         rightPanel = new JPanel();
         rightPanel.setPreferredSize(new Dimension(200, 804));
         rightPanel.setBackground(Color.DARK_GRAY);
@@ -327,7 +327,7 @@ public class GameInGameScene extends JPanel implements Runnable {
         add(playersTurn ? opponentBoard : playerBoard, BorderLayout.CENTER);
         add(rightPanel, BorderLayout.EAST);
 
-        // Nur das aktive Board interaktiv schalten:
+        // Show the right board depending on the player's turn
         if (playersTurn) {
             opponentBoard.setInteractive(true);
             playerBoard.setInteractive(false);
@@ -337,11 +337,18 @@ public class GameInGameScene extends JPanel implements Runnable {
         }
     }
 
+    /**
+     * Clears the selected items on both boards.
+     */
     public void removeSelectedItems() {
         playerBoard.clearSelectedItem();
         opponentBoard.clearSelectedItem();
     }
 
+    /**
+     * Updates the item buttons based on the player's energy.
+     * @param energy The current energy of the player.
+     */
     private void updateItemButtons(int energy) {
         boolean canSelect = playersTurn;
         bombButton.setEnabled(canSelect && energy >= new SeaBombItem().getEnergyCost());
@@ -349,8 +356,12 @@ public class GameInGameScene extends JPanel implements Runnable {
         airStrikeButton.setEnabled(canSelect && energy >= new AirStrikeItem().getEnergyCost());
     }
 
+    /**
+     * Updates the highlighting of the item buttons based on the selected item.
+     * @param selected The selected item.
+     */
     private void updateItemButtonHighlighting(Item selected) {
-        // Setze alle Buttons zunächst auf Weiß
+
         bombButton.setForeground(Color.BLACK);
         radarButton.setForeground(Color.BLACK);
         airStrikeButton.setForeground(Color.BLACK);
@@ -373,10 +384,18 @@ public class GameInGameScene extends JPanel implements Runnable {
         }
     }
 
+    /**
+     * Sets the game handler for this scene.
+     * @param newEndTime The new end time for the current turn.
+     */
     public void extendCurrentTurn(Date newEndTime) {
         this.currentTurnEnd = newEndTime;
     }
 
+    /**
+     * Toggles the turn between the player and the opponent.
+     * @param isPlayersTurn true if it's the player's turn, false if it's the opponent's turn.
+     */
     public void toggleTurn(boolean isPlayersTurn) {
         this.playersTurn = isPlayersTurn;
         playerTurnLabel.setText(isPlayersTurn ? "Your Turn" : "Waiting for Opponent");
@@ -384,7 +403,7 @@ public class GameInGameScene extends JPanel implements Runnable {
         playerTurnLabel.setForeground(isPlayersTurn ? Color.GREEN : Color.LIGHT_GRAY);
         opponentTurnLabel.setForeground(!isPlayersTurn ? Color.GREEN : Color.LIGHT_GRAY);
 
-        // Bei Turn-Wechsel die selektierten Items und Hover-Daten zurücksetzen
+        // Reset the selected items and affected cells
         playerBoard.clearSelectedItem();
         opponentBoard.clearSelectedItem();
         playerBoard.clearOpponentAffectedCells();
@@ -398,7 +417,7 @@ public class GameInGameScene extends JPanel implements Runnable {
         revalidate();
         repaint();
 
-        // Interaktivität des Boards anpassen
+        // Toggle the interactivity of the boards
         if (playersTurn) {
             opponentBoard.setInteractive(true);
             playerBoard.setInteractive(false);
@@ -409,36 +428,41 @@ public class GameInGameScene extends JPanel implements Runnable {
     }
 
     /**
-     * Setzt die Gegner-Hover-Daten im eigenen Board (playerBoard).
-     * Falls der übergebene Parameter null ist, wird stattdessen eine leere Liste gesetzt.
+     * Sets the hover effect for the opponent's board.
+     * @param row the target row
+     * @param col the target column
+     * @param affectedCells the list of affected cells
      */
     public void setOpponentHover(int row, int col, ArrayList<Cell> affectedCells) {
         if (affectedCells == null) {
-            System.out.println("Affected cells are null. Setting to empty list.");
             affectedCells = new ArrayList<>();
         }
-        // Wenn der Spieler sein eigenes Board sieht (playersTurn == false),
-        // wird im playerBoard das Gegner-Hover-Overlay gesetzt.
         if (!playersTurn) {
-            System.out.println("Setting opponent hover at: " + row + ", " + col + ". Affected cells: " + affectedCells);
             playerBoard.setOpponentAffectedCells(affectedCells);
         }
     }
 
+    /**
+     * Sets the hover effect for the player's board.
+     * @param energy the current energy of the player
+     */
     public void setPlayerEnergy(int energy) {
         energyLabel.setText("Energy: " + energy);
         updateItemButtons(energy);
     }
 
+    /**
+     * Sets the hover effect for the opponent's board.
+     */
     @Override
     public void run() {
-        System.out.println("GameInGameScene started");
         while (!Thread.currentThread().isInterrupted()) {
             try {
-                Thread.sleep(1000); // 1 Sekunde warten
+                Thread.sleep(1000); // Call every second
             } catch (InterruptedException e) {
                 break;
             }
+
             long remainingMillis = currentTurnEnd.getTime() - System.currentTimeMillis();
             long minutes = (remainingMillis / (60 * 1000)) % 60;
             long seconds = (remainingMillis / 1000) % 60;
@@ -449,7 +473,6 @@ public class GameInGameScene extends JPanel implements Runnable {
 
             if (remainingMillis <= 0) {
                 SwingUtilities.invokeLater(() -> timerLabel.setText("Waiting for Server"));
-                System.out.println("Timer expired. Executing expiration logic.");
             } else {
                 String timeStr = String.format("%02d:%02d", minutes, seconds);
                 SwingUtilities.invokeLater(() -> timerLabel.setText(timeStr));

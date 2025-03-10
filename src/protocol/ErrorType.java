@@ -1,6 +1,10 @@
 package protocol;
 
+/**
+ * Enum representing various error types that can occur in the game.
+ */
 public enum ErrorType {
+
     SERVER_CLOSED("Server closed"),
     INVALID_GAME_SIZE("Invalid game size"),
     INVALID_SESSION_CODE("Invalid session code"),
@@ -17,8 +21,12 @@ public enum ErrorType {
 
     private final String message;
 
+    /**
+     * Constructor for ErrorType.
+     * @param message the message associated with the error type
+     */
     ErrorType(String message) {
-        this.message = "An error occurred";
+        this.message = message;
     }
 
     public String getMessage() {

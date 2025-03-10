@@ -5,17 +5,17 @@ import java.awt.*;
 public class Board {
 
     /**
-     * Zeichnet den Hintergrund des Spielfeldes.
-     * @param g Graphics-Objekt
-     * @param backgroundImage Hintergrundbild
-     * @param boardSize Größe (in Pixeln) des quadratischen Spielfeldes
-     * @param rows Anzahl der Reihen
-     * @param cols Anzahl der Spalten
+     * Draws the grid lines and fills each cell with the specified background image.
+     * @param g Graphics object
+     * @param backgroundImage The image to be used as the background for each cell
+     * @param boardSize Size (in pixels) of the square board
+     * @param rows Number of rows
+     * @param cols Number of columns
      */
     public static void drawLines(Graphics g, Image backgroundImage, int boardSize, int rows, int cols) {
         double cellWidth = boardSize / (double) cols;
         double cellHeight = boardSize / (double) rows;
-        // Zeichne in jeder Zelle das Hintergrundbild
+        // Paints the background image in each cell
         for (int row = 0; row < rows; row++) {
             for (int col = 0; col < cols; col++) {
                 int x = (int) Math.round(col * cellWidth);
@@ -23,7 +23,7 @@ public class Board {
                 g.drawImage(backgroundImage, x, y, (int) cellWidth, (int) cellHeight, null);
             }
         }
-        // Zeichne die Gitterlinien
+        // Paints the grid lines
         g.setColor(Color.WHITE);
         for (int i = 0; i <= cols; i++) {
             int x = (int) Math.round(i * cellWidth);
@@ -36,16 +36,16 @@ public class Board {
     }
 
     /**
-     * Zeichnet die Legende (Zeilen- und Spaltenbezeichnungen) des Spielfeldes.
-     * @param g Graphics-Objekt
-     * @param boardSize Größe (in Pixeln) des quadratischen Spielfeldes
-     * @param rows Anzahl der Reihen
-     * @param cols Anzahl der Spalten
+     * Paints the legend (row and column labels) on the board.
+     * @param g Graphics object
+     * @param boardSize Size of the board (in pixels)
+     * @param rows Number of rows
+     * @param cols Number of columns
      */
     public static void drawLegend(Graphics g, int boardSize, int rows, int cols) {
         double cellWidth = boardSize / (double) cols;
         double cellHeight = boardSize / (double) rows;
-        // Zeichne Zeilenbeschriftung (Nummern) links
+        // Paints the column labels (left)
         g.setFont(new Font("Arial", Font.BOLD, 14));
         g.setColor(Color.WHITE);
         FontMetrics fm = g.getFontMetrics();
@@ -58,7 +58,7 @@ public class Board {
             g.drawString(label, x, y);
         }
 
-        // Zeichne Spaltenbeschriftung (Buchstaben) oben
+        // Paints the row labels (top)
         for (int col = 0; col < cols; col++) {
             char letter = (char) ('A' + col);
             String label = String.valueOf(letter);
@@ -71,12 +71,13 @@ public class Board {
     }
 
     /**
-     * Verdunkelt eine Zelle im Spielfeld.
-     * @param g Graphics-Objekt
+     * Darkens a cell with a specified color.
+     * @param g Graphics object
      * @param row Zeile (Zellenindex)
      * @param col Spalte (Zellenindex)
-     * @param cellWidth Breite der Zelle
-     * @param cellHeight Höhe der Zelle
+     * @param cellWidth width of the cell
+     * @param cellHeight height of the cell
+     * @param color Color to darken the cell with
      */
     public static void darkenCell(Graphics g, int row, int col, double cellWidth, double cellHeight, Color color) {
         color = new Color(color.getRed(), color.getGreen(), color.getBlue(), 100);
@@ -90,12 +91,12 @@ public class Board {
     }
 
     /**
-     * Zeichnet einen Treffer (rote Markierung) in der Zelle.
-     * @param g Graphics-Objekt
+     * Draws a hit cell (red marking) in the cell.
+     * @param g Graphics object
      * @param row Zeile (Zellenindex)
      * @param col Spalte (Zellenindex)
-     * @param cellWidth Breite der Zelle
-     * @param cellHeight Höhe der Zelle
+     * @param cellWidth width of the cell
+     * @param cellHeight height of the cell
      */
     public static void drawShipHitCell(Graphics g, int row, int col, double cellWidth, double cellHeight) {
         g.setColor(Color.RED);
@@ -106,12 +107,12 @@ public class Board {
     }
 
     /**
-     * Zeichnet einen Fehlschuss (graue Markierung) in der Zelle.
-     * @param g Graphics-Objekt
+     * Draws a miss cell (light gray marking) in the cell.
+     * @param g Graphics object
      * @param row Zeile (Zellenindex)
      * @param col Spalte (Zellenindex)
-     * @param cellWidth Breite der Zelle
-     * @param cellHeight Höhe der Zelle
+     * @param cellWidth width of the cell
+     * @param cellHeight height of the cell
      */
     public static void drawShipMissCell(Graphics g, int row, int col, double cellWidth, double cellHeight) {
         g.setColor(Color.LIGHT_GRAY);
@@ -122,13 +123,13 @@ public class Board {
     }
 
     /**
-     * Zeichnet eine Radarzahl in der Zelle.
-     * @param g Graphics-Objekt
-     * @param row Zeile (Zellenindex)
-     * @param col Spalte (Zellenindex)
-     * @param cellWidth Breite der Zelle
-     * @param cellHeight Höhe der Zelle
-     * @param number Die Radarzahl
+     * Draws a radar number in the cell.
+     * @param g Graphics object
+     * @param row row
+     * @param col col
+     * @param cellWidth width of the cell
+     * @param cellHeight height of the cell
+     * @param number The number to be displayed in the cell
      */
     public static void drawRadar(Graphics g, int row, int col, double cellWidth, double cellHeight, int number) {
         int centerX = (int) Math.round(col * cellWidth + cellWidth / 2);

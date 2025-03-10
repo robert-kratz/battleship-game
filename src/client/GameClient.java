@@ -36,14 +36,34 @@ public interface GameClient {
      */
     void onBuildPhaseStarts(BuildingPhaseStartMessage buildingPhaseStartMessage);
 
+    /**
+     * This method is called when the game starts
+     * @param gameInGameStartMessage The message containing the game information
+     */
     void onGameInGameStarts(GameInGameStartMessage gameInGameStartMessage);
 
+    /**
+     * This method is called when the game is over
+     * @param gameOverMessage The message containing the game over information
+     */
     void onGameOver(GameOverMessage gameOverMessage);
 
+    /**
+     * This method is called when the game is in the building phase
+     * @param playerTurnChangeMessage The message containing the player's turn information
+     */
     void onTurnChange(PlayerTurnChangeMessage playerTurnChangeMessage);
 
+    /**
+     * This method is called when the game is in the building phase
+     * @param moveMadeMessage The message containing the move information
+     */
     void onMoveMade(MoveMadeMessage moveMadeMessage);
 
+    /**
+     * This method is called when the build ready state changes
+     * @param buildReadyStateChange The message containing the build ready state information
+     */
     void onBuildReadyStateChange(BuildReadyStateChange buildReadyStateChange);
 
     /**
@@ -52,6 +72,9 @@ public interface GameClient {
      */
     void onGameError(ErrorMessage message);
 
+    /**
+     * This method is called when the game is in the building phase
+     */
     void showBuildPhase();
 
     //CLIENT -> SERVER

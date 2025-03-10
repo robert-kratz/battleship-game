@@ -42,12 +42,13 @@ public class GameHandler implements GameClient {
         this.gameState = gameState;
     }
 
-
+    /**
+     * Triggers when the game starts
+     * @param gameStartMessage The message containing the game starting information
+     */
     @Override
     public void onBuildPhaseStarts(BuildingPhaseStartMessage gameStartMessage) {
         this.gameState = gameStartMessage.getGameState();
-
-        System.out.println("onGameStartingEvent.state: " + gameStartMessage.getGameState().getStatus());
 
         if(!this.gameState.getStatus().equals(GameState.GameStatus.BUILD_GAME_BOARD)) return;
 
@@ -63,11 +64,13 @@ public class GameHandler implements GameClient {
         }
     }
 
+    /**
+     * Triggers when the game starts
+     * @param gameInGameStartMessage The message containing the game starting information
+     */
     @Override
     public void onGameInGameStarts(GameInGameStartMessage gameInGameStartMessage) {
         this.gameState = gameInGameStartMessage.getGameState();
-
-        System.out.println("onGameInGameStarts.state: " + gameInGameStartMessage.getGameState().getStatus());
 
         if(!this.gameState.getStatus().equals(GameState.GameStatus.IN_GAME)) return;
 
@@ -78,12 +81,14 @@ public class GameHandler implements GameClient {
         }
     }
 
+    /**
+     * Triggers when the game is over
+     * @param gameOverMessage The message containing the game over information
+     */
     @Override
     public void onGameOver(GameOverMessage gameOverMessage) {
         this.gameState = gameOverMessage.getGameState();
 
-        System.out.println("Game over scene triggered");
-        System.out.println("Game over scene: " + this.clientHandler.getStageManager().gameOverScene);
         this.clientHandler.getStageManager().startGameOverScene();
     }
 
@@ -105,15 +110,16 @@ public class GameHandler implements GameClient {
         clientHandler.getStageManager().gameIngameScene.setOpponentHover(playerHoverMessage.getX(), playerHoverMessage.getY(), playerHoverMessage.getAffectedFields());
     }
 
+    /**
+     * Triggers when the player turn changes
+     * @param playerTurnChangeMessage The message containing the player turn change information
+     */
     @Override
     public void onTurnChange(PlayerTurnChangeMessage playerTurnChangeMessage) {
 
         boolean playerTurnHasChanged = this.gameState.isPlayersTurn(this.clientHandler.getUserId()) != playerTurnChangeMessage.getGameState().isPlayersTurn(this.clientHandler.getUserId());
 
         this.gameState = playerTurnChangeMessage.getGameState();
-
-        System.out.println("PlayerTurn: " + this.gameState.isPlayersTurn(this.clientHandler.getUserId()));
-        System.out.println("Player turn has changed: " + playerTurnHasChanged);
 
         boolean isPlayersTurn = this.gameState.isPlayersTurn(this.clientHandler.getUserId());
 
@@ -126,6 +132,10 @@ public class GameHandler implements GameClient {
         updateMoves();
     }
 
+    /**
+     * Triggers when the player makes a move
+     * @param moveMadeMessage The message containing the move made information
+     */
     @Override
     public void onMoveMade(MoveMadeMessage moveMadeMessage) {
         if(!this.gameState.getStatus().equals(GameState.GameStatus.IN_GAME)) return;
@@ -134,24 +144,22 @@ public class GameHandler implements GameClient {
 
         this.gameState = moveMadeMessage.getGameState();
 
-        System.out.println("this.gameState.getPlayersTurnEnd()" + this.gameState.getPlayersTurnEnd());
-
         if(!extendedTime) this.clientHandler.getStageManager().gameIngameScene.extendCurrentTurn(this.gameState.getPlayersTurnEnd());
 
         ClientPlayer player = this.gameState.getPlayer(this.clientHandler.getUserId());
         ClientPlayer opponent = this.gameState.getOpponent(this.clientHandler.getUserId());
 
-        System.out.println("Player Uncovered ships: " + player.getUncoveredShips().size());
-        System.out.println("Opponent Uncovered ships: " + opponent.getUncoveredShips().size());
 
         this.clientHandler.getStageManager().gameIngameScene.opponentBoard.setPlacedShips(player.getUncoveredShips());
-        //this.clientHandler.getStageManager().gameIngameScene.playerBoard.setPlacedShips(this.playersShips);
         this.clientHandler.getStageManager().gameIngameScene.setPlayerEnergy(player.getEnergy());
 
         //Show the move on the board
         updateMoves();
     }
 
+    /**
+     * Update the moves of the player and opponent
+     */
     private void updateMoves() {
         if (clientHandler.getUserId().equals(gameState.getPlayerA().getId())) {
             clientHandler.getStageManager().gameIngameScene.playerBoard.setMoves(gameState.getPlayerB().getMoves());
@@ -189,7 +197,6 @@ public class GameHandler implements GameClient {
         ArrayList<Cell> copy = new ArrayList<>();
         if(affectedFields != null) {
             for (Cell c : affectedFields) {
-                // Voraussetzung: Die Klasse Cell hat einen geeigneten Kopierkonstruktor oder Getter
                 copy.add(new Cell(c.getX(), c.getY()));
             }
         }
@@ -209,6 +216,10 @@ public class GameHandler implements GameClient {
         clientHandler.sendMessage(new UpdateBuildBoardMessage(ships));
     }
 
+    /**
+     * Send the ready state of the player to the server
+     * @param ready The ready state of the player
+     */
     @Override
     public void sendPlayerReadyMessage(boolean ready) {
         if(gameState.getStatus() != GameState.GameStatus.BUILD_GAME_BOARD) {
@@ -238,9 +249,13 @@ public class GameHandler implements GameClient {
     public void sendLeaveGame() {
         clientHandler.sendMessage(new LeaveGameMessage());
         this.isInGame = false;
-        this.clientHandler.endCurrentGame(); //Removes the game handler from the client handler and switch scene to lobby
+        this.clientHandler.endCurrentGame(); // Removes the game handler from the client handler and switch scene to lobby
     }
 
+    /**
+     * Triggers when the player is ready to start the game
+     * @param buildReadyStateChange The message containing the build ready state change information
+     */
     @Override
     public void onBuildReadyStateChange(BuildReadyStateChange buildReadyStateChange) {
         if(!this.gameState.getStatus().equals(GameState.GameStatus.BUILD_GAME_BOARD)) return;
@@ -249,6 +264,9 @@ public class GameHandler implements GameClient {
         updateOpponentReadyState();
     }
 
+    /**
+     * Show the build phase
+     */
     @Override
     public void showBuildPhase() {
         if(this.gameState.getStatus().equals(GameState.GameStatus.LOBBY_WAITING)) return;
@@ -258,6 +276,9 @@ public class GameHandler implements GameClient {
         this.getClientHandler().getStageManager().startBuildScene();
     }
 
+    /**
+     * Update the opponent's ready state in the build phase
+     */
     private void updateOpponentReadyState() {
         if(this.clientHandler.getStageManager().gameBuildScene != null) {
             ClientPlayer player = this.gameState.getPlayer(this.clientHandler.getUserId());

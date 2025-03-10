@@ -13,11 +13,22 @@ public class Cell implements Serializable {
     private final int x;
     private final int y;
 
+    /**
+     * Creates a new Cell instance.
+     * @param x The x coordinate of the cell.
+     * @param y The y coordinate of the cell.
+     */
     public Cell(int x, int y) {
         this.x = x;
         this.y = y;
     }
 
+    /**
+     * This constructor is used to create a cell with a ship.
+     * @param x The x coordinate of the cell.
+     * @param y The y coordinate of the cell.
+     * @param hit The hit status of the cell.
+     */
     public Cell(int x, int y, boolean hit) {
         this.x = x;
         this.y = y;

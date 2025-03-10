@@ -11,34 +11,34 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class GameOverScene extends JPanel {
-    private final GameHandler gameHandler;
 
+    /**
+     * Returns the size of the window.
+     * @return The size of the window as a Dimension object.
+     */
     public Dimension getWindowSize() {
         return new Dimension(510, 590);
     }
 
+    /**
+     * Creates a new GameOverScene.
+     * @param gameHandler The GameHandler instance used to manage the game state.
+     */
     public GameOverScene(GameHandler gameHandler) {
-        this.gameHandler = gameHandler;
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         setPreferredSize(getWindowSize());
 
-        // Hole den aktuellen GameState und die ID des aktuellen Users
         GameState gameState = gameHandler.getGameState();
         UUID currentUserId = gameHandler.getClientHandler().getUserId();
 
-        // Bestimme, welcher Spieler der aktuelle User ist (PlayerA oder PlayerB)
-        boolean isUserPlayerA = currentUserId.equals(gameState.getPlayerA());
-        // boolean isUserPlayerB = currentUserId.equals(gameState.getPlayerB()); // nicht zwingend nötig
-
-        // Hole Gewinner und Verlierer aus dem GameState (bei GAME_OVER ist winner gesetzt)
+        // Get the winner and loser players
         ArrayList<ClientPlayer> winners = gameState.getWinner();
         ArrayList<ClientPlayer> loosers = gameState.getLoser();
 
         String winnerNames = winners.stream().map(ClientPlayer::getName).collect(Collectors.joining(", "));
         String loserNames = loosers.stream().map(ClientPlayer::getName).collect(Collectors.joining(", "));
 
-        // Oberste Überschrift: "You won" oder "You lost"
         JLabel resultLabel;
         if (winners.stream().anyMatch(player -> player.getId().equals(currentUserId))) {
             resultLabel = new JLabel("You won");
@@ -48,7 +48,6 @@ public class GameOverScene extends JPanel {
         resultLabel.setFont(new Font("Arial", Font.BOLD, 32));
         resultLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // Gewinner-Klarname unterhalb der Überschrift (kleiner dargestellt)
         String winnerText = "Winner: " + winnerNames;
 
         if(winners.stream().anyMatch(player -> player.getId().equals(currentUserId))) {
@@ -59,8 +58,7 @@ public class GameOverScene extends JPanel {
         winnerLabel.setFont(new Font("Arial", Font.PLAIN, 24));
         winnerLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // Verlierer-Anzeige – wenn der User verloren hat, wird "(You)" angehängt
-        String loserText = "Loser: " + loserNames;
+               String loserText = "Loser: " + loserNames;
         if (loosers.stream().anyMatch(player -> player.getId().equals(currentUserId))) {
             loserText += " (You)";
         }
@@ -68,12 +66,11 @@ public class GameOverScene extends JPanel {
         loserLabel.setFont(new Font("Arial", Font.PLAIN, 24));
         loserLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // Panel für Statistiken (nebeneinander in zwei Spalten)
-        JPanel statsPanel = new JPanel();
+           JPanel statsPanel = new JPanel();
         statsPanel.setLayout(new GridLayout(1, 2, 10, 0));
         statsPanel.setMaximumSize(new Dimension(460, 200));
 
-        // Statistik-Panel für Player A
+        // Stats Panel für Player A
         JPanel playerAPanel = new JPanel();
         playerAPanel.setLayout(new BoxLayout(playerAPanel, BoxLayout.Y_AXIS));
         playerAPanel.setBorder(BorderFactory.createTitledBorder(gameState.getPlayerA().getName() + " (" + (winners.stream().anyMatch(p -> p.getId().equals(gameState.getPlayerA().getId())) ? "Winner" : "Looser") + ")"));
@@ -89,7 +86,7 @@ public class GameOverScene extends JPanel {
         playerAPanel.add(movesALabel);
         playerAPanel.add(Box.createVerticalGlue());
 
-        // Statistik-Panel für Player B
+        // Stats Panel für Player B
         JPanel playerBPanel = new JPanel();
         playerBPanel.setLayout(new BoxLayout(playerBPanel, BoxLayout.Y_AXIS));
         playerBPanel.setBorder(BorderFactory.createTitledBorder(gameState.getPlayerB().getName() + " (" + (winners.stream().anyMatch(p -> p.getId().equals(gameState.getPlayerB().getId())) ? "Winner" : "Looser") + ")"));
@@ -108,7 +105,7 @@ public class GameOverScene extends JPanel {
         statsPanel.add(playerAPanel);
         statsPanel.add(playerBPanel);
 
-        // Back-Button: Beim Klick verlässt der User das aktuelle Spiel und gelangt zurück zur Lobby.
+        // Button back
         JButton backButton = new JButton("Back");
         backButton.setFont(new Font("Arial", Font.BOLD, 14));
         backButton.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -118,7 +115,7 @@ public class GameOverScene extends JPanel {
             System.out.println("Back to lobby");
         });
 
-        // Komponenten zum Panel hinzufügen
+        // Add components to the panel
         add(resultLabel);
         add(Box.createRigidArea(new Dimension(0, 10)));
         add(winnerLabel);
