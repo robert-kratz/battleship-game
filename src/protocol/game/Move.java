@@ -57,8 +57,11 @@ public class Move implements Serializable {
             this.affectedCells = new ArrayList<>(this.seaBombItem.getAffectedFields(this.x, this.y, boardSize));
         } else if (this.airStrikeItem != null) {
             // Bei AirStrike wird die betroffene Reihe/Spalte anhand der Orientierung berechnet
+            System.out.println("AirStrikeItem: " + this.airStrikeItem.getOrientation());
+            System.out.println("x: " + this.x);
+            System.out.println("y: " + this.y);
             this.affectedCells = new ArrayList<>(this.airStrikeItem.getAffectedFields(
-                    this.airStrikeItem.getOrientation() == AirStrikeItem.Orientation.HORIZONTAL ? this.y : this.x,
+                    this.rowOrColumn,
                     boardSize));
         } else if (this.radarItem != null) {
             // Radar beeinflusst keine Treffer, daher bleibt die Liste leer
@@ -69,8 +72,23 @@ public class Move implements Serializable {
         }
     }
 
+    public Item getSelectedItem() {
+        if (this.seaBombItem != null) {
+            return this.seaBombItem;
+        } else if (this.airStrikeItem != null) {
+            return this.airStrikeItem;
+        } else if (this.radarItem != null) {
+            return this.radarItem;
+        }
+        return null;
+    }
+
     public boolean isItemMove() {
         return this.seaBombItem != null || this.airStrikeItem != null || this.radarItem != null;
+    }
+
+    public int getRowOrColumn() {
+        return rowOrColumn;
     }
 
     /**

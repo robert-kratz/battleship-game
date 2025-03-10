@@ -106,6 +106,10 @@ public class GameInGameScene extends JPanel implements Runnable {
                                 case "AirStrikeItem" -> {
                                     AirStrikeItem airStrikeItem = (AirStrikeItem) opponentBoard.getSelectedItem();
 
+                                    System.out.println("AirStrikeItem selected");
+                                    System.out.println("X: " + col);
+                                    System.out.println("Y: " + row);
+
                                     yield new Move(airStrikeItem, airStrikeItem.getOrientation() == AirStrikeItem.Orientation.HORIZONTAL ? row : col);
                                 }
                                 default -> new Move(col, row);
@@ -122,6 +126,8 @@ public class GameInGameScene extends JPanel implements Runnable {
 
                         if(moveManager.isPlayerMoveMoveValid(player.getId(), move)) {
                             System.out.println("Sending move: " + move);
+
+                            opponentBoard.setSelectedItem(null);
 
                             gameHandler.sendGameMoveEvent(move);
                         } else {
@@ -178,12 +184,14 @@ public class GameInGameScene extends JPanel implements Runnable {
         bombButton.addActionListener(e -> {
             if (!playersTurn) return;
 
-            removeSelectedItems(); // Entferne selektierte Items, da AirStrike nur einmalig ausgewählt werden kann
-
-            System.out.println("Bomb item selected");
-            opponentBoard.setSelectedItem(new SeaBombItem());
-            updateItemButtonHighlighting(opponentBoard.getSelectedItem());
-            opponentBoard.requestFocusInWindow();
+            if(opponentBoard.getSelectedItem() instanceof SeaBombItem) {
+                removeSelectedItems();
+            } else {
+                System.out.println("Bomb item selected");
+                opponentBoard.setSelectedItem(new SeaBombItem());
+                updateItemButtonHighlighting(opponentBoard.getSelectedItem());
+                opponentBoard.requestFocusInWindow();
+            }
         });
         leftPanel.add(bombButton);
         leftPanel.add(Box.createVerticalStrut(10));
@@ -196,12 +204,14 @@ public class GameInGameScene extends JPanel implements Runnable {
         radarButton.addActionListener(e -> {
             if (!playersTurn) return;
 
-            removeSelectedItems(); // Entferne selektierte Items, da AirStrike nur einmalig ausgewählt werden kann
-
-            System.out.println("Radar item selected");
-            opponentBoard.setSelectedItem(new RadarItem());
-            updateItemButtonHighlighting(opponentBoard.getSelectedItem());
-            opponentBoard.requestFocusInWindow();
+            if(opponentBoard.getSelectedItem() instanceof RadarItem) {
+                removeSelectedItems();
+            } else {
+                System.out.println("Radar item selected");
+                opponentBoard.setSelectedItem(new RadarItem());
+                updateItemButtonHighlighting(opponentBoard.getSelectedItem());
+                opponentBoard.requestFocusInWindow();
+            }
         });
         leftPanel.add(radarButton);
         leftPanel.add(Box.createVerticalStrut(10));
@@ -214,13 +224,14 @@ public class GameInGameScene extends JPanel implements Runnable {
         airStrikeButton.addActionListener(e -> {
             if (!playersTurn) return;
 
-            removeSelectedItems(); // Entferne selektierte Items, da AirStrike nur einmalig ausgewählt werden kann
-
-
-            System.out.println("Air Strike item selected");
-            opponentBoard.setSelectedItem(new AirStrikeItem());
-            updateItemButtonHighlighting(opponentBoard.getSelectedItem());
-            opponentBoard.requestFocusInWindow();
+            if(opponentBoard.getSelectedItem() instanceof AirStrikeItem) {
+                removeSelectedItems();
+            } else {
+                System.out.println("Air Strike item selected");
+                opponentBoard.setSelectedItem(new AirStrikeItem(AirStrikeItem.Orientation.HORIZONTAL));
+                updateItemButtonHighlighting(opponentBoard.getSelectedItem());
+                opponentBoard.requestFocusInWindow();
+            }
         });
         leftPanel.add(airStrikeButton);
         leftPanel.add(Box.createVerticalStrut(10));
@@ -333,17 +344,25 @@ public class GameInGameScene extends JPanel implements Runnable {
 
     private void updateItemButtonHighlighting(Item selected) {
         // Setze alle Buttons zunächst auf Weiß
-        bombButton.setBackground(Color.WHITE);
-        radarButton.setBackground(Color.WHITE);
-        airStrikeButton.setBackground(Color.WHITE);
+        bombButton.setForeground(Color.BLACK);
+        radarButton.setForeground(Color.BLACK);
+        airStrikeButton.setForeground(Color.BLACK);
 
-        if (selected == null) return;
         if (selected instanceof SeaBombItem) {
-            bombButton.setBackground(Color.YELLOW);
+            bombButton.setForeground(Color.ORANGE);
+            radarButton.setForeground(Color.GRAY);
+            airStrikeButton.setForeground(Color.GRAY);
+            bombButton.setOpaque(false);
         } else if (selected instanceof RadarItem) {
-            radarButton.setBackground(Color.YELLOW);
+            radarButton.setForeground(Color.ORANGE);
+            bombButton.setForeground(Color.GRAY);
+            airStrikeButton.setForeground(Color.GRAY);
+            bombButton.setOpaque(false);
         } else if (selected instanceof AirStrikeItem) {
-            airStrikeButton.setBackground(Color.YELLOW);
+            airStrikeButton.setForeground(Color.ORANGE);
+            bombButton.setForeground(Color.GRAY);
+            radarButton.setForeground(Color.GRAY);
+            bombButton.setOpaque(false);
         }
     }
 

@@ -27,7 +27,7 @@ public class AirStrikeItem extends Item implements Serializable {
     }
 
     public AirStrikeItem(Orientation orientation) {
-        super(ItemType.AIRSTRIKE, 60);
+        super(ItemType.AIRSTRIKE, Parameters.ITEM_AIRSTRIKE_COST);
 
         this.orientation = orientation;
     }

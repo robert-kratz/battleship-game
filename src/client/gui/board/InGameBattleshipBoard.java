@@ -14,6 +14,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
 public class InGameBattleshipBoard extends AbstractBattleshipBoard {
@@ -219,31 +220,38 @@ public class InGameBattleshipBoard extends AbstractBattleshipBoard {
         double cellWidth = pixelBoardSize / (double) cols;
         double cellHeight = pixelBoardSize / (double) rows;
 
-        HashMap<Integer, Integer> takenCells = new HashMap<>();
+        // Verwende ein HashSet, um bereits bemalte Zellen zu speichern.
+        // Der Schlüssel ist ein String in der Form "col-row".
+        HashSet<String> paintedCells = new HashSet<>();
 
         // Zeichne alle Moves (Treffer, Fehlschüsse, Radar)
         for (Move move : moves) {
             for (Cell cell : move.getAffectedCells()) {
                 int col = cell.getX();
                 int row = cell.getY();
+                String key = col + "-" + row; // Zusammengesetzter Schlüssel
 
-                if(takenCells.containsKey(col) && takenCells.get(col) == row) continue;
+                if (paintedCells.contains(key)) {
+                    System.out.println("DID NOT REPAINT CELL: " + col + ", " + row);
+                    continue; // Zelle wurde bereits gezeichnet
+                }
+
+                paintedCells.add(key);
+
                 if (cell.isHit()) {
                     Board.darkenCell(g, row, col, cellWidth, cellHeight, Color.RED);
                     Board.drawShipHitCell(g, row, col, cellWidth, cellHeight);
-
                 } else {
                     Board.darkenCell(g, row, col, cellWidth, cellHeight, Color.BLACK);
                     Board.drawShipMissCell(g, row, col, cellWidth, cellHeight);
-
                 }
-                takenCells.put(col, row);
             }
         }
 
+        // Zeichne alle Radar-Moves (diese dürfen doppelt eingefärbt werden)
         for (Move move : moves) {
             if (move.getRadarItem() != null) {
-                Board.drawRadar(g, move.getY(), move.getX(), cellWidth, cellHeight, move.getRadarShipsIn3x3Area(), Color.WHITE);
+                Board.drawRadar(g, move.getY(), move.getX(), cellWidth, cellHeight, move.getRadarShipsIn3x3Area());
             }
         }
 

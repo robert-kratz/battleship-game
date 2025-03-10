@@ -76,8 +76,8 @@ public class MoveManager {
         } else if(move.getAirStrikeItem() != null) {
             // Only check if the target already has an air strike item placed.
             for (Move m : moves) {
-                if (m.getAirStrikeItem().getOrientation() == move.getAirStrikeItem().getOrientation()) {
-                    if (m.getX() == move.getX() && m.getY() == move.getY()) {
+                if (m.getAirStrikeItem() != null && m.getAirStrikeItem().getOrientation() == move.getAirStrikeItem().getOrientation()) {
+                    if (m.getRowOrColumn() == move.getRowOrColumn()) {
                         System.out.println("Already placed an air strike item on this row/column");
                         return false;
                     }

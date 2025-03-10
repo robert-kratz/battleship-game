@@ -29,7 +29,7 @@ public class BattleShipGame implements Game, Runnable {
     private ArrayList<Ship> shipsPlayerA = new ArrayList<>();
     private ArrayList<Ship> shipsPlayerB = new ArrayList<>();
 
-    private Timer turnDelayTimer, gameOverTimer;
+    private Timer turnDelayTimer;
 
     public BattleShipGame(Server server, int size) {
         this.server = server;
@@ -415,6 +415,22 @@ public class BattleShipGame implements Game, Runnable {
 
         move.computeAffectedCells(this.size);
 
+        if(move.isItemMove()) {
+            int itemCost = move.getSelectedItem().getEnergyCost();
+
+            ClientPlayer clientPlayer = newState.getPlayer(player.getId());
+
+            System.out.println("Item cost: " + itemCost);
+            System.out.println("Player energy: " + clientPlayer.getEnergy());
+
+            if(clientPlayer.getEnergy() < itemCost) {
+                player.sendMessage(new ErrorMessage(ErrorType.NOT_ENOUGH_ENERGY));
+                return;
+            }
+
+            clientPlayer.removeEnergy(itemCost);
+        }
+
         if (playerA != null && playerA.getId().equals(player.getId())) {
             newState.addMove(playerA.getId(), move);
         } else if (playerB != null && playerB.getId().equals(player.getId())) {
@@ -485,6 +501,7 @@ public class BattleShipGame implements Game, Runnable {
         boolean hasPlayerAWon = this.gameState.hasPlayerSunkAllShips(this.gameState.getPlayerA(), this.shipsPlayerB);
         boolean hasPlayerBWon = this.gameState.hasPlayerSunkAllShips(this.gameState.getPlayerB(), this.shipsPlayerA);
 
+        Timer gameOverTimer;
         if(hasPlayerAWon || hasPlayerBWon) {
             gameOverTimer = new Timer();
 

@@ -130,14 +130,17 @@ public class Board {
      * @param cellHeight Höhe der Zelle
      * @param number Die Radarzahl
      */
-    public static void drawRadar(Graphics g, int row, int col, double cellWidth, double cellHeight, int number, Color color) {
-        g.setColor(Color.RED);
+    public static void drawRadar(Graphics g, int row, int col, double cellWidth, double cellHeight, int number) {
         int centerX = (int) Math.round(col * cellWidth + cellWidth / 2);
         int centerY = (int) Math.round(row * cellHeight + cellHeight / 2);
         FontMetrics fm = g.getFontMetrics();
         String label = String.valueOf(number);
         g.setFont(new Font("Arial", Font.BOLD, 20));
-        g.setColor(color);
+        if(number != 0) {
+            g.setColor(Color.RED);
+        } else {
+            g.setColor(Color.LIGHT_GRAY);
+        }
         int textWidth = fm.stringWidth(label);
         // Berechne die Basislinie, sodass der Text vertikal zentriert ist
         int y = centerY + (fm.getAscent() - fm.getDescent()) / 2;

@@ -71,20 +71,6 @@ public class Ship implements Serializable {
         this.icon = other.icon;
     }
 
-    public boolean isIn3x3Area(int x, int y) {
-
-        System.out.println("isIn3x3Area x: " + x + " y: " + y);
-
-        for (Point cells : getOccupiedCells()) {
-            System.out.println("cells.x: " + cells.x + " cells.y: " + cells.y);
-
-            if (cells.x == x && cells.y == y) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     // Getter und Setter
     public void setOrientation(Orientation orientation) {
         this.orientation = orientation;
