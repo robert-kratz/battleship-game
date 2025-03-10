@@ -53,13 +53,12 @@ public class CreateGameScene extends JPanel {
 
     private final ClientHandler clientHandler;
 
+    private GameOptions gameOptions = new GameOptions();
+
     // Fenstergröße
     public Dimension getWindowSize() {
         return new Dimension(430, 730);
     }
-
-    // GameOptions-Objekt: Hier werden alle Werte gespeichert und via Setter aktualisiert
-    private final GameOptions gameOptions = new GameOptions();
 
     public CreateGameScene(ClientHandler clientHandler) {
         this.clientHandler = clientHandler;
@@ -272,12 +271,15 @@ public class CreateGameScene extends JPanel {
                 System.out.println("Ship Hit Energy: " + shipHitEnergy);
 
                 clientHandler.getLobbyHandler().sendCreateGameEvent(gameOptions);
+
+                resetValues();
             }
         });
 
         backButton.addActionListener(e -> {
             clientHandler.getStageManager().switchScene(Stage.LOBBY_SCENE);
             sizeGroup.clearSelection();
+            resetValues();
         });
 
         // --- Komponenten hinzufügen in der gewünschten Reihenfolge ---
@@ -306,6 +308,16 @@ public class CreateGameScene extends JPanel {
         buttonPanel.add(Box.createRigidArea(new Dimension(0, 10)));
         buttonPanel.add(backButton);
         add(buttonPanel);
+    }
+
+    private void resetValues() {
+        gameOptions = new GameOptions();
+        buildTimeSlider.setValue(gameOptions.getBuildTime());
+        moveTimeSlider.setValue(gameOptions.getMoveTime());
+        bonusTimeSlider.setValue(gameOptions.getMoveHitTimeBonus());
+        startEnergySlider.setValue(gameOptions.getEnergyGameStart());
+        shipHitEnergySlider.setValue(gameOptions.getEnergyShipHit());
+        energyTurnBonusSlider.setValue(gameOptions.getEnergyTurnBonus());
     }
 
     /**
