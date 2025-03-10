@@ -43,6 +43,10 @@ public class BattleShipGame implements Game, Runnable {
 
     @Override
     public void run() {
+        while (this.gameState.getStatus().equals(GameState.GameStatus.LOBBY_WAITING)) {
+            sleep(1000);
+            System.out.println("Warte auf zweiten Spieler...");
+        }
         // Build-Phase
         while (this.gameState.getStatus().equals(GameState.GameStatus.BUILD_GAME_BOARD)) {
             sleep(1000);
@@ -329,8 +333,8 @@ public class BattleShipGame implements Game, Runnable {
             this.turnDelayTimer = null;
         }
 
-        this.playerA.setInGame(false);
-        this.playerB.setInGame(false);
+        if(this.playerA != null)this.playerA.setInGame(false);
+        if(this.playerB != null) this.playerB.setInGame(false);
 
         switch (reason) {
             case PLAYER_LEFT_IN_GAME -> {
@@ -580,7 +584,7 @@ public class BattleShipGame implements Game, Runnable {
         if (playerB != null) playerB.sendMessage(message);
     }
 
-    private void unregisterGame() {
+    private synchronized void unregisterGame() {
         server.unregisterGame(this.gameState.getId());
         server.updateGameList();
     }
