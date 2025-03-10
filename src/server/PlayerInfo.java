@@ -108,6 +108,8 @@ public class PlayerInfo implements Runnable {
 
                         createGame(createGameMessage.getSize());
 
+                        server.getQueue().remove(this);
+
                         this.isInGame = true;
                     }
                     case MessageType.JOIN_GAME_WITH_CODE -> {
@@ -124,6 +126,8 @@ public class PlayerInfo implements Runnable {
                             sendMessage(new ErrorMessage(ErrorType.GAME_ALREADY_STARTED));
                             return;
                         }
+
+                        server.getQueue().remove(this);
 
                         targetGame.addPlayer(this);
 
