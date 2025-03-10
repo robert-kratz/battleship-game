@@ -6,7 +6,7 @@ import protocol.messages.MessageType;
 /**
  * This message is sent from the client to the server when a player is ready.
  * A response to this message from the server will be:
- * - BuildReadyStateChangeMessage
+ * - PlayerReadyStateChangeMessage
  * or
  * - ErrorMessage(ErrorType.NO_GAME_IN_PROGRESS); if the player is not in a game.
  */

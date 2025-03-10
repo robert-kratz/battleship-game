@@ -4,10 +4,10 @@ import protocol.Ship;
 import protocol.game.Cell;
 import protocol.game.Move;
 import protocol.messages.*;
-import protocol.messages.game.BuildingPhaseStartMessage;
-import protocol.messages.game.GameInGameStartMessage;
+import protocol.messages.game.building.GameBuildingStartMessage;
+import protocol.messages.game.ingame.GameInGameStartMessage;
 import protocol.messages.game.GameOverMessage;
-import protocol.messages.game.building.BuildReadyStateChangeMessage;
+import protocol.messages.game.building.PlayerReadyStateChangeMessage;
 import protocol.messages.game.ingame.MoveMadeMessage;
 import protocol.messages.game.ingame.PlayerHoverMessage;
 import protocol.messages.game.ingame.PlayerTurnChangeMessage;
@@ -32,9 +32,9 @@ public interface GameClient {
 
     /**
      * This method is called when:
-     * @param buildingPhaseStartMessage The message containing the game starting information
+     * @param gameBuildingStartMessage The message containing the game starting information
      */
-    void onBuildPhaseStarts(BuildingPhaseStartMessage buildingPhaseStartMessage);
+    void onBuildPhaseStarts(GameBuildingStartMessage gameBuildingStartMessage);
 
     /**
      * This method is called when the game starts
@@ -62,9 +62,9 @@ public interface GameClient {
 
     /**
      * This method is called when the build ready state changes
-     * @param buildReadyStateChangeMessage The message containing the build ready state information
+     * @param playerReadyStateChangeMessage The message containing the build ready state information
      */
-    void onBuildReadyStateChange(BuildReadyStateChangeMessage buildReadyStateChangeMessage);
+    void onBuildReadyStateChange(PlayerReadyStateChangeMessage playerReadyStateChangeMessage);
 
     /**
      * This method is called when an error occurs in the game

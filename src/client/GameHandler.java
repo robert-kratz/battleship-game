@@ -7,11 +7,11 @@ import protocol.game.Cell;
 import protocol.game.Move;
 import protocol.messages.*;
 import protocol.GameState;
-import protocol.messages.game.BuildingPhaseStartMessage;
-import protocol.messages.game.GameInGameStartMessage;
+import protocol.messages.game.building.GameBuildingStartMessage;
+import protocol.messages.game.ingame.GameInGameStartMessage;
 import protocol.messages.game.GameOverMessage;
 import protocol.messages.game.LeaveGameMessage;
-import protocol.messages.game.building.BuildReadyStateChangeMessage;
+import protocol.messages.game.building.PlayerReadyStateChangeMessage;
 import protocol.messages.game.building.PlayerReadyMessage;
 import protocol.messages.game.building.PlayerUpdateShipPlacement;
 import protocol.messages.game.ingame.MoveMadeMessage;
@@ -47,7 +47,7 @@ public class GameHandler implements GameClient {
      * @param gameStartMessage The message containing the game starting information
      */
     @Override
-    public void onBuildPhaseStarts(BuildingPhaseStartMessage gameStartMessage) {
+    public void onBuildPhaseStarts(GameBuildingStartMessage gameStartMessage) {
         this.gameState = gameStartMessage.getGameState();
 
         if(!this.gameState.getStatus().equals(GameState.GameStatus.BUILD_GAME_BOARD)) return;
@@ -254,13 +254,13 @@ public class GameHandler implements GameClient {
 
     /**
      * Triggers when the player is ready to start the game
-     * @param buildReadyStateChangeMessage The message containing the build ready state change information
+     * @param playerReadyStateChangeMessage The message containing the build ready state change information
      */
     @Override
-    public void onBuildReadyStateChange(BuildReadyStateChangeMessage buildReadyStateChangeMessage) {
+    public void onBuildReadyStateChange(PlayerReadyStateChangeMessage playerReadyStateChangeMessage) {
         if(!this.gameState.getStatus().equals(GameState.GameStatus.BUILD_GAME_BOARD)) return;
 
-        this.gameState = buildReadyStateChangeMessage.getGameState();
+        this.gameState = playerReadyStateChangeMessage.getGameState();
         updateOpponentReadyState();
     }
 

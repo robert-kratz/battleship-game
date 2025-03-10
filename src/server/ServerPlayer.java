@@ -30,6 +30,7 @@ public class ServerPlayer implements Runnable {
     private final String username;
     private final String ip;
 
+    // Server internal player state
     private boolean isInGame = false;
 
     public ServerPlayer(Socket socket, Server server) {

@@ -3,11 +3,11 @@ package client;
 import protocol.ErrorType;
 import protocol.messages.*;
 import protocol.messages.RegisterMessage;
-import protocol.messages.game.BuildingPhaseStartMessage;
-import protocol.messages.game.GameInGameStartMessage;
+import protocol.messages.game.building.GameBuildingStartMessage;
+import protocol.messages.game.ingame.GameInGameStartMessage;
 import protocol.messages.game.GameOverMessage;
 import protocol.messages.game.JoinGameMessage;
-import protocol.messages.game.building.BuildReadyStateChangeMessage;
+import protocol.messages.game.building.PlayerReadyStateChangeMessage;
 import protocol.messages.game.ingame.MoveMadeMessage;
 import protocol.messages.game.ingame.PlayerHoverMessage;
 import protocol.messages.game.ingame.PlayerTurnChangeMessage;
@@ -118,7 +118,7 @@ public class ClientHandler {
 
                         }
                         case MessageType.BUILDING_PHASE_STARTS -> {
-                            BuildingPhaseStartMessage gameStartedMessage = (BuildingPhaseStartMessage) received;
+                            GameBuildingStartMessage gameStartedMessage = (GameBuildingStartMessage) received;
 
                             if(this.gameHandler == null) return;
 
@@ -146,11 +146,11 @@ public class ClientHandler {
                             this.gameHandler.onMoveMade(moveMadeMessage);
                         }
                         case MessageType.BUILD_READY_STATE_CHANGE -> {
-                            BuildReadyStateChangeMessage buildReadyStateChangeMessage = (BuildReadyStateChangeMessage) received;
+                            PlayerReadyStateChangeMessage playerReadyStateChangeMessage = (PlayerReadyStateChangeMessage) received;
 
                             if(this.gameHandler == null) return;
 
-                            this.gameHandler.onBuildReadyStateChange(buildReadyStateChangeMessage);
+                            this.gameHandler.onBuildReadyStateChange(playerReadyStateChangeMessage);
                         }
                         case MessageType.TURN_CHANGE -> {
                             PlayerTurnChangeMessage playerTurnChangeMessage = (PlayerTurnChangeMessage) received;

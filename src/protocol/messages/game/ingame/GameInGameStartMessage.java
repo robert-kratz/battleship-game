@@ -1,4 +1,4 @@
-package protocol.messages.game;
+package protocol.messages.game.ingame;
 
 import protocol.GameState;
 import protocol.Ship;
@@ -10,7 +10,7 @@ import java.util.ArrayList;
 /**
  * This is the GameInGameStartMessage which is sent from the server to the client when a game starts.
  * This message is in response either to a PlayerReadyMessage; If both players are ready, the game starts (Triggered by this message);
- * Or to the build time running out (Triggered by the BuildingPhaseStartMessage).
+ * Or to the build time running out (Triggered by the GameBuildingStartMessage).
  */
 
 public class GameInGameStartMessage extends Message {

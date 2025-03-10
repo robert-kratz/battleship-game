@@ -3,11 +3,11 @@ package server;
 import protocol.*;
 import protocol.game.Move;
 import protocol.messages.*;
-import protocol.messages.game.BuildingPhaseStartMessage;
-import protocol.messages.game.GameInGameStartMessage;
+import protocol.messages.game.building.GameBuildingStartMessage;
+import protocol.messages.game.ingame.GameInGameStartMessage;
 import protocol.messages.game.GameOverMessage;
 import protocol.messages.game.JoinGameMessage;
-import protocol.messages.game.building.BuildReadyStateChangeMessage;
+import protocol.messages.game.building.PlayerReadyStateChangeMessage;
 import protocol.messages.game.ingame.MoveMadeMessage;
 import protocol.messages.game.ingame.PlayerTurnChangeMessage;
 
@@ -176,7 +176,7 @@ public class BattleShipGame implements Game, Runnable {
         newState.setBuildGameBoardStarted(date);
         newState.setBuildGameBoardFinished(new Date(date.getTime() + (newState.getGameOptions().getBuildTime() * 1000L)));
 
-        broadcastMessage(new BuildingPhaseStartMessage(newState));
+        broadcastMessage(new GameBuildingStartMessage(newState));
 
         server.updateGameList();
 
@@ -231,9 +231,9 @@ public class BattleShipGame implements Game, Runnable {
         }
 
         if (playerA != null)
-            playerA.sendMessage(new BuildReadyStateChangeMessage(gameState));
+            playerA.sendMessage(new PlayerReadyStateChangeMessage(gameState));
         if (playerB != null)
-            playerB.sendMessage(new BuildReadyStateChangeMessage(gameState));
+            playerB.sendMessage(new PlayerReadyStateChangeMessage(gameState));
 
         // Optional: Ausgabe, wenn beide Spieler ready sind
         if (gameState.getPlayerA() != null && gameState.getPlayerB() != null &&

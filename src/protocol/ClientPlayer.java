@@ -1,8 +1,6 @@
 package protocol;
 
-import protocol.game.Cell;
 import protocol.game.Move;
-import server.Parameters;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -12,8 +10,8 @@ public class ClientPlayer implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    private UUID id;
-    private String name;
+    private final UUID id;
+    private final String name;
     private boolean ready;
     private ArrayList<Move> moves;
     private ArrayList<Ship> uncoveredShips;
