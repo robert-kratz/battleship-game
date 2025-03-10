@@ -1,19 +1,20 @@
 package protocol.messages.lobby;
 
+import protocol.GameOptions;
 import protocol.messages.Message;
 import protocol.messages.MessageType;
 
 public class CreateGameMessage extends Message {
 
-    private int size;
+    private GameOptions gameOptions;
 
-    public CreateGameMessage(int size) {
+    public CreateGameMessage(GameOptions gameOptions) {
         super(MessageType.CREATE_GAME);
 
-        this.size = size;
+        this.gameOptions = gameOptions;
     }
 
-    public int getSize() {
-        return size;
+    public GameOptions getGameOptions() {
+        return gameOptions;
     }
 }

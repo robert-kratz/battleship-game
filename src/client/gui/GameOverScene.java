@@ -13,10 +13,15 @@ import java.util.stream.Collectors;
 public class GameOverScene extends JPanel {
     private final GameHandler gameHandler;
 
+    public Dimension getWindowSize() {
+        return new Dimension(510, 590);
+    }
+
     public GameOverScene(GameHandler gameHandler) {
         this.gameHandler = gameHandler;
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        setPreferredSize(getWindowSize());
 
         // Hole den aktuellen GameState und die ID des aktuellen Users
         GameState gameState = gameHandler.getGameState();

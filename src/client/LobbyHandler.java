@@ -1,5 +1,6 @@
 package client;
 
+import protocol.GameOptions;
 import protocol.messages.*;
 import protocol.messages.lobby.*;
 
@@ -63,11 +64,11 @@ public class LobbyHandler implements LobbyClient {
 
     /**
      * Create a game.
-     * @param size The size of the game.
+     * @param gameOptions The game options.
      */
     @Override
-    public void sendCreateGameEvent(int size) {
-        this.clientHandler.sendMessage(new CreateGameMessage(size));
+    public void sendCreateGameEvent(GameOptions gameOptions) {
+        this.clientHandler.sendMessage(new CreateGameMessage(gameOptions));
     }
 
     /**

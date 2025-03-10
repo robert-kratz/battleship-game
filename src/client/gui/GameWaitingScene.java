@@ -27,6 +27,10 @@ public class GameWaitingScene extends JPanel {
     // Timer für den Countdown
     private Timer countdownTimer;
 
+    public Dimension getWindowSize() {
+        return new Dimension(900, 500);
+    }
+
     public GameWaitingScene(GameHandler gameHandler) {
         this.gameHandler = gameHandler;
         this.gameCode = gameHandler.getGameState().getSessionCode();
@@ -35,7 +39,7 @@ public class GameWaitingScene extends JPanel {
 
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-        setPreferredSize(new Dimension(320, 300));
+        setPreferredSize(getWindowSize());
 
         // Überschrift mit Game-Code
         // Hier fügen wir den MouseListener zum Kopieren hinzu

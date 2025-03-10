@@ -31,14 +31,27 @@ public class BattleShipGame implements Game, Runnable {
 
     private Timer turnDelayTimer;
 
-    public BattleShipGame(Server server, int size) {
+    public BattleShipGame(Server server) {
         this.server = server;
-        this.size = size;
+
+        GameOptions gameOptions = new GameOptions(); // Default game options
+
+        this.size = gameOptions.getBoardSize();
 
         // Initialize available ships
         initAvailableShips();
 
-        this.gameState = new GameState(size, availableShips);
+        this.gameState = new GameState(gameOptions, availableShips);
+    }
+
+    public BattleShipGame(Server server, GameOptions gameOptions) {
+        this.server = server;
+        this.size = gameOptions.getBoardSize();
+
+        // Initialize available ships
+        initAvailableShips();
+
+        this.gameState = new GameState(gameOptions, availableShips);
     }
 
     @Override
@@ -86,6 +99,7 @@ public class BattleShipGame implements Game, Runnable {
             playerA = player;
             GameState newState = new GameState(this.getGameState());
             newState.setPlayerA(new ClientPlayer(playerA.getId(), playerA.getUsername())); //Create Wrapper for PlayerInfo
+            newState.getPlayerA().setEnergy(gameState.getGameOptions().getEnergyGameStart());
 
             System.out.println("Player A: " + playerA.getUsername());
 
@@ -96,6 +110,7 @@ public class BattleShipGame implements Game, Runnable {
             playerB = player;
             GameState newState = new GameState(this.getGameState());
             newState.setPlayerB(new ClientPlayer(playerB.getId(), playerB.getUsername())); //Create Wrapper for PlayerInfo
+            newState.getPlayerB().setEnergy(gameState.getGameOptions().getEnergyGameStart());
 
             System.out.println("Player B: " + playerB.getUsername());
 
@@ -131,12 +146,12 @@ public class BattleShipGame implements Game, Runnable {
 
         gameState.setStatus(GameState.GameStatus.BUILD_GAME_BOARD);
 
-        Date date = new Date(System.currentTimeMillis() + Parameters.TIMER_BEFORE_LOBBY_START * 1000);
+        Date date = new Date(System.currentTimeMillis() + Parameters.LOBBY_GAME_START_TIME * 1000);
 
         GameState newState = new GameState(this.getGameState());
 
         newState.setBuildGameBoardStarted(date);
-        newState.setBuildGameBoardFinished(new Date(date.getTime() + (Parameters.BUILD_TIME_IN_SECONDS * 1000)));
+        newState.setBuildGameBoardFinished(new Date(date.getTime() + (newState.getGameOptions().getBuildTime() * 1000L)));
 
         broadcastMessage(new BuildingPhaseStartMessage(newState));
 
@@ -220,7 +235,7 @@ public class BattleShipGame implements Game, Runnable {
         GameState newState = new GameState(this.getGameState());
 
         Date start = new Date();
-        Date end = new Date(start.getTime() + Parameters.SHOOT_TIME_IN_SECONDS * 1000);
+        Date end = new Date(start.getTime() + newState.getGameOptions().getMoveTime() * 1000L);
 
         newState.setPlayersTurnStart(start);
         newState.setPlayersTurnEnd(end);
@@ -262,12 +277,12 @@ public class BattleShipGame implements Game, Runnable {
         GameState newState = new GameState(this.getGameState());
 
         Date start = new Date();
-        Date end = new Date(start.getTime() + Parameters.SHOOT_TIME_IN_SECONDS * 1000);
+        Date end = new Date(start.getTime() + newState.getGameOptions().getMoveTime() * 1000L);
 
         newState.setPlayersTurnStart(start);
         newState.setPlayersTurnEnd(end);
 
-        newState.getCurrentTurnPlayer().addEnergy(Parameters.ENERGY_TURN_BONUS);
+        newState.getCurrentTurnPlayer().addEnergy(newState.getGameOptions().getEnergyTurnBonus());
 
         newState.setNextTurn();
 
@@ -451,14 +466,12 @@ public class BattleShipGame implements Game, Runnable {
         System.out.println("Move: " + move.getX() + " - " + move.getY() + " - Is a Hit: " + moveIsHit);
 
         if (moveIsHit) {
-            newState.getCurrentTurnPlayer().addEnergy(Parameters.ENERGY_SHIP_HIT);
+            newState.getCurrentTurnPlayer().addEnergy(newState.getGameOptions().getEnergyShipHit());
 
-            long buffer =  (Parameters.HIT_BONUS_TIME_IN_SECONDS * 1000);
+            long buffer =  (newState.getGameOptions().getMoveHitTimeBonus() * 1000L);
             Date lastDate = newState.getPlayersTurnEnd().after(new Date()) ? (newState.getPlayersTurnEnd()) : new Date();
 
             newState.setPlayersTurnEnd(new Date(buffer + lastDate.getTime()));
-            System.out.println("Extending turn time by " + Parameters.HIT_BONUS_TIME_IN_SECONDS + " seconds");
-            System.out.println("New turn end: " + newState.getPlayersTurnEnd().toString());
             this.allowAnotherMove = true;
         } else {
             this.allowAnotherMove = false;

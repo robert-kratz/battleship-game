@@ -40,7 +40,6 @@ public class ClientPlayer implements Serializable {
         this.ready = false;
         this.moves = new ArrayList<>();
         this.uncoveredShips = new ArrayList<>();
-        this.energy = Parameters.PLAYER_ENERGY_START;
     }
 
     public ArrayList<Cell> getAttackedCellsForPlayer() {

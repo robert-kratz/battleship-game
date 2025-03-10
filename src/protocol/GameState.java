@@ -42,6 +42,8 @@ public class GameState implements Serializable  {
 
     private GameStatus status = GameStatus.LOBBY_WAITING;
 
+    private final GameOptions gameOptions;
+
     public GameState(GameState gameState) {
         if(gameState.playerA != null) {
             this.playerA = new ClientPlayer(gameState.playerA);
@@ -64,12 +66,15 @@ public class GameState implements Serializable  {
         this.availableShips = new ArrayList<>(gameState.availableShips);
         this.currentGameRound = gameState.currentGameRound;
         this.id = gameState.id;
+        this.gameOptions = gameState.gameOptions;
     }
 
-    public GameState(int size, ArrayList<Ship> ships) {
-        this.size = size;
+    public GameState(GameOptions gameOptions, ArrayList<Ship> ships) {
+        this.size = gameOptions.getBoardSize();
         this.sessionCode = generateSessionCode();
         this.id = UUID.randomUUID();
+
+        this.gameOptions = gameOptions;
 
         this.availableShips = ships;
     }
@@ -448,5 +453,9 @@ public class GameState implements Serializable  {
 
     private int generateSessionCode() {
         return (int) (Math.random() * 900000) + 100000;
+    }
+
+    public GameOptions getGameOptions() {
+        return gameOptions;
     }
 }

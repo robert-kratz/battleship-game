@@ -42,8 +42,15 @@ public class GameInGameScene extends JPanel implements Runnable {
     private JButton airStrikeButton;
     private JButton giveUpButton;
 
+    public Dimension getWindowSize() {
+        return new Dimension(900, 500);
+    }
+
     public GameInGameScene(GameHandler gameHandler, ArrayList<Ship> placedShips) {
         this.gameHandler = gameHandler;
+
+        setPreferredSize(getWindowSize());
+
         this.playersTurn = gameHandler.getGameState().isPlayersTurn(this.gameHandler.getClientHandler().getUserId());
         this.currentTurnStart = this.gameHandler.getGameState().getPlayersTurnStart();
         this.currentTurnEnd = this.gameHandler.getGameState().getPlayersTurnEnd();

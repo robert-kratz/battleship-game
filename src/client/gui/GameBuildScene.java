@@ -41,8 +41,15 @@ public class GameBuildScene extends JPanel implements Runnable {
 
     private JLabel tipLabel;
 
+    public Dimension getWindowSize() {
+        return new Dimension(900, 500);
+    }
+
     public GameBuildScene(GameHandler gameHandler) {
         setLayout(new BorderLayout());
+
+        setPreferredSize(getWindowSize());
+
         this.gameHandler = gameHandler;
 
         // Alle möglichen Schiffe aus dem GameState laden

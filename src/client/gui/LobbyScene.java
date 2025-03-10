@@ -19,11 +19,17 @@ public class LobbyScene extends JPanel {
     JButton createButton;
     JButton joinButton;
 
+    public Dimension getWindowSize() {
+        return new Dimension(430, 270);
+    }
+
     public LobbyScene(ClientHandler clientHandler) {
         this.clientHandler = clientHandler;
 
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20)); // Padding um das Panel
+        //setPreferredSize(new Dimension(320, 300));
+        setPreferredSize(getWindowSize());
 
         // Große Überschrift
         titleLabel = new JLabel("Battleships");

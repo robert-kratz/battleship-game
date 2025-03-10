@@ -1,7 +1,5 @@
 package protocol;
 
-import protocol.game.Cell;
-
 import java.awt.*;
 import java.util.ArrayList;
 
@@ -23,6 +21,7 @@ public class ItemManager {
         pointArrayList.add(new Point(x, y + 1));
         pointArrayList.add(new Point(x - 1, y + 1));
         pointArrayList.add(new Point(x + 1, y + 1));
+
         //check if the points are in the 3x3 area
         for (Point point : pointArrayList) {
             for (Ship ship : ships) {

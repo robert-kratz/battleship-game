@@ -1,5 +1,6 @@
 package server;
 
+import protocol.GameOptions;
 import protocol.GameState;
 import protocol.messages.ErrorMessage;
 import protocol.ErrorType;
@@ -101,12 +102,12 @@ public class PlayerInfo implements Runnable {
                     case MessageType.CREATE_GAME -> {
                         CreateGameMessage createGameMessage = (CreateGameMessage) received;
 
-                        if(createGameMessage.getSize() < 5 || createGameMessage.getSize() > 20) {
+                        if(createGameMessage.getGameOptions().getBoardSize() < 5 || createGameMessage.getGameOptions().getBoardSize() > 20) {
                             sendMessage(new ErrorMessage(ErrorType.INVALID_GAME_SIZE));
                             return;
                         }
 
-                        createGame(createGameMessage.getSize());
+                        createGame(createGameMessage.getGameOptions());
 
                         server.getQueue().remove(this);
 
@@ -220,17 +221,17 @@ public class PlayerInfo implements Runnable {
             server.getQueue().remove(playerA);
             server.getQueue().remove(playerB);
 
-            createGame(10, playerA, playerB);
+            createGame(playerA, playerB);
         }
     }
 
     /**
      * Create a new game with the given size for the current player.
      * Übergibt die gesamte Thread-Erstellung und -Logik an den Server.
-     * @param size size of the game board
+     * @param gameOptions gameOptions
      */
-    private void createGame(int size) {
-        BattleShipGame game = new BattleShipGame(this.server, size);
+    private void createGame(GameOptions gameOptions) {
+        BattleShipGame game = new BattleShipGame(this.server, gameOptions);
         game.addPlayer(this);
         server.registerGame(game);
     }
@@ -238,12 +239,11 @@ public class PlayerInfo implements Runnable {
     /**
      * Create a new game with the given size for the two given players.
      * Übergibt die gesamte Thread-Erstellung und -Logik an den Server.
-     * @param size size of the game board
      * @param playerA playerA
      * @param playerB playerB
      */
-    private void createGame(int size, PlayerInfo playerA, PlayerInfo playerB) {
-        BattleShipGame game = new BattleShipGame(this.server, size);
+    private void createGame(PlayerInfo playerA, PlayerInfo playerB) {
+        BattleShipGame game = new BattleShipGame(this.server);
         System.out.println("Game created with player A: " + playerA.getUsername() +
                 " and player B: " + playerB.getUsername());
 

@@ -34,10 +34,6 @@ public class StageManager extends JFrame {
 
     private Stage currentStage = Stage.LOBBY_SCENE;
 
-    private final Dimension BIG_DIMENSION = new Dimension(900, 530);
-    private final Dimension SMALL_DIMENSION = new Dimension(430, 270);
-    private final Dimension GAME_OVER_DIMENSION = new Dimension(510, 590);
-
     public StageManager(ClientHandler clientHandler) {
         this.clientHandler = clientHandler;
 
@@ -45,7 +41,19 @@ public class StageManager extends JFrame {
         setResizable(true);
 
         cardLayout = new CardLayout();
-        mainPanel = new JPanel(cardLayout);
+        mainPanel = new JPanel(cardLayout) {
+            @Override
+            public Dimension getPreferredSize() {
+                // Gehe durch alle enthaltenen Komponenten und gib die PreferredSize der sichtbaren Komponente zurück
+                for (Component comp : getComponents()) {
+                    if (comp.isVisible()) {
+                        return comp.getPreferredSize();
+                    }
+                }
+                return super.getPreferredSize();
+            }
+        };
+
         add(mainPanel);
 
         lobbyScene = new LobbyScene(clientHandler);
@@ -56,6 +64,8 @@ public class StageManager extends JFrame {
         addScene(Stage.CREATE_GAME_SCENE, createGameScene);
 
         switchScene(Stage.LOBBY_SCENE);
+
+        adaptScreenSize();
 
         setVisible(true);
     }
@@ -173,26 +183,57 @@ public class StageManager extends JFrame {
 
         System.out.println("Adapting screen size for stage: " + currentStage);
 
+        System.out.println("Old size: " + getSize());
+
+        setResizable(false);
+
         switch (currentStage) {
             case LOBBY_SCENE:
+                System.out.println("Lobby scene:" + this.lobbyScene.getWindowSize());
+
+                this.lobbyScene.setPreferredSize(this.lobbyScene.getWindowSize());
+
+                setSize(this.lobbyScene.getWindowSize());
+                setMinimumSize(this.lobbyScene.getWindowSize());
+                break;
             case CREATE_GAME_SCENE:
-                setSize(SMALL_DIMENSION);
-                setMinimumSize(SMALL_DIMENSION);
-                setResizable(false);
+
+                this.createGameScene.setPreferredSize(this.createGameScene.getWindowSize());
+
+                setSize(this.createGameScene.getWindowSize());
+                setMinimumSize(this.createGameScene.getWindowSize());
                 break;
             case GAME_WAITING_SCENE:
+
+                this.gameWaitingScene.setPreferredSize(this.gameWaitingScene.getWindowSize());
+
+                setSize(this.gameWaitingScene.getWindowSize());
+                setMinimumSize(this.gameWaitingScene.getWindowSize());
+                break;
             case GAME_BUILD_SCENE:
+
+                this.gameBuildScene.setPreferredSize(this.gameBuildScene.getWindowSize());
+
+                setSize(this.gameBuildScene.getWindowSize());
+                setMinimumSize(this.gameBuildScene.getWindowSize());
+                break;
             case GAME_IN_GAME_SCENE:
-                setSize(BIG_DIMENSION);
-                setMinimumSize(BIG_DIMENSION);
-                setResizable(false);
+
+                this.gameIngameScene.setPreferredSize(this.gameIngameScene.getWindowSize());
+
+                setSize(this.gameIngameScene.getWindowSize());
+                setMinimumSize(this.gameIngameScene.getWindowSize());
                 break;
             case GAME_END_SCENE:
-                setSize(GAME_OVER_DIMENSION);
-                setMinimumSize(GAME_OVER_DIMENSION);
-                setResizable(false);
+
+                this.gameOverScene.setPreferredSize(this.gameOverScene.getWindowSize());
+
+                setSize(this.gameOverScene.getWindowSize());
+                setMinimumSize(this.gameOverScene.getWindowSize());
                 break;
         }
+
+        System.out.println("New size: " + getSize());
     }
 
     public void switchScene(Stage stage) {
@@ -203,6 +244,7 @@ public class StageManager extends JFrame {
 
             setTitle(stage.getWindowTitle());
             adaptScreenSize();
+            pack();
         } else {
             System.err.println("Unable to switch to scene: " + stage);
         }

@@ -1,5 +1,6 @@
 package client;
 
+import protocol.GameOptions;
 import protocol.messages.ErrorMessage;
 import protocol.messages.lobby.QueueUpdateMessage;
 
@@ -39,9 +40,9 @@ public interface LobbyClient {
 
     /**
      * Create a game.
-     * @param size The size of the game.
+     * @param gameOptions The game options.
      */
-    void sendCreateGameEvent(int size);
+    void sendCreateGameEvent(GameOptions gameOptions);
 
     /**
      * Join a game with a code.
