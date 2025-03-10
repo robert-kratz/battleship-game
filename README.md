@@ -229,5 +229,5 @@ The project followed a structured timeline as part of the seminar requirements:
 
 ## Acknowledgements
 
-This project was developed as part of Programmierpraktikum 2 in the “Entwicklung eines Projektes für Programmierpraktikum 2” seminar at the University of Mannheim. Special thanks to all contributors and mentors who provided guidance during the development of this network-based Battleship game.
+This project was developed as part of Programmierpraktikum 2 in the “Entwicklung eines Projektes für Programmierpraktikum 2” seminar at the University of Mannheim and was developed by [Robert Julian Kratz](https://rjks.us)
 
