@@ -2,6 +2,7 @@ package protocol;
 
 import protocol.game.Cell;
 import protocol.game.Move;
+import server.Parameters;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -39,7 +40,7 @@ public class ClientPlayer implements Serializable {
         this.ready = false;
         this.moves = new ArrayList<>();
         this.uncoveredShips = new ArrayList<>();
-        this.energy = 30;
+        this.energy = Parameters.PLAYER_ENERGY_START;
     }
 
     public ArrayList<Cell> getAttackedCellsForPlayer() {
