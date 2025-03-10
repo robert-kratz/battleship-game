@@ -213,7 +213,7 @@ The communication between the client and server is facilitated by a series of se
 
 ⸻
 
-Seminar Context & Documentation Requirements
+## Seminar Context & Documentation Requirements
 
 This project is part of the “Entwicklung eines Projektes für Programmierpraktikum 2” seminar at the University of Mannheim. The aim was to develop a project that later forms the basis for an assignment sheet for Programmierpraktikum 2. The primary focus was on implementing a client/server architecture using threads and sockets, with the classic Battleship game as the application domain.
 
@@ -228,15 +228,15 @@ Key aspects include:
 
 ⸻
 
-Timeline and Project Milestones
+## Timeline and Project Milestones
 
 The project followed a structured timeline as part of the seminar requirements:
--	18 February 2025: Kick-off event and initial topic briefing.
--	18 February – 28 February 2025: Preparation phase and individual topic discussions.
--	2 March 2025: Submission of the project exposé (0.5-1.5 pages describing the project).
--	21 June 2025: First project submission for review.
--	28 June 2025: Submission of review materials.
--	7 July – 11 July 2025: Possible revision phase and final project adjustments during the colloquium.
+-	**18 February 2025**: Kick-off event and initial topic briefing.
+-	**18 February – 28 February 2025**: Preparation phase and individual topic discussions.
+-	**2 March 2025**: Submission of the project exposé (0.5-1.5 pages describing the project).
+-	**21 June 2025**: First project submission for review.
+-	**28 June 2025**: Submission of review materials.
+-	**7 July – 11 July 2025**: Possible revision phase and final project adjustments during the colloquium.
 -	Final Submission: One week after the colloquium.
 -	Additional Events:
 -	Kick-off presentations.
@@ -245,13 +245,7 @@ The project followed a structured timeline as part of the seminar requirements:
 
 ⸻
 
-Contributing
-
-Contributions are welcome! Please refer to the project documentation for coding standards and guidelines. Pull requests should adhere to the established code style and include appropriate tests.
-
-⸻
-
-Acknowledgements
+## Acknowledgements
 
 This project was developed as part of Programmierpraktikum 2 in the “Entwicklung eines Projektes für Programmierpraktikum 2” seminar at the University of Mannheim. Special thanks to all contributors and mentors who provided guidance during the development of this network-based Battleship game.
 
