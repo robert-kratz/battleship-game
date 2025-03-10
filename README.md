@@ -27,13 +27,9 @@ Network-Based Battleship is a fully featured, real-time multiplayer game inspire
 - [Contributing](#contributing)
 - [Acknowledgements](#acknowledgements)
 
----
-
 ## Overview
 
 Network-Based Battleship is a competitive 1v1 game where players place a set of ships on a grid and then take turns attacking their opponent’s board. The game supports a customizable board size, configurable timers, energy management, and an item system that adds strategic depth to each turn. The client and server communicate via a set of well-defined messages that maintain a snapshot of the game state throughout the match.
-
----
 
 ## Key Features
 
@@ -48,8 +44,6 @@ Network-Based Battleship is a competitive 1v1 game where players place a set of 
 - **Turn-Based Gameplay:** Alternating turns with a dynamic timer that can be extended when a move is successful.
 - **Comprehensive Messaging Protocol:** A set of messages (e.g., RegisterMessage, QueueUpdateMessage, CreateGameMessage, GameBuildingStartMessage, PlayerMoveMessage, MoveMadeMessage, PlayerTurnChangeMessage, GameOverMessage) ensures synchronized game state updates.
 - **Automatic Fallback:** If a player does not finish placing ships within the build phase, the server randomizes the remaining ship placements.
-
----
 
 ## Game Flow and Phases
 
@@ -130,8 +124,6 @@ Network-Based Battleship is a competitive 1v1 game where players place a set of 
   - Detailed statistics (energy accumulated, number of moves, etc.).
   - A button to return to the lobby.
 
----
-
 ## Protocol and Messaging
 
 The communication between the client and server is facilitated by a series of serializable messages. Key message types include:
@@ -158,8 +150,6 @@ The communication between the client and server is facilitated by a series of se
 - **Game State Snapshot:**  
   The `GameState` object contains all relevant data such as board size, available ships, player details (using `ClientPlayer`), session code, timers, moves, energy levels, and turn information.
 
----
-
 ## Technical Implementation
 
 - **Language & Frameworks:**
@@ -183,8 +173,6 @@ The communication between the client and server is facilitated by a series of se
 
 - **Item Mechanics:**  
   Items (Sea Bomb, Radar, Air Strike) extend the base `Item` class and define specific methods to compute affected board cells. Energy costs for these items are enforced and integrated into the move validation process.
-
----
 
 ## Installation and Setup
 
@@ -211,8 +199,6 @@ The communication between the client and server is facilitated by a series of se
 -	Engage in turn-based play in the in-game phase. Use items and strategize to hit your opponent’s ships.
 -	The game ends when one player sinks all enemy ships or a player gives up.
 
-⸻
-
 ## Seminar Context & Documentation Requirements
 
 This project is part of the “Entwicklung eines Projektes für Programmierpraktikum 2” seminar at the University of Mannheim. The aim was to develop a project that later forms the basis for an assignment sheet for Programmierpraktikum 2. The primary focus was on implementing a client/server architecture using threads and sockets, with the classic Battleship game as the application domain.
@@ -225,8 +211,6 @@ Key aspects include:
 3.	Eclipse Project with Templates: Starter code for participants.
 4.	Assignment Sheet: Created in LaTeX.
 5.	Presentation Slides: Provided in PDF format.
-
-⸻
 
 ## Timeline and Project Milestones
 
@@ -242,8 +226,6 @@ The project followed a structured timeline as part of the seminar requirements:
 -	Kick-off presentations.
 -	Individual topic meetings.
 -	Submission of exposés.
-
-⸻
 
 ## Acknowledgements
 
