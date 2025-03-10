@@ -7,7 +7,7 @@ import protocol.messages.game.BuildingPhaseStartMessage;
 import protocol.messages.game.GameInGameStartMessage;
 import protocol.messages.game.GameOverMessage;
 import protocol.messages.game.JoinGameMessage;
-import protocol.messages.game.building.BuildReadyStateChange;
+import protocol.messages.game.building.BuildReadyStateChangeMessage;
 import protocol.messages.game.ingame.MoveMadeMessage;
 import protocol.messages.game.ingame.PlayerTurnChangeMessage;
 
@@ -17,7 +17,7 @@ public class BattleShipGame implements Game, Runnable {
 
     private Server server;
 
-    private PlayerInfo playerA, playerB;
+    private ServerPlayer playerA, playerB;
     private GameState gameState = null;
     private final int size;
 
@@ -106,7 +106,7 @@ public class BattleShipGame implements Game, Runnable {
      * @param player The player to add.
      */
     @Override
-    public synchronized void addPlayer(PlayerInfo player) {
+    public synchronized void addPlayer(ServerPlayer player) {
         if (!this.gameState.getStatus().equals(GameState.GameStatus.LOBBY_WAITING)) return;
 
         player.setInGame(true);
@@ -114,7 +114,7 @@ public class BattleShipGame implements Game, Runnable {
         if (playerA == null) {
             playerA = player;
             GameState newState = new GameState(this.getGameState());
-            newState.setPlayerA(new ClientPlayer(playerA.getId(), playerA.getUsername())); //Create Wrapper for PlayerInfo
+            newState.setPlayerA(new ClientPlayer(playerA.getId(), playerA.getUsername())); //Create Wrapper for ServerPlayer
             newState.getPlayerA().setEnergy(gameState.getGameOptions().getEnergyGameStart());
 
             System.out.println("Player A: " + playerA.getUsername());
@@ -125,7 +125,7 @@ public class BattleShipGame implements Game, Runnable {
         } else if (playerB == null) {
             playerB = player;
             GameState newState = new GameState(this.getGameState());
-            newState.setPlayerB(new ClientPlayer(playerB.getId(), playerB.getUsername())); //Create Wrapper for PlayerInfo
+            newState.setPlayerB(new ClientPlayer(playerB.getId(), playerB.getUsername())); //Create Wrapper for ServerPlayer
             newState.getPlayerB().setEnergy(gameState.getGameOptions().getEnergyGameStart());
 
             System.out.println("Player B: " + playerB.getUsername());
@@ -146,7 +146,7 @@ public class BattleShipGame implements Game, Runnable {
      * @param player The player to remove.
      */
     @Override
-    public synchronized void removePlayer(PlayerInfo player) {
+    public synchronized void removePlayer(ServerPlayer player) {
         this.gameState.getPlayer(player.getId()).setInGame(false);
         player.setInGame(false);
 
@@ -189,7 +189,7 @@ public class BattleShipGame implements Game, Runnable {
      * @param ships The ships that the player has.
      */
     @Override
-    public void onPlayerPlaceShips(PlayerInfo player, ArrayList<Ship> ships) {
+    public void onPlayerPlaceShips(ServerPlayer player, ArrayList<Ship> ships) {
 
         boolean validatePlacement = ShipPlacementHelper.shipsAreShipsTheSame(this.gameState.getAvailableShips(), ships, this.size);
 
@@ -211,7 +211,7 @@ public class BattleShipGame implements Game, Runnable {
      * @param ready Whether the player is ready or not.
      */
     @Override
-    public void onPlayerReadyStateChange(PlayerInfo player, boolean ready) {
+    public void onPlayerReadyStateChange(ServerPlayer player, boolean ready) {
         GameState gameState = new GameState(this.getGameState());
 
         if (playerA != null && playerA.getId().equals(player.getId())) {
@@ -231,9 +231,9 @@ public class BattleShipGame implements Game, Runnable {
         }
 
         if (playerA != null)
-            playerA.sendMessage(new BuildReadyStateChange(gameState));
+            playerA.sendMessage(new BuildReadyStateChangeMessage(gameState));
         if (playerB != null)
-            playerB.sendMessage(new BuildReadyStateChange(gameState));
+            playerB.sendMessage(new BuildReadyStateChangeMessage(gameState));
 
         // Optional: Ausgabe, wenn beide Spieler ready sind
         if (gameState.getPlayerA() != null && gameState.getPlayerB() != null &&
@@ -449,7 +449,7 @@ public class BattleShipGame implements Game, Runnable {
      * @param move The move object containing the move.
      */
     @Override
-    public void onPlayerAttemptMove(PlayerInfo player, Move move) {
+    public void onPlayerAttemptMove(ServerPlayer player, Move move) {
         if (!this.gameState.getStatus().equals(GameState.GameStatus.IN_GAME)) return;
 
         if(playerTurnMadeMove && !allowAnotherMove) return;
@@ -635,11 +635,11 @@ public class BattleShipGame implements Game, Runnable {
         return size;
     }
 
-    public PlayerInfo getPlayerA() {
+    public ServerPlayer getPlayerA() {
         return playerA;
     }
 
-    public PlayerInfo getPlayerB() {
+    public ServerPlayer getPlayerB() {
         return playerB;
     }
 }

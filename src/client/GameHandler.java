@@ -11,13 +11,13 @@ import protocol.messages.game.BuildingPhaseStartMessage;
 import protocol.messages.game.GameInGameStartMessage;
 import protocol.messages.game.GameOverMessage;
 import protocol.messages.game.LeaveGameMessage;
-import protocol.messages.game.building.BuildReadyStateChange;
+import protocol.messages.game.building.BuildReadyStateChangeMessage;
 import protocol.messages.game.building.PlayerReadyMessage;
+import protocol.messages.game.building.PlayerUpdateShipPlacement;
 import protocol.messages.game.ingame.MoveMadeMessage;
 import protocol.messages.game.ingame.PlayerHoverMessage;
 import protocol.messages.game.ingame.PlayerMoveMessage;
 import protocol.messages.game.ingame.PlayerTurnChangeMessage;
-import protocol.messages.game.building.UpdateBuildBoardMessage;
 
 import java.util.ArrayList;
 import java.util.UUID;
@@ -213,7 +213,7 @@ public class GameHandler implements GameClient {
             return;
         }
 
-        clientHandler.sendMessage(new UpdateBuildBoardMessage(ships));
+        clientHandler.sendMessage(new PlayerUpdateShipPlacement(ships));
     }
 
     /**
@@ -254,13 +254,13 @@ public class GameHandler implements GameClient {
 
     /**
      * Triggers when the player is ready to start the game
-     * @param buildReadyStateChange The message containing the build ready state change information
+     * @param buildReadyStateChangeMessage The message containing the build ready state change information
      */
     @Override
-    public void onBuildReadyStateChange(BuildReadyStateChange buildReadyStateChange) {
+    public void onBuildReadyStateChange(BuildReadyStateChangeMessage buildReadyStateChangeMessage) {
         if(!this.gameState.getStatus().equals(GameState.GameStatus.BUILD_GAME_BOARD)) return;
 
-        this.gameState = buildReadyStateChange.getGameState();
+        this.gameState = buildReadyStateChangeMessage.getGameState();
         updateOpponentReadyState();
     }
 

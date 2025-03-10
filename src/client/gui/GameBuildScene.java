@@ -293,7 +293,7 @@ public class GameBuildScene extends JPanel implements Runnable {
         rightPanel.add(new JSeparator(SwingConstants.HORIZONTAL));
         rightPanel.add(Box.createVerticalStrut(10));
 
-        tipLabel = new JLabel("Press 'R' to rotate ship");
+        tipLabel = new JLabel("Press 'R' to rotate");
         tipLabel.setForeground(Color.WHITE);
         tipLabel.setFont(new Font("Arial", Font.PLAIN, 14));
         tipLabel.setAlignmentX(Component.LEFT_ALIGNMENT);

@@ -7,13 +7,19 @@ import protocol.messages.MessageType;
 import java.util.ArrayList;
 import java.util.UUID;
 
+/**
+ * This message is sent from the client to the server when a player hovers over a cell.
+ * This message is also received by the client from the server when the opponent hovers over a cell.
+ * The client distinguishes between the two by checking if the userId is equal to its own.
+ */
+
 public class PlayerHoverMessage extends Message {
 
     private static final long serialVersionUID = 1L;
 
     private final UUID userId;
-    private int x;
-    private int y;
+    private final int x;
+    private final int y;
     private ArrayList<Cell> affectedFields;
 
     /**

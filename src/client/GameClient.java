@@ -7,7 +7,7 @@ import protocol.messages.*;
 import protocol.messages.game.BuildingPhaseStartMessage;
 import protocol.messages.game.GameInGameStartMessage;
 import protocol.messages.game.GameOverMessage;
-import protocol.messages.game.building.BuildReadyStateChange;
+import protocol.messages.game.building.BuildReadyStateChangeMessage;
 import protocol.messages.game.ingame.MoveMadeMessage;
 import protocol.messages.game.ingame.PlayerHoverMessage;
 import protocol.messages.game.ingame.PlayerTurnChangeMessage;
@@ -62,9 +62,9 @@ public interface GameClient {
 
     /**
      * This method is called when the build ready state changes
-     * @param buildReadyStateChange The message containing the build ready state information
+     * @param buildReadyStateChangeMessage The message containing the build ready state information
      */
-    void onBuildReadyStateChange(BuildReadyStateChange buildReadyStateChange);
+    void onBuildReadyStateChange(BuildReadyStateChangeMessage buildReadyStateChangeMessage);
 
     /**
      * This method is called when an error occurs in the game

@@ -22,12 +22,12 @@ public class Server {
     private ServerSocket serverSocket;
     private boolean running = false;
 
-    private final List<PlayerInfo> players = new ArrayList<>();
+    private final List<ServerPlayer> players = new ArrayList<>();
     private final List<Thread> clientThreads = new ArrayList<>();
 
     private final Map<UUID, GameContainer> games = new HashMap<>();
 
-    private final ArrayList<PlayerInfo> queue = new ArrayList<>();
+    private final ArrayList<ServerPlayer> queue = new ArrayList<>();
     private final ServerGUI gui;
 
     /**
@@ -55,7 +55,7 @@ public class Server {
                     Socket clientSocket = serverSocket.accept();
                     System.out.println("New connection from " + clientSocket.getInetAddress().getHostAddress() + ":" + clientSocket.getPort() + " (" + clientSocket.getInetAddress().getHostName() + ");");
 
-                    PlayerInfo player = new PlayerInfo(clientSocket, this);
+                    ServerPlayer player = new ServerPlayer(clientSocket, this);
                     players.add(player);
 
                     Thread clientThread = new Thread(player);
@@ -80,7 +80,7 @@ public class Server {
             for (UUID gameId : new ArrayList<>(games.keySet())) {
                 unregisterGame(gameId);
             }
-            for (PlayerInfo p : players) {
+            for (ServerPlayer p : players) {
                 p.sendMessage(new ErrorMessage(ErrorType.SERVER_CLOSED));
             }
             if (serverSocket != null) {
@@ -130,7 +130,7 @@ public class Server {
      * @param player the player for whom to retrieve the game
      * @return the game the player is in or null if none
      */
-    public synchronized BattleShipGame getGame(PlayerInfo player) {
+    public synchronized BattleShipGame getGame(ServerPlayer player) {
         for (GameContainer container : games.values()) {
             BattleShipGame game = container.getGame();
             if (game == null) continue;
@@ -163,7 +163,7 @@ public class Server {
      * Adds a player to the queue and sends an update message to the player.
      * @param player the player to add to the queue
      */
-    public void addToQueue(PlayerInfo player) {
+    public void addToQueue(ServerPlayer player) {
         queue.add(player);
         player.sendMessage(new QueueUpdateMessage(queue.size(), true));
     }
@@ -187,7 +187,7 @@ public class Server {
      */
     private void updatePlayerList() {
         StringBuilder sb = new StringBuilder();
-        for (PlayerInfo p : players) {
+        for (ServerPlayer p : players) {
             sb.append(p.getUsername()).append(" (").append(p.getIp()).append(")\n");
         }
         gui.updatePlayerList(sb.toString());
@@ -222,11 +222,11 @@ public class Server {
         gui.updateGameList(sb.toString());
     }
 
-    public List<PlayerInfo> getPlayers() {
+    public List<ServerPlayer> getPlayers() {
         return players;
     }
 
-    public ArrayList<PlayerInfo> getQueue() {
+    public ArrayList<ServerPlayer> getQueue() {
         return queue;
     }
 
@@ -245,7 +245,7 @@ public class Server {
      * Removes a player from the server. If the player is in a game, the game is ended and unregistered.
      * @param player the player leaving the server
      */
-    public void removePlayer(PlayerInfo player) {
+    public void removePlayer(ServerPlayer player) {
         BattleShipGame game = getGame(player);
         System.out.println("Player " + player.getUsername() + " left the server");
 

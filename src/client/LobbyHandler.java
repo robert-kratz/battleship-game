@@ -63,7 +63,7 @@ public class LobbyHandler implements LobbyClient {
     @Override
     public void sendLeaveQueueEvent() {
         //if(!inQueue) throw new IllegalStateException("Not in queue.");
-        this.clientHandler.sendMessage(new QuitQueueMessage());
+        this.clientHandler.sendMessage(new LeaveQueueMessage());
     }
 
     /**

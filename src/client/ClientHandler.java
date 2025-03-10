@@ -7,7 +7,7 @@ import protocol.messages.game.BuildingPhaseStartMessage;
 import protocol.messages.game.GameInGameStartMessage;
 import protocol.messages.game.GameOverMessage;
 import protocol.messages.game.JoinGameMessage;
-import protocol.messages.game.building.BuildReadyStateChange;
+import protocol.messages.game.building.BuildReadyStateChangeMessage;
 import protocol.messages.game.ingame.MoveMadeMessage;
 import protocol.messages.game.ingame.PlayerHoverMessage;
 import protocol.messages.game.ingame.PlayerTurnChangeMessage;
@@ -124,14 +124,14 @@ public class ClientHandler {
 
                             this.gameHandler.onBuildPhaseStarts(gameStartedMessage);
                         }
-                        case MessageType.GAME_IN_GAME_STARTS -> {
+                        case MessageType.GAME_IN_GAME_START -> {
                             GameInGameStartMessage gameInGameStartMessage = (GameInGameStartMessage) received;
 
                             if(this.gameHandler == null) return;
 
                             this.gameHandler.onGameInGameStarts(gameInGameStartMessage);
                         }
-                        case MessageType.GAME_END -> {
+                        case MessageType.GAME_OVER -> {
                             GameOverMessage gameOverMessage = (GameOverMessage) received;
 
                             if(this.gameHandler == null) return;
@@ -146,11 +146,11 @@ public class ClientHandler {
                             this.gameHandler.onMoveMade(moveMadeMessage);
                         }
                         case MessageType.BUILD_READY_STATE_CHANGE -> {
-                            BuildReadyStateChange buildReadyStateChange = (BuildReadyStateChange) received;
+                            BuildReadyStateChangeMessage buildReadyStateChangeMessage = (BuildReadyStateChangeMessage) received;
 
                             if(this.gameHandler == null) return;
 
-                            this.gameHandler.onBuildReadyStateChange(buildReadyStateChange);
+                            this.gameHandler.onBuildReadyStateChange(buildReadyStateChangeMessage);
                         }
                         case MessageType.TURN_CHANGE -> {
                             PlayerTurnChangeMessage playerTurnChangeMessage = (PlayerTurnChangeMessage) received;

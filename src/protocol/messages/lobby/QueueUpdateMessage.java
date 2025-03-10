@@ -3,6 +3,12 @@ package protocol.messages.lobby;
 import protocol.messages.Message;
 import protocol.messages.MessageType;
 
+/**
+ * This class represents a message that updates the player about the queue size and their status in the queue.
+ * It contains the size of the queue and whether the player is in the queue or not.
+ * It will be sent from the server to the client to inform the player about their queue status and a queue change.
+ */
+
 public class QueueUpdateMessage extends Message {
 
     private final int queueSize;

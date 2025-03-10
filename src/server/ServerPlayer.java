@@ -7,7 +7,7 @@ import protocol.ErrorType;
 import protocol.messages.*;
 import protocol.messages.game.LeaveGameMessage;
 import protocol.messages.game.building.PlayerReadyMessage;
-import protocol.messages.game.building.UpdateBuildBoardMessage;
+import protocol.messages.game.building.PlayerUpdateShipPlacement;
 import protocol.messages.RegisterMessage;
 import protocol.messages.game.ingame.PlayerHoverMessage;
 import protocol.messages.game.ingame.PlayerMoveMessage;
@@ -20,7 +20,7 @@ import java.io.*;
 import java.net.Socket;
 import java.util.UUID;
 
-public class PlayerInfo implements Runnable {
+public class ServerPlayer implements Runnable {
 
     private final Server server;
 
@@ -32,7 +32,7 @@ public class PlayerInfo implements Runnable {
 
     private boolean isInGame = false;
 
-    public PlayerInfo(Socket socket, Server server) {
+    public ServerPlayer(Socket socket, Server server) {
         this.socket = socket;
         this.id = UUID.randomUUID();
         this.ip = socket.getInetAddress().getHostAddress();
@@ -114,6 +114,11 @@ public class PlayerInfo implements Runnable {
                     case MessageType.JOIN_GAME_WITH_CODE -> {
                         JoinGameWithCodeMessage joinGameWithCodeMessage = (JoinGameWithCodeMessage) received;
 
+                        if(game != null) {
+                            sendMessage(new ErrorMessage(ErrorType.ALREADY_IN_GAME));
+                            return;
+                        }
+
                         BattleShipGame targetGame = server.getGameFromJoinCode(joinGameWithCodeMessage.getSessionCode());
 
                         if (targetGame == null) {
@@ -144,15 +149,15 @@ public class PlayerInfo implements Runnable {
 
                         this.isInGame = false;
                     }
-                    case MessageType.UPDATE_BUILD_BOARD -> {
-                        UpdateBuildBoardMessage updateBuildBoardMessage = (UpdateBuildBoardMessage) received;
+                    case MessageType.PLAYER_UPDATE_SHIP_PLACEMENT -> {
+                        PlayerUpdateShipPlacement playerUpdateShipPlacement = (PlayerUpdateShipPlacement) received;
 
                         if(game == null) {
                             sendMessage(new ErrorMessage(ErrorType.NO_GAME_IN_PROGRESS));
                             return;
                         }
 
-                        game.onPlayerPlaceShips(this, updateBuildBoardMessage.getShips());
+                        game.onPlayerPlaceShips(this, playerUpdateShipPlacement.getShips());
                     }
                     case MessageType.PLAYER_READY -> {
                         PlayerReadyMessage playerReadyMessage = (PlayerReadyMessage) received;
@@ -188,8 +193,6 @@ public class PlayerInfo implements Runnable {
                             return;
                         }
 
-                        if(!game.getGameState().getStatus().equals(GameState.GameStatus.IN_GAME)) return;
-
                         game.onPlayerAttemptMove(this, playerMoveMessage.getMove());
                     }
                 }
@@ -205,7 +208,7 @@ public class PlayerInfo implements Runnable {
      * Broadcasts the current queue state to all players.
      */
     private void broadcastQueueStateUpdate() {
-        for (PlayerInfo player : server.getPlayers()) {
+        for (ServerPlayer player : server.getPlayers()) {
             boolean isInQueue = server.getQueue().contains(player);
             player.sendMessage(new QueueUpdateMessage(server.getQueue().size(), isInQueue));
         }
@@ -217,8 +220,8 @@ public class PlayerInfo implements Runnable {
     private void checkQueueForPossibleGame() {
         // Check if there are enough players in queue to start a game
         if(server.getQueue().size() >= 2) {
-            PlayerInfo playerA = server.getQueue().get(0);
-            PlayerInfo playerB = server.getQueue().get(1);
+            ServerPlayer playerA = server.getQueue().get(0);
+            ServerPlayer playerB = server.getQueue().get(1);
 
             server.getQueue().remove(playerA);
             server.getQueue().remove(playerB);
@@ -242,7 +245,7 @@ public class PlayerInfo implements Runnable {
      * @param playerA playerA
      * @param playerB playerB
      */
-    private void createGame(PlayerInfo playerA, PlayerInfo playerB) {
+    private void createGame(ServerPlayer playerA, ServerPlayer playerB) {
         BattleShipGame game = new BattleShipGame(this.server);
         System.out.println("Game created with player A: " + playerA.getUsername() +
                 " and player B: " + playerB.getUsername());
