@@ -131,19 +131,35 @@ public class Board {
      * @param cellHeight height of the cell
      * @param number The number to be displayed in the cell
      */
-    public static void drawRadar(Graphics g, int row, int col, double cellWidth, double cellHeight, int number) {
+    public static void drawRadar(Graphics g, int row, int col, double cellWidth, double cellHeight, int number, boolean isHit) {
+        Graphics2D g2d = (Graphics2D) g.create();
+        // Setze den Strich auf 2 Pixel Dicke
+        g2d.setStroke(new BasicStroke(2));
+        g2d.setColor(new Color(38, 255, 0));
+
+        if(!isHit) darkenCell(g, row, col, cellWidth, cellHeight, new Color(38, 255, 0));
+
+        int startCol = col - 1;
+        int startRow = row - 1;
+        int topLeftX = (int) Math.round(startCol * cellWidth);
+        int topLeftY = (int) Math.round(startRow * cellHeight);
+        int blockWidth = (int) Math.round(3 * cellWidth);
+        int blockHeight = (int) Math.round(3 * cellHeight);
+
+        g2d.drawRect(topLeftX, topLeftY, blockWidth, blockHeight);
+        g2d.dispose();
+
         int centerX = (int) Math.round(col * cellWidth + cellWidth / 2);
         int centerY = (int) Math.round(row * cellHeight + cellHeight / 2);
         FontMetrics fm = g.getFontMetrics();
         String label = String.valueOf(number);
         g.setFont(new Font("Arial", Font.BOLD, 20));
         if(number != 0) {
-            g.setColor(Color.RED);
+            g.setColor(Color.WHITE);
         } else {
             g.setColor(Color.LIGHT_GRAY);
         }
         int textWidth = fm.stringWidth(label);
-        // Berechne die Basislinie, sodass der Text vertikal zentriert ist
         int y = centerY + (fm.getAscent() - fm.getDescent()) / 2;
         g.drawString(label, centerX - textWidth / 2, y);
     }

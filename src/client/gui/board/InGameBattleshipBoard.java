@@ -280,7 +280,7 @@ public class InGameBattleshipBoard extends AbstractBattleshipBoard {
         // Paint all placed ships
         for (Move move : moves) {
             if (move.getRadarItem() != null) {
-                Board.drawRadar(g, move.getY(), move.getX(), cellWidth, cellHeight, move.getRadarShipsIn3x3Area());
+                Board.drawRadar(g, move.getY(), move.getX(), cellWidth, cellHeight, move.getRadarShipsIn3x3Area(), (paintedCells.contains(move.getX() + "-" + move.getY())));
             }
         }
 
