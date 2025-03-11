@@ -7,8 +7,7 @@ public enum SoundType {
 
     CLICK("sounds/mouse-click.wav"),
     ERROR("sounds/error.wav"),
-    CLOCK_TICK("sounds/clock-tick.wav"),
-    TIME_UP("sounds/time-up.wav");
+    CLOCK_TICK("sounds/clock-tick.wav");
 
     private final String filePath;
 

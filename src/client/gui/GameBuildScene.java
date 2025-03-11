@@ -399,7 +399,6 @@ public class GameBuildScene extends JPanel implements Runnable {
                 }
 
                 if (remainingMillis <= 0) {
-                    ClientHandler.mediaPlayer.playSound(SoundType.TIME_UP);
                     SwingUtilities.invokeLater(() -> timerLabel.setText("Time over"));
 
                     SwingUtilities.invokeLater(() -> {
