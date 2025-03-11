@@ -28,4 +28,11 @@ public class PlayerReadyStateChangeMessage extends Message {
     public GameState getGameState() {
         return gameState;
     }
+
+    @Override
+    public String toString() {
+        return "PlayerReadyStateChangeMessage{" +
+                "gameState=" + gameState +
+                '}';
+    }
 }

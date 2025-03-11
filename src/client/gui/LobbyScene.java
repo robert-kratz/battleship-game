@@ -108,11 +108,8 @@ public class LobbyScene extends JPanel {
         queueButton.setText(this.clientHandler.getLobbyHandler().isInQueue() ? "Leave Queue" : "Enter Queue " + queueSize);
         queueButton.addActionListener(e -> {
 
-            System.out.println("Queue clicked" + this.clientHandler.getLobbyHandler().isInQueue());
-
             try {
                 if (!this.clientHandler.getLobbyHandler().isInQueue()) {
-                    System.out.println("Joining queue");
                     this.clientHandler.getLobbyHandler().sendJoinQueueEvent();
                 } else {
                     this.clientHandler.getLobbyHandler().sendLeaveQueueEvent();

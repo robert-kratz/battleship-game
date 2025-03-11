@@ -38,4 +38,12 @@ public class GameInGameStartMessage extends Message {
     public ArrayList<Ship> getYourShips() {
         return yourShips;
     }
+
+    @Override
+    public String toString() {
+        return "GameInGameStartMessage{" +
+                "gameState=" + gameState +
+                ", yourShips=" + yourShips +
+                '}';
+    }
 }

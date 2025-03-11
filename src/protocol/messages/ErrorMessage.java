@@ -28,6 +28,8 @@ public class ErrorMessage extends Message {
 
     @Override
     public String toString() {
-        return "Error: " + error;
+        return "ErrorMessage{" +
+                "error=" + error +
+                '}';
     }
 }

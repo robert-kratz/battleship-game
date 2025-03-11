@@ -43,29 +43,6 @@ public class MoveManager {
     }
 
     /**
-     * Checks if the given move hits any of the ships.
-     * @param ships The list of ships to check against.
-     * @param move The move to be checked.
-     * @return true if the move hits a ship, false otherwise.
-     */
-    public static boolean moveHasHit(ArrayList<Ship> ships, Move move) {
-        // Ensure that affectedCells are computed before checking.
-        // (If not already computed, you might want to call move.computeAffectedCells(boardSize) beforehand.)
-        for (Cell cell : move.getAffectedCells()) {
-            for (Ship ship : ships) {
-                // Get the list of points (cells) occupied by the ship.
-                ArrayList<Point> occupiedCells = ship.getOccupiedCells();
-                for (Point p : occupiedCells) {
-                    if (p.x == cell.getX() && p.y == cell.getY()) {
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
-    }
-
-    /**
      * Checks if the move is valid by checking if it has already been hit or if it is out of bounds.
      * @param move The move to be checked.
      * @param moves The list of moves already made.
@@ -177,6 +154,29 @@ public class MoveManager {
             for (int y = 0; y < boardSize; y++) {
                 if (!hitCells[x][y]) {
                     return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Checks if the given move hits any of the ships.
+     * @param ships The list of ships to check against.
+     * @param move The move to be checked.
+     * @return true if the move hits a ship, false otherwise.
+     */
+    public static boolean moveHasHit(ArrayList<Ship> ships, Move move) {
+        // Ensure that affectedCells are computed before checking.
+        // (If not already computed, you might want to call move.computeAffectedCells(boardSize) beforehand.)
+        for (Cell cell : move.getAffectedCells()) {
+            for (Ship ship : ships) {
+                // Get the list of points (cells) occupied by the ship.
+                ArrayList<Point> occupiedCells = ship.getOccupiedCells();
+                for (Point p : occupiedCells) {
+                    if (p.x == cell.getX() && p.y == cell.getY()) {
+                        return true;
+                    }
                 }
             }
         }

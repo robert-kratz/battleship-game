@@ -86,12 +86,12 @@ public class GameState implements Serializable  {
     }
 
     public void setPlayerA(ClientPlayer playerA) {
-        System.out.println("Setting player A: " + playerA);
+        System.out.println("[Game " + this.getId() + "] Setting player A: " + playerA.getName() + " (" + playerA.getId() + ")");
         this.playerA = playerA;
     }
 
     public void setPlayerB(ClientPlayer playerB) {
-        System.out.println("Setting player B: " + playerB);
+        System.out.println("[Game " + this.getId() + "] Setting player B: " + playerB.getName() + " (" + playerB.getId() + ")");
         this.playerB = playerB;
 
         // Randomly assign turn to one of the players
@@ -475,5 +475,24 @@ public class GameState implements Serializable  {
 
     public GameOptions getGameOptions() {
         return gameOptions;
+    }
+
+    @Override
+    public String toString() {
+        return "GameState{" +
+                "id=" + id +
+                ", sessionCode=" + sessionCode +
+                ", buildGameBoardStarted=" + buildGameBoardStarted +
+                ", buildGameBoardFinished=" + buildGameBoardFinished +
+                ", playersTurnStart=" + playersTurnStart +
+                ", playersTurnEnd=" + playersTurnEnd +
+                ", playerA=" + playerA +
+                ", playerB=" + playerB +
+                ", availableShips=" + availableShips +
+                ", size=" + size +
+                ", currentGameRound=" + currentGameRound +
+                ", status=" + status +
+                ", gameOptions=" + gameOptions +
+                '}';
     }
 }

@@ -29,4 +29,11 @@ public class MoveMadeMessage extends Message {
     public GameState getGameState() {
         return gameState;
     }
+
+    @Override
+    public String toString() {
+        return "MoveMadeMessage{" +
+                "gameState=" + gameState +
+                '}';
+    }
 }

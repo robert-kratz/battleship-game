@@ -20,4 +20,9 @@ public class LeaveGameMessage extends Message {
     public LeaveGameMessage() {
         super(MessageType.LEAVE_GAME);
     }
+
+    @Override
+    public String toString() {
+        return super.toString();
+    }
 }

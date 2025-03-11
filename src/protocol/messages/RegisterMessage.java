@@ -33,6 +33,9 @@ public class RegisterMessage extends Message {
 
     @Override
     public String toString() {
-        return "Welcome, " + username + "!";
+        return "RegisterMessage{" +
+                "username='" + username + '\'' +
+                ", userId=" + userId +
+                '}';
     }
 }

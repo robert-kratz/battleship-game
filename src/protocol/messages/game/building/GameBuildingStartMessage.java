@@ -28,4 +28,11 @@ public class GameBuildingStartMessage extends Message {
     public GameState getGameState() {
         return gameState;
     }
+
+    @Override
+    public String toString() {
+        return "GameBuildingStartMessage{" +
+                "gameState=" + gameState +
+                '}';
+    }
 }

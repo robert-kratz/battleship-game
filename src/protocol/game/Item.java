@@ -35,4 +35,12 @@ public class Item implements Serializable {
     public ItemType getType() {
         return type;
     }
+
+    @Override
+    public String toString() {
+        return "Item{" +
+                "type=" + type +
+                ", energy=" + energy +
+                '}';
+    }
 }

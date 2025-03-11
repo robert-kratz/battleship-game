@@ -70,16 +70,15 @@ public class BattleShipGame implements Game, Runnable {
     public void run() {
         while (this.gameState.getStatus().equals(GameState.GameStatus.LOBBY_WAITING)) {
             sleep(1000);
-            System.out.println("Waiting for players to join");
+            logToConsole("Waiting for players to join");
         }
         // Build-Phase
         while (this.gameState.getStatus().equals(GameState.GameStatus.BUILD_GAME_BOARD)) {
             sleep(1000);
 
-            System.out.println("Build Game Board in progress");
             if (this.gameState.getBuildGameBoardFinished().before(new Date())) {
 
-                System.out.println("Build Game Board Finished");
+                logToConsole("Build phase finished; Starting In-Game phase");
 
                 sendInGameStartEvent();
             }
@@ -88,15 +87,16 @@ public class BattleShipGame implements Game, Runnable {
         // In-Game Phase
         while (gameState.getStatus().equals(GameState.GameStatus.IN_GAME)) {
             sleep(1000);
-            System.out.println("Game in progress");
 
             if (this.gameState.getPlayersTurnEnd().before(new Date())) {
+                logToConsole("Players turn ended; sending turn change event");
+
                 sendTurnChangeEvent();
             }
         }
 
         if (gameState.getStatus().equals(GameState.GameStatus.GAME_OVER)) {
-            System.out.println("Game Over");
+            logToConsole("Game Over");
             unregisterGame(); // Unregister the game from the server
         }
     }
@@ -117,7 +117,7 @@ public class BattleShipGame implements Game, Runnable {
             newState.setPlayerA(new ClientPlayer(playerA.getId(), playerA.getUsername())); //Create Wrapper for ServerPlayer
             newState.getPlayerA().setEnergy(gameState.getGameOptions().getEnergyGameStart());
 
-            System.out.println("Player A: " + playerA.getUsername());
+            logToConsole("Player A " + playerA.getUsername() + " joined the game");
 
             playerA.sendMessage(new JoinGameMessage(newState));
 
@@ -128,7 +128,7 @@ public class BattleShipGame implements Game, Runnable {
             newState.setPlayerB(new ClientPlayer(playerB.getId(), playerB.getUsername())); //Create Wrapper for ServerPlayer
             newState.getPlayerB().setEnergy(gameState.getGameOptions().getEnergyGameStart());
 
-            System.out.println("Player B: " + playerB.getUsername());
+            logToConsole("Player B " + playerB.getUsername() + " joined the game");
 
             playerB.sendMessage(new JoinGameMessage(newState));
 
@@ -149,6 +149,8 @@ public class BattleShipGame implements Game, Runnable {
     public synchronized void removePlayer(ServerPlayer player) {
         this.gameState.getPlayer(player.getId()).setInGame(false);
         player.setInGame(false);
+
+        logToConsole("Player " + player.getUsername() + " left the game");
 
         if (this.gameState.getStatus().equals(GameState.GameStatus.LOBBY_WAITING)) {
             sendGameOverEvent(GameOverReason.PLAYER_LEFT_LOBBY);
@@ -283,13 +285,13 @@ public class BattleShipGame implements Game, Runnable {
      */
     private void checkForUnplacedShips() {
         if (gameState.getPlayerA() != null && !gameState.getPlayerA().isReady()) {
-            System.out.println("Player A did not submit placement");
+            logToConsole("Player A did not submit placement");
             this.shipsPlayerA = ShipPlacementHelper.createRandomizedGameBoard(size, availableShips, this.shipsPlayerA);
             gameState.getPlayerA().setReady(true);
         }
 
         if (gameState.getPlayerB() != null && !gameState.getPlayerB().isReady()) {
-            System.out.println("Player B did not submit placement");
+            logToConsole("Player B did not submit placement");
             this.shipsPlayerB = ShipPlacementHelper.createRandomizedGameBoard(size, availableShips, this.shipsPlayerB);
             gameState.getPlayerB().setReady(true);
         }
@@ -314,24 +316,27 @@ public class BattleShipGame implements Game, Runnable {
 
         newState.setNextTurn();
 
+        logToConsole("New player turn: " + newState.getCurrentTurnPlayer().getName());
+
         MoveManager moveManager = new MoveManager(newState);
 
         if (!moveManager.isAMoveStillPossible()) {
-            System.out.println("No more moves possible");
+            logToConsole("No more moves possible");
             sendGameOverEvent(GameOverReason.NO_MORE_MOVES);
             return;
         }
 
         if (gameState.getPlayerA() != null && gameState.getPlayerA().isTurn() &&
                 !this.playerTurnMadeMove) {
-            System.out.println("Player A did not submit move");
+
+            logToConsole("Player A did not submit move; placing random move");
 
             Move move = moveManager.makeRandomMove(playerA.getId());
             newState.addMove(playerA.getId(), move);
             //this.onPlayerAttemptMove(playerA, move);
         } else if (gameState.getPlayerB() != null && gameState.getPlayerB().isTurn() &&
                 !this.playerTurnMadeMove) {
-            System.out.println("Player B did not submit move");
+            logToConsole("Player B did not submit move; placing random move");
 
             Move move = moveManager.makeRandomMove(playerB.getId());
             newState.addMove(playerB.getId(), move);
@@ -383,12 +388,12 @@ public class BattleShipGame implements Game, Runnable {
 
                 if(playerA != null && this.gameState.getPlayerA().isInGame()) {
                     newState.setWinner(playerA.getId());
-                    System.out.println("Player A won");
+                    logToConsole("Player A (" + playerA.getUsername() + ") won the game");
                     playerA.sendMessage(new GameOverMessage(newState));
                 }
                 if(playerB != null && this.gameState.getPlayerB().isInGame()) {
                     newState.setWinner(playerB.getId());
-                    System.out.println("Player B won");
+                    logToConsole("Player B (" + playerB.getUsername() + ") won the game");
                     playerB.sendMessage(new GameOverMessage(newState));
                 }
 
@@ -423,10 +428,10 @@ public class BattleShipGame implements Game, Runnable {
                 boolean hasPlayerBWon = this.gameState.hasPlayerSunkAllShips(newState.getPlayerB(), this.shipsPlayerA);
 
                 if(hasPlayerAWon) {
-                    System.out.println("Player A won");
+                    logToConsole("Player A (" + playerA.getUsername() + ") won the game");
                     newState.setWinner(playerA.getId());
                 } else if(hasPlayerBWon) {
-                    System.out.println("Player B won");
+                    logToConsole("Player B (" + playerB.getUsername() + ") won the game");
                     newState.setWinner(playerB.getId());
                 }
 
@@ -597,6 +602,27 @@ public class BattleShipGame implements Game, Runnable {
     }
 
     /**
+     * Broadcasts a message to both players in the game.
+     * @param message The message to be broadcast.
+     */
+    private void broadcastMessage(Message message) {
+        if (playerA != null) playerA.sendMessage(message);
+        if (playerB != null) playerB.sendMessage(message);
+    }
+
+    /**
+     * Unregisters the game from the server.
+     */
+    private synchronized void unregisterGame() {
+        server.unregisterGame(this.gameState.getId());
+        server.updateGameList();
+    }
+
+    private void logToConsole(String message) {
+        System.out.println("[Game " + this.gameState.getId() + "] " + message);
+    }
+
+    /**
      * Returns the available ships for the game.
      * @return The list of available ships.
      */
@@ -612,23 +638,6 @@ public class BattleShipGame implements Game, Runnable {
     @Override
     public void setGameState(GameState gameState) {
         this.gameState = gameState;
-    }
-
-    /**
-     * Broadcasts a message to both players in the game.
-     * @param message The message to be broadcast.
-     */
-    private void broadcastMessage(Message message) {
-        if (playerA != null) playerA.sendMessage(message);
-        if (playerB != null) playerB.sendMessage(message);
-    }
-
-    /**
-     * Unregisters the game from the server.
-     */
-    private synchronized void unregisterGame() {
-        server.unregisterGame(this.gameState.getId());
-        server.updateGameList();
     }
 
     public int getSize() {

@@ -6,8 +6,10 @@ import protocol.ErrorType;
 import protocol.messages.lobby.QueueUpdateMessage;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -31,6 +33,23 @@ public class Server {
     private final ServerGUI gui;
 
     /**
+     * Main method to start the server
+     * -p <port> to specify the port
+     * @param args command line arguments
+     */
+    public static void main(String[] args) {
+        for (int i = 0; i < args.length; i++) {
+            if (args[i].equals("--p")) {
+                PORT = Integer.parseInt(args[i + 1]);
+            }
+        }
+        printLocalAddress();
+
+        instance = new Server(); // Create a new instance of the server
+        instance.startServer();
+    }
+
+    /**
      * Creates a new server instance and initializes the GUI.
      */
     public Server() {
@@ -49,11 +68,11 @@ public class Server {
                 serverSocket = new ServerSocket(PORT);
                 running = true;
                 this.gui.updateServerOnlineStatus(true);
-                System.out.println("Starting server on port " + PORT);
+                System.out.println("[Server] Starting server on port " + PORT);
 
                 while (running) {
                     Socket clientSocket = serverSocket.accept();
-                    System.out.println("New connection from " + clientSocket.getInetAddress().getHostAddress() + ":" + clientSocket.getPort() + " (" + clientSocket.getInetAddress().getHostName() + ");");
+                    System.out.println("[Server] New connection from " + clientSocket.getInetAddress().getHostAddress() + ":" + clientSocket.getPort() + " (" + clientSocket.getInetAddress().getHostName() + ");");
 
                     ServerPlayer player = new ServerPlayer(clientSocket, this);
                     players.add(player);
@@ -85,7 +104,7 @@ public class Server {
             }
             if (serverSocket != null) {
                 serverSocket.close();
-                System.out.println("Stopping server on port " + PORT);
+                System.out.println("[Server] Stopping server on port " + PORT);
             }
             for (Thread t : clientThreads) {
                 t.interrupt();
@@ -120,7 +139,7 @@ public class Server {
         if (container != null) {
             container.getThread().interrupt();
             games.remove(id);
-            System.out.println("Game " + id + " removed");
+            System.out.println("[Server] Game " + id + " removed");
             updateGameList();
         }
     }
@@ -235,19 +254,12 @@ public class Server {
     }
 
     /**
-     * Returns a list of all active games.
-     */
-    public ArrayList<BattleShipGame> getGames() {
-        return new ArrayList<>(games.values().stream().map(GameContainer::getGame).collect(Collectors.toList()));
-    }
-
-    /**
      * Removes a player from the server. If the player is in a game, the game is ended and unregistered.
      * @param player the player leaving the server
      */
     public void removePlayer(ServerPlayer player) {
         BattleShipGame game = getGame(player);
-        System.out.println("Player " + player.getUsername() + " left the server");
+        System.out.println("[Server] Player " + player.getUsername() + " left the server");
 
         if (game != null) {
             game.removePlayer(player);
@@ -258,17 +270,25 @@ public class Server {
     }
 
     /**
-     * Main method to start the server
-     * -p <port> to specify the port
-     * @param args command line arguments
+     * Prints the local IP address of the client.
      */
-    public static void main(String[] args) {
-        for (int i = 0; i < args.length; i++) {
-            if (args[i].equals("--p")) {
-                PORT = Integer.parseInt(args[i + 1]);
-            }
+    private static void printLocalAddress() {
+        try {
+            System.out.println("\n__________         __    __  .__           _________.__    .__              \n" +
+                    "\\______   \\_____ _/  |__/  |_|  |   ____  /   _____/|  |__ |__|_____  ______\n" +
+                    " |    |  _/\\__  \\\\   __\\   __\\  | _/ __ \\ \\_____  \\ |  |  \\|  \\____ \\/  ___/\n" +
+                    " |    |   \\ / __ \\|  |  |  | |  |_\\  ___/ /        \\|   Y  \\  |  |_> >___ \\ \n" +
+                    " |______  /(____  /__|  |__| |____/\\___  >_______  /|___|  /__|   __/____  >\n" +
+                    "        \\/      \\/                     \\/        \\/      \\/   |__|       \\/");
+
+            System.out.println("\n\nWelcome to BattleShip Server! \n" +
+                    "Server started on port " + PORT + "\n" +
+                    "To stop the server, press Ctrl+C\n\n");
+            InetAddress localHost = InetAddress.getLocalHost();
+            System.out.println("[Server] Connect to in locally with --p " + PORT + " --h 127.0.0.1" + " (localhost)");
+            System.out.println("[Server] Connect within your network with --p " + PORT + " --h " + localHost.getHostAddress() + " (local IP)");
+        } catch (UnknownHostException e) {
+            System.err.println("Error: " + e.getMessage());
         }
-        instance = new Server();
-        instance.startServer();
     }
 }

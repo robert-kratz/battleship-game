@@ -33,4 +33,11 @@ public class PlayerUpdateShipPlacement extends Message {
     public ArrayList<Ship> getShips() {
         return ships;
     }
+
+    @Override
+    public String toString() {
+        return "PlayerUpdateShipPlacement{" +
+                "ships=" + ships +
+                '}';
+    }
 }

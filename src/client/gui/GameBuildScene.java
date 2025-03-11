@@ -86,7 +86,7 @@ public class GameBuildScene extends JPanel implements Runnable {
                     } else {
                         // Check for collision with other ships
                         if (ShipPlacementHelper.isCollision(selectedShip, gameHandler.getGameState().getBoardSize(), row, col, buildBoard.getPlacedShips())) {
-                            System.out.println("Cannot place ship here due to collision.");
+                            System.err.println("Cannot place ship here due to collision.");
                             return;
                         }
                         if (selectedShip != null) {
@@ -140,7 +140,6 @@ public class GameBuildScene extends JPanel implements Runnable {
             shipButton.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
             shipButton.setBackground(Color.WHITE);
             shipButton.addActionListener(e -> {
-                System.out.println("Ship button clicked: " + ship.getId());
 
                 boolean shipAlreadyPlaced = buildBoard.getPlacedShips().stream().anyMatch(s -> s.getId() == ship.getId());
 
@@ -302,13 +301,6 @@ public class GameBuildScene extends JPanel implements Runnable {
         add(leftPanel, BorderLayout.WEST);
         add(buildBoard, BorderLayout.CENTER);
         add(rightPanel, BorderLayout.EAST);
-
-        addComponentListener(new ComponentAdapter() {
-            @Override
-            public void componentResized(ComponentEvent e) {
-                System.out.println("GameBuildScene: Resized: " + getWidth() + "x" + getHeight());
-            }
-        });
     }
 
     /**

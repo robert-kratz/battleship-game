@@ -19,4 +19,9 @@ public class JoinQueueMessage extends Message {
     public JoinQueueMessage() {
         super(MessageType.JOIN_QUEUE);
     }
+
+    @Override
+    public String toString() {
+        return super.toString();
+    }
 }

@@ -120,4 +120,19 @@ public class ClientPlayer implements Serializable {
     public void setUncoveredShips(ArrayList<Ship> uncoveredShips) {
         this.uncoveredShips = uncoveredShips;
     }
+
+    @Override
+    public String toString() {
+        return "ClientPlayer{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", ready=" + ready +
+                ", moves=" + moves +
+                ", uncoveredShips=" + uncoveredShips +
+                ", energy=" + energy +
+                ", isInGame=" + isInGame +
+                ", turn=" + turn +
+                ", winner=" + winner +
+                '}';
+    }
 }

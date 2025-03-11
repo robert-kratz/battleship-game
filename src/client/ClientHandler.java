@@ -112,8 +112,6 @@ public class ClientHandler {
                             gameHandler = new GameHandler(this, joinGameMessage.getGameState());
                             this.getStageManager().startWaitingLobbyScene(); //Start waiting lobby scene
 
-                            System.out.println("Game state: " + joinGameMessage.getGameState().getStatus());
-
                             this.lobbyHandler.setInQueue(false);
 
                         }

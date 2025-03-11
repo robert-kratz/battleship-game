@@ -15,13 +15,12 @@ public class Ship implements Serializable {
         NORTH, EAST, SOUTH, WEST;
 
         public Orientation next() {
-            switch (this) {
-                case NORTH: return EAST;
-                case EAST: return SOUTH;
-                case SOUTH: return WEST;
-                case WEST: return NORTH;
-            }
-            return NORTH;
+            return switch (this) {
+                case NORTH -> EAST;
+                case EAST -> SOUTH;
+                case SOUTH -> WEST;
+                case WEST -> NORTH;
+            };
         }
     }
 
@@ -131,22 +130,8 @@ public class Ship implements Serializable {
         return cells;
     }
 
-    public void setOrientation(Orientation orientation) {
-        this.orientation = orientation;
-    }
-
     public Orientation getOrientation() {
         return orientation;
-    }
-
-    public void setX(int x) {
-        this.x = x;
-        this.isPlaced = true;
-    }
-
-    public void setY(int y) {
-        this.y = y;
-        this.isPlaced = true;
     }
 
     public int getX() {
@@ -167,6 +152,20 @@ public class Ship implements Serializable {
 
     public int getWidth() {
         return width;
+    }
+
+    public void setOrientation(Orientation orientation) {
+        this.orientation = orientation;
+    }
+
+    public void setX(int x) {
+        this.x = x;
+        this.isPlaced = true;
+    }
+
+    public void setY(int y) {
+        this.y = y;
+        this.isPlaced = true;
     }
 
     @Override

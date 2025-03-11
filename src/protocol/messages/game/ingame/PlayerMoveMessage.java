@@ -32,4 +32,11 @@ public class PlayerMoveMessage extends Message {
     public Move getMove() {
         return move;
     }
+
+    @Override
+    public String toString() {
+        return "PlayerMoveMessage{" +
+                "move=" + move +
+                '}';
+    }
 }

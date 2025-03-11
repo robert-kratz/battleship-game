@@ -32,4 +32,11 @@ public class PlayerTurnChangeMessage extends Message {
     public GameState getGameState() {
         return gameState;
     }
+
+    @Override
+    public String toString() {
+        return "PlayerTurnChangeMessage{" +
+                "gameState=" + gameState +
+                '}';
+    }
 }

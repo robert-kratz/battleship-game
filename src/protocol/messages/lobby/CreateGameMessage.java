@@ -30,4 +30,11 @@ public class CreateGameMessage extends Message {
     public GameOptions getGameOptions() {
         return gameOptions;
     }
+
+    @Override
+    public String toString() {
+        return "CreateGameMessage{" +
+                "gameOptions=" + gameOptions +
+                '}';
+    }
 }

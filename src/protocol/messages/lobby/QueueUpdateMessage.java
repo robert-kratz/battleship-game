@@ -33,4 +33,12 @@ public class QueueUpdateMessage extends Message {
     public boolean isPlayerInQueue() {
         return playerInQueue;
     }
+
+    @Override
+    public String toString() {
+        return "QueueUpdateMessage{" +
+                "queueSize=" + queueSize +
+                ", playerInQueue=" + playerInQueue +
+                '}';
+    }
 }

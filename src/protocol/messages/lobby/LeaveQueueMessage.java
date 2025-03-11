@@ -19,4 +19,9 @@ public class LeaveQueueMessage extends Message {
     public LeaveQueueMessage() {
         super(MessageType.LEAVE_QUEUE);
     }
+
+    @Override
+    public String toString() {
+        return super.toString();
+    }
 }

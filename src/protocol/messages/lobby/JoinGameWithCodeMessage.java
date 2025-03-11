@@ -32,4 +32,11 @@ public class JoinGameWithCodeMessage extends Message {
     public int getSessionCode() {
         return sessionCode;
     }
+
+    @Override
+    public String toString() {
+        return "JoinGameWithCodeMessage{" +
+                "sessionCode=" + sessionCode +
+                '}';
+    }
 }

@@ -199,7 +199,6 @@ public class ServerPlayer implements Runnable {
                 }
             }
         } catch (IOException | ClassNotFoundException e) {
-            System.out.println("Lost connection to player " + username);
             server.removePlayer(this);
             server.removeFromQueue(this.getId());
         }
@@ -248,7 +247,7 @@ public class ServerPlayer implements Runnable {
      */
     private void createGame(ServerPlayer playerA, ServerPlayer playerB) {
         BattleShipGame game = new BattleShipGame(this.server);
-        System.out.println("Game created with player A: " + playerA.getUsername() +
+        System.out.println("[Server] Game created with player A: " + playerA.getUsername() +
                 " and player B: " + playerB.getUsername());
 
         game.addPlayer(playerA);
@@ -263,11 +262,11 @@ public class ServerPlayer implements Runnable {
      */
     public void sendMessage(Message message) {
         try {
-            if(!message.getClass().getSimpleName().equals("PlayerHoverMessage"))System.out.println("Sending: " + message.getClass().getSimpleName());
+            if(!message.getClass().getSimpleName().equals("PlayerHoverMessage")) System.out.println("[Player " + username + "] Sending " + message.toString());
             out.writeObject(message);
             out.flush();
         } catch (IOException e) {
-            System.out.println("Failed to send message to player " + username + " (" + message.getType().toString() + ")");
+            System.out.println("[Player " + username + "] Failed to send message to player " + username + " (" + message.getType().toString() + ")");
             e.printStackTrace();
         }
     }

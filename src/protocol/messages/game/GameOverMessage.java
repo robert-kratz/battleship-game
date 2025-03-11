@@ -32,4 +32,11 @@ public class GameOverMessage extends Message {
     public GameState getGameState() {
         return gameState;
     }
+
+    @Override
+    public String toString() {
+        return "GameOverMessage{" +
+                "gameState=" + gameState +
+                '}';
+    }
 }

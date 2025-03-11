@@ -144,4 +144,18 @@ public class Move implements Serializable {
     public SeaBombItem getSeaBombItem() {
         return seaBombItem;
     }
+
+    @Override
+    public String toString() {
+        return "Move{" +
+                "x=" + x +
+                ", y=" + y +
+                ", rowOrColumn=" + rowOrColumn +
+                ", seaBombItem=" + seaBombItem +
+                ", airStrikeItem=" + airStrikeItem +
+                ", radarItem=" + radarItem +
+                ", radarShipsIn3x3Area=" + radarShipsIn3x3Area +
+                ", affectedCells=" + affectedCells +
+                '}';
+    }
 }

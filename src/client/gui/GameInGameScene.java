@@ -194,7 +194,6 @@ public class GameInGameScene extends JPanel implements Runnable {
             if(opponentBoard.getSelectedItem() instanceof SeaBombItem) {
                 removeSelectedItems();
             } else {
-                System.out.println("Bomb item selected");
                 opponentBoard.setSelectedItem(new SeaBombItem());
                 updateItemButtonHighlighting(opponentBoard.getSelectedItem());
                 opponentBoard.requestFocusInWindow();

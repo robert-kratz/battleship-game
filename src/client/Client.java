@@ -1,5 +1,8 @@
 package client;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
 public class Client {
 
     private static int PORT = 12345;

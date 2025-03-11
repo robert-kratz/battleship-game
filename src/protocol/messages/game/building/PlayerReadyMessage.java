@@ -29,4 +29,11 @@ public class PlayerReadyMessage extends Message {
     public boolean isReady() {
         return ready;
     }
+
+    @Override
+    public String toString() {
+        return "PlayerReadyMessage{" +
+                "ready=" + ready +
+                '}';
+    }
 }

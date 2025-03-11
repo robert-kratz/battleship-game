@@ -29,4 +29,11 @@ public class JoinGameMessage extends Message {
     public GameState getGameState() {
         return gameState;
     }
+
+    @Override
+    public String toString() {
+        return "JoinGameMessage{" +
+                "gameState=" + gameState +
+                '}';
+    }
 }

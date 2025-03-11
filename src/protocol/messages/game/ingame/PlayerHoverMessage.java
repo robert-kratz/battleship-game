@@ -65,4 +65,14 @@ public class PlayerHoverMessage extends Message {
     public UUID getUserId() {
         return userId;
     }
+
+    @Override
+    public String toString() {
+        return "PlayerHoverMessage{" +
+                "userId=" + userId +
+                ", x=" + x +
+                ", y=" + y +
+                ", affectedFields=" + affectedFields +
+                '}';
+    }
 }
