@@ -1,5 +1,7 @@
 package client;
 
+import java.util.Arrays;
+
 public class Client {
 
     private static int PORT = 12345;
@@ -20,6 +22,8 @@ public class Client {
                 HOST = args[i + 1];
             }
         }
+
+        System.out.println("Starting client on " + HOST + ":" + PORT);
 
         new ClientHandler(HOST, PORT);
     }
