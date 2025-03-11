@@ -1,5 +1,7 @@
-package protocol;
+package utils;
 
+import protocol.GameState;
+import protocol.Ship;
 import protocol.game.Cell;
 import protocol.game.Move;
 

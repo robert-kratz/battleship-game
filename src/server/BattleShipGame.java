@@ -10,6 +10,7 @@ import protocol.messages.game.JoinGameMessage;
 import protocol.messages.game.building.PlayerReadyStateChangeMessage;
 import protocol.messages.game.ingame.MoveMadeMessage;
 import protocol.messages.game.ingame.PlayerTurnChangeMessage;
+import utils.MoveManager;
 
 import java.util.*;
 

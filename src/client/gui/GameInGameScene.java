@@ -7,7 +7,7 @@ import client.gui.board.InGameBattleshipBoard;
 import client.gui.painter.BoardPainter;
 import client.gui.painter.InGameBoardPainter;
 import protocol.ClientPlayer;
-import protocol.MoveManager;
+import utils.MoveManager;
 import protocol.Ship;
 import protocol.game.Cell;
 import protocol.game.Move;

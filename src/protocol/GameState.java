@@ -2,6 +2,7 @@ package protocol;
 
 import protocol.game.Cell;
 import protocol.game.Move;
+import utils.ItemManager;
 
 import java.awt.*;
 import java.io.Serializable;

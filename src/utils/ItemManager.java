@@ -1,4 +1,6 @@
-package protocol;
+package utils;
+
+import protocol.Ship;
 
 import java.awt.*;
 import java.util.ArrayList;
