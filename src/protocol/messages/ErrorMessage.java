@@ -18,7 +18,6 @@ public class ErrorMessage extends Message {
      */
     public ErrorMessage(ErrorType error) {
         super(MessageType.ERROR);
-        System.err.println("Error: " + error);
         this.error = error;
     }
 

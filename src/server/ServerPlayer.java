@@ -276,7 +276,11 @@ public class ServerPlayer implements Runnable {
      * @param message the message to log
      */
     private void logToConsole(String message) {
-        System.out.println("[Player " + username + "] " + message);
+        if(message.contains("Error")) {
+            System.err.println("[Player " + username + "] " + message);
+        } else {
+            System.out.println("[Player " + username + "] " + message);
+        }
     }
 
     public void setInGame(boolean inGame) {
