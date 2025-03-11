@@ -65,7 +65,7 @@ public class ClientHandler {
                     Object received = in.readObject();
                     Message message = (Message) received;
 
-                    System.out.println("Received message: " + message.getType());
+                    System.out.println("Received message: " + message.toString());
 
                     switch (message.getType()) {
                         //Lobby messages
@@ -88,7 +88,7 @@ public class ClientHandler {
                             ErrorMessage errorMessage = (ErrorMessage) received;
 
                             if(errorMessage.getError().equals(ErrorType.SERVER_CLOSED)) {
-                                JOptionPane.showMessageDialog(null, "Server closed.", "Fehler", JOptionPane.ERROR_MESSAGE);
+                                JOptionPane.showMessageDialog(null, "Server closed.", "Error", JOptionPane.ERROR_MESSAGE);
 
                                 System.exit(1);
                             }

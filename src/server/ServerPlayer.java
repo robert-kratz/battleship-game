@@ -61,7 +61,7 @@ public class ServerPlayer implements Runnable {
 
                 BattleShipGame game = server.getGame(this);
 
-                if(!received.getClass().getSimpleName().equals("PlayerHoverMessage")) System.out.println("Received: " + received.getClass().getSimpleName());
+                if(!received.getClass().getSimpleName().equals("PlayerHoverMessage")) logToConsole("Received: " + received.getClass().getSimpleName());
 
                 switch (received.getType()) {
                     case MessageType.JOIN_QUEUE -> {
@@ -262,13 +262,21 @@ public class ServerPlayer implements Runnable {
      */
     public void sendMessage(Message message) {
         try {
-            if(!message.getClass().getSimpleName().equals("PlayerHoverMessage")) System.out.println("[Player " + username + "] Sending " + message.toString());
+            if(!message.getClass().getSimpleName().equals("PlayerHoverMessage")) logToConsole("Sending " + message.toString());
             out.writeObject(message);
             out.flush();
         } catch (IOException e) {
-            System.out.println("[Player " + username + "] Failed to send message to player " + username + " (" + message.getType().toString() + ")");
+            logToConsole("Failed to send message to player " + username + " (" + message.getType().toString() + ")");
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Logs a message to the console.
+     * @param message the message to log
+     */
+    private void logToConsole(String message) {
+        System.out.println("[Player " + username + "] " + message);
     }
 
     public void setInGame(boolean inGame) {
