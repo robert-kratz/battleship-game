@@ -9,7 +9,7 @@ public class BuildBoardPainter implements BoardPainter {
 
     /**
      * Creates a new BuildBoardPainter with the specified background image.
-     * @param backgroundImage
+     * @param backgroundImage the image to use as the background
      */
     public BuildBoardPainter(Image backgroundImage) {
         this.backgroundImage = backgroundImage;

@@ -12,8 +12,6 @@ import protocol.ShipPlacementHelper;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -67,7 +65,7 @@ public class GameBuildScene extends JPanel implements Runnable {
         ArrayList<Ship> centralPlacedShips = new ArrayList<>();
 
         // Board-Painter for Build-Phase
-        Image buildBackgroundImage = new ImageIcon("resource/background-2.png").getImage();
+        Image buildBackgroundImage = new ImageIcon("resource/cell-background.png").getImage();
         BoardPainter buildPainter = new BuildBoardPainter(buildBackgroundImage);
 
         buildBoard = new BuildBattleshipBoard(gameHandler.getGameState().getBoardSize(), centralPlacedShips, buildPainter,
@@ -174,7 +172,6 @@ public class GameBuildScene extends JPanel implements Runnable {
         readyButton.setOpaque(true);
         readyButton.setEnabled(false);
         readyButton.addActionListener(e -> {
-            System.out.println("Ready button clicked");
             gameHandler.sendUpdateBuildBoardMessage(new ArrayList<>(buildBoard.getPlacedShips()));
             if(!buildBoard.isLocked()) {
                 buildBoard.lockBoard();

@@ -5,7 +5,6 @@ import protocol.game.Item;
 import protocol.game.ItemType;
 import server.Parameters;
 
-import java.awt.*;
 import java.io.Serializable;
 import java.util.ArrayList;
 

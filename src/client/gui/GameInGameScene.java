@@ -21,7 +21,6 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.Map;
 
 public class GameInGameScene extends JPanel implements Runnable {
 
@@ -68,7 +67,7 @@ public class GameInGameScene extends JPanel implements Runnable {
         this.currentTurnEnd = this.gameHandler.getGameState().getPlayersTurnEnd();
 
         // Board-Painter for InGame Phase
-        Image inGameBackgroundImage = new ImageIcon("resource/background-2.png").getImage();
+        Image inGameBackgroundImage = new ImageIcon("resource/cell-background.png").getImage();
         BoardPainter inGamePainter = new InGameBoardPainter(inGameBackgroundImage);
 
         // Create the player board

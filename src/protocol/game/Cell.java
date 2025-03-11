@@ -1,6 +1,5 @@
 package protocol.game;
 
-import java.awt.*;
 import java.io.Serializable;
 
 public class Cell implements Serializable {

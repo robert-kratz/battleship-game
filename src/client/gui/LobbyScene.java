@@ -1,9 +1,7 @@
 package client.gui;
 
 import client.ClientHandler;
-import client.GameHandler;
 import client.Stage;
-import client.StageManager;
 import javax.swing.*;
 import java.awt.*;
 
