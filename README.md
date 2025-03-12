@@ -24,7 +24,7 @@ Network-Based Battleship is a fully featured, real-time multiplayer game inspire
 - [Installation and Setup](#installation-and-setup)
 - [Seminar Context & Documentation Requirements](#seminar-context--documentation-requirements)
 - [Timeline and Project Milestones](#timeline-and-project-milestones)
-- [Contributing](#contributing)
+- [Screenshots](#screenshots)
 - [Acknowledgements](#acknowledgements)
 
 ## Overview
