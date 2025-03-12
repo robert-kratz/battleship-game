@@ -227,6 +227,15 @@ The project followed a structured timeline as part of the seminar requirements:
 -	Individual topic meetings.
 -	Submission of exposés.
 
+## Screenshots
+Building phase and in-game phase screenshots are provided below to illustrate the GUI and game mechanics.
+
+![Game Build Phase](https://raw.githubusercontent.com/robert-kratz/battleship-game/99b9c71c95a21f7a104709145f2f8044d7bb878d/resource/build_phase.gif)
+
+In-game phase with item usage and turn-based mechanics.
+
+![Game In-Game Phase](https://raw.githubusercontent.com/robert-kratz/battleship-game/99b9c71c95a21f7a104709145f2f8044d7bb878d/resource/ingame_phase.gif)
+
 ## Acknowledgements
 
 This project was developed as part of Programmierpraktikum 2 in the “Entwicklung eines Projektes für Programmierpraktikum 2” seminar at the University of Mannheim and was developed by [Robert Julian Kratz](https://rjks.us)
