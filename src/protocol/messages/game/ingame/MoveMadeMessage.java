@@ -15,14 +15,14 @@ public class MoveMadeMessage extends Message {
 
     public static final long serialVersionUID = 1L;
 
-    private final GameState gameState;
+    private final GameState gameState; // 0.5P Für Deklaration + Initialisierung + Gettet Methode
 
     /**
      * Creates a new MoveMadeMessage instance.
      * @param gameState The game state of the game that has started.
      */
     public MoveMadeMessage(GameState gameState) {
-        super(MessageType.MOVE_MADE);
+        super(MessageType.MOVE_MADE); // 0.5P Für Übergabe an Message
         this.gameState = gameState;
     }
 

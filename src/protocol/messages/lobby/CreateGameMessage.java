@@ -14,15 +14,18 @@ import protocol.messages.MessageType;
  */
 
 public class CreateGameMessage extends Message {
+	
+	private static final long serialVersionUID = 1L;
 
-    private final GameOptions gameOptions;
+
+    private final GameOptions gameOptions; // 0.5P Für Deklaration + Initialisierung + Gettet Methode
 
     /**
      * Creates a new CreateGameMessage instance.
      * @param gameOptions The game options for the new game.
      */
     public CreateGameMessage(GameOptions gameOptions) {
-        super(MessageType.CREATE_GAME);
+        super(MessageType.CREATE_GAME); // 0.5P Für Übergabe an Message
 
         this.gameOptions = gameOptions;
     }

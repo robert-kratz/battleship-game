@@ -18,15 +18,17 @@ import java.util.ArrayList;
  */
 
 public class PlayerUpdateShipPlacement extends Message {
+	
+	private static final long serialVersionUID = 1L;
 
-    private final ArrayList<Ship> ships;
+    private final ArrayList<Ship> ships; // 0.5P Für Deklaration + Initialisierung + Gettet Methode
 
     /**
      * Creates a new PlayerUpdateShipPlacement instance.
      * @param ships The ships to be displayed on the build board.
      */
     public PlayerUpdateShipPlacement(ArrayList<Ship> ships) {
-        super(MessageType.PLAYER_UPDATE_SHIP_PLACEMENT);
+        super(MessageType.PLAYER_UPDATE_SHIP_PLACEMENT);// 0.5P Für Übergabe an Message
         this.ships = ships;
     }
 

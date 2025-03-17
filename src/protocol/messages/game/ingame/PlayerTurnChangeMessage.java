@@ -17,14 +17,14 @@ public class PlayerTurnChangeMessage extends Message {
 
     private static final long serialVersionUID = 1L;
 
-    private final GameState gameState;
+    private final GameState gameState; // 0.5P Für Deklaration + Initialisierung + Gettet Methode
 
     /**
      * Creates a new PlayerTurnChangeMessage instance.
      * @param gameState The game state of the game that has started.
      */
     public PlayerTurnChangeMessage(GameState gameState) {
-        super(MessageType.TURN_CHANGE);
+        super(MessageType.TURN_CHANGE); // 0.5P Für Übergabe an Message
 
         this.gameState = gameState;
     }

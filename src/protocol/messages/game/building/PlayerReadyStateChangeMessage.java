@@ -14,14 +14,14 @@ public class PlayerReadyStateChangeMessage extends Message {
 
     private static final long serialVersionUID = 1L;
 
-    private final GameState gameState;
+    private final GameState gameState; // 0.5P Für Deklaration + Initialisierung + Gettet Methode
 
     /**
      * Creates a new PlayerReadyStateChangeMessage instance.
      * @param gameState The game state of the game that has started.
      */
     public PlayerReadyStateChangeMessage(GameState gameState) {
-        super(MessageType.BUILD_READY_STATE_CHANGE);
+        super(MessageType.BUILD_READY_STATE_CHANGE); // 0.5P Für Übergabe an Message
         this.gameState = gameState;
     }
 

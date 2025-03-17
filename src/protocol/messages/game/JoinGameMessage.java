@@ -14,14 +14,14 @@ public class JoinGameMessage extends Message {
 
     private static final long serialVersionUID = 1L;
 
-    private final GameState gameState;
+    private final GameState gameState;  // 0.5P Für Deklaration + Initialisierung + Gettet Methode
 
     /**
      * Creates a new JoinGameMessage instance.
      * @param gameState The game state of the game to join.
      */
-    public JoinGameMessage(GameState gameState) {
-        super(MessageType.JOIN_GAME);
+    public JoinGameMessage(GameState gameState) {  // 0.5P
+        super(MessageType.JOIN_GAME); // 0.5P Für Übergabe an Message
 
         this.gameState = gameState;
     }

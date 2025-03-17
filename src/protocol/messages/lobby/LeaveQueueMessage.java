@@ -13,11 +13,14 @@ import protocol.messages.MessageType;
 
 public class LeaveQueueMessage extends Message {
 
+	private static final long serialVersionUID = 1L;
+
+	
     /**
      * Creates a new LeaveQueueMessage instance.
      */
     public LeaveQueueMessage() {
-        super(MessageType.LEAVE_QUEUE);
+        super(MessageType.LEAVE_QUEUE);  // 0.5P Für Übergabe an Message
     }
 
     @Override

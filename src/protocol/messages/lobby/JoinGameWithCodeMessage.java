@@ -15,15 +15,17 @@ import protocol.messages.MessageType;
  */
 
 public class JoinGameWithCodeMessage extends Message {
+	
+	private static final long serialVersionUID = 1L;
 
-    private final int sessionCode;
+    private final int sessionCode; // 0.5P Für Deklaration + Initialisierung + Gettet Methode
 
     /**
      * Creates a new JoinGameWithCodeMessage instance.
      * @param sessionCode The session code to join the game.
      */
     public JoinGameWithCodeMessage(int sessionCode) {
-        super(MessageType.JOIN_GAME_WITH_CODE);
+        super(MessageType.JOIN_GAME_WITH_CODE); // 0.5P Für Übergabe an Message
 
         this.sessionCode = sessionCode;
 

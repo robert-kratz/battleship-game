@@ -35,25 +35,33 @@ public class ClientHandler {
     private ObjectInputStream in;
 
     /**
+     * Aufgabe 3a1: Implementieren das Client Protokoll 
+     */
+    
+    /**
      * Creates a new ClientHandler instance.
      * @param serverAddress The address of the server.
      * @param port The port of the server.
      */
     public ClientHandler(String serverAddress, int port) {
         try {
-            socket = new Socket(serverAddress, port);
-            out = new ObjectOutputStream(socket.getOutputStream());
-            in = new ObjectInputStream(socket.getInputStream());
+            socket = new Socket(serverAddress, port); // 0.5
+            out = new ObjectOutputStream(socket.getOutputStream()); // 0.5
+            in = new ObjectInputStream(socket.getInputStream()); // 0.5
 
             this.lobbyHandler = new LobbyHandler(this);
-            this.stageManager = new StageManager(this);
+            this.stageManager = new StageManager(this);  // 0.5
 
             listenForMessages();
         } catch (IOException e) {
-            JOptionPane.showMessageDialog(null, "Connection to server failed.", "Error", JOptionPane.ERROR_MESSAGE);
+            showError("Unable to connect to server");
             System.exit(1);
         }
     }
+    
+    /**
+     * Aufgabe 3a2: Implementieren das Client Protokoll 
+     */
 
     /**
      * Listens for incoming messages from the server.
@@ -62,32 +70,32 @@ public class ClientHandler {
         new Thread(() -> {
             try {
                 while (socket.isConnected()) {
-                    Object received = in.readObject();
-                    Message message = (Message) received;
+                    Object received = in.readObject(); // 0.5
+                    Message message = (Message) received; // 0.5
 
                     System.out.println("Received message: " + message.toString());
 
                     switch (message.getType()) {
                         //Lobby messages
                         case MessageType.REGISTER -> {
-                            RegisterMessage registerMessage = (RegisterMessage) received;
+                            RegisterMessage registerMessage = (RegisterMessage) received; // 0.5
 
                             System.out.println("Registered as: " + registerMessage.getUsername() + " with ID: " + registerMessage.getUserId());
 
-                            this.userId = registerMessage.getUserId();
-                            this.username = registerMessage.getUsername();
+                            this.userId = registerMessage.getUserId(); // 0.5
+                            this.username = registerMessage.getUsername(); // 0.5
 
-                            this.getStageManager().lobbyScene.setUsername(username);
+                            this.getStageManager().lobbyScene.setUsername(username); // 0.5
                         }
                         case MessageType.QUEUE_UPDATE -> {
-                            QueueUpdateMessage queueUpdateMessage = (QueueUpdateMessage) received;
+                            QueueUpdateMessage queueUpdateMessage = (QueueUpdateMessage) received; // 0.5
 
-                            lobbyHandler.onQueueUpdate(queueUpdateMessage);
+                            lobbyHandler.onQueueUpdate(queueUpdateMessage); // 0.5
                         }
                         case MessageType.ERROR -> {
-                            ErrorMessage errorMessage = (ErrorMessage) received;
+                            ErrorMessage errorMessage = (ErrorMessage) received; // 0.5
 
-                            if(errorMessage.getError().equals(ErrorType.SERVER_CLOSED)) {
+                            if(errorMessage.getError().equals(ErrorType.SERVER_CLOSED)) { // 0.5
                                 JOptionPane.showMessageDialog(null, "Server closed.", "Error", JOptionPane.ERROR_MESSAGE);
 
                                 System.exit(1);
@@ -96,73 +104,73 @@ public class ClientHandler {
                             System.err.println("Received error: " + errorMessage.getError());
 
                             if (gameHandler != null) {
-                                gameHandler.onGameError(errorMessage);
+                                gameHandler.onGameError(errorMessage); // 0.5
                             } else {
-                                lobbyHandler.onLobbyError(errorMessage);
+                                lobbyHandler.onLobbyError(errorMessage); // 0.5
                             }
                         }
                         //Game messages
                         case MessageType.JOIN_GAME -> {
-                            JoinGameMessage joinGameMessage = (JoinGameMessage) received;
+                            JoinGameMessage joinGameMessage = (JoinGameMessage) received; // 0.5
 
                             if(gameHandler != null) {
-                                gameHandler.sendLeaveGame();
+                                gameHandler.sendLeaveGame(); // 0.5
                             }
 
-                            gameHandler = new GameHandler(this, joinGameMessage.getGameState());
+                            gameHandler = new GameHandler(this, joinGameMessage.getGameState()); // 0.5
                             this.getStageManager().startWaitingLobbyScene(); //Start waiting lobby scene
 
-                            this.lobbyHandler.setInQueue(false);
+                            this.lobbyHandler.setInQueue(false); // 0.5
 
                         }
                         case MessageType.BUILDING_PHASE_STARTS -> {
-                            GameBuildingStartMessage gameStartedMessage = (GameBuildingStartMessage) received;
+                            GameBuildingStartMessage gameStartedMessage = (GameBuildingStartMessage) received; // 0.5
 
                             if(this.gameHandler == null) return;
 
-                            this.gameHandler.onBuildPhaseStarts(gameStartedMessage);
+                            this.gameHandler.onBuildPhaseStarts(gameStartedMessage); // 0.5
                         }
                         case MessageType.GAME_IN_GAME_START -> {
-                            GameInGameStartMessage gameInGameStartMessage = (GameInGameStartMessage) received;
+                            GameInGameStartMessage gameInGameStartMessage = (GameInGameStartMessage) received; // 0.5
 
                             if(this.gameHandler == null) return;
 
-                            this.gameHandler.onGameInGameStarts(gameInGameStartMessage);
+                            this.gameHandler.onGameInGameStarts(gameInGameStartMessage); // 0.5
                         }
                         case MessageType.GAME_OVER -> {
-                            GameOverMessage gameOverMessage = (GameOverMessage) received;
+                            GameOverMessage gameOverMessage = (GameOverMessage) received; // 0.5
 
                             if(this.gameHandler == null) return;
 
-                            this.gameHandler.onGameOver(gameOverMessage);
+                            this.gameHandler.onGameOver(gameOverMessage); // 0.5
                         }
                         case MessageType.MOVE_MADE -> {
-                            MoveMadeMessage moveMadeMessage = (MoveMadeMessage) received;
+                            MoveMadeMessage moveMadeMessage = (MoveMadeMessage) received; // 0.5
 
                             if(this.gameHandler == null) return;
 
-                            this.gameHandler.onMoveMade(moveMadeMessage);
+                            this.gameHandler.onMoveMade(moveMadeMessage); // 0.5
                         }
                         case MessageType.BUILD_READY_STATE_CHANGE -> {
-                            PlayerReadyStateChangeMessage playerReadyStateChangeMessage = (PlayerReadyStateChangeMessage) received;
+                            PlayerReadyStateChangeMessage playerReadyStateChangeMessage = (PlayerReadyStateChangeMessage) received; // 0.5
 
                             if(this.gameHandler == null) return;
 
-                            this.gameHandler.onBuildReadyStateChange(playerReadyStateChangeMessage);
+                            this.gameHandler.onBuildReadyStateChange(playerReadyStateChangeMessage); // 0.5
                         }
                         case MessageType.TURN_CHANGE -> {
-                            PlayerTurnChangeMessage playerTurnChangeMessage = (PlayerTurnChangeMessage) received;
+                            PlayerTurnChangeMessage playerTurnChangeMessage = (PlayerTurnChangeMessage) received; // 0.5
 
                             if(this.gameHandler == null) return;
 
-                            this.gameHandler.onTurnChange(playerTurnChangeMessage);
+                            this.gameHandler.onTurnChange(playerTurnChangeMessage); // 0.5
                         }
                         case MessageType.PLAYER_HOVER -> {
-                            PlayerHoverMessage playerHoverMessage = (PlayerHoverMessage) received;
+                            PlayerHoverMessage playerHoverMessage = (PlayerHoverMessage) received; // 0.5
 
                             if(this.gameHandler == null) return;
 
-                            gameHandler.onPlayerHoverEvent(playerHoverMessage);
+                            gameHandler.onPlayerHoverEvent(playerHoverMessage); // 0.5
                         }
                     }
                 }
@@ -173,7 +181,38 @@ public class ClientHandler {
             }
         }).start();
     }
+    
+    
+    
+    
+    
+    
+    
 
+    /**
+     * ACHTUNG! AB HIER DÜRFEN KEINE ÄNDERUNGEN MEHR VORGENOMMEN WERDEN
+     */
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     /**
      * Ends the current game and returns to the lobby.
      */

@@ -18,7 +18,7 @@ public class LeaveGameMessage extends Message {
      * Creates a new LeaveGameMessage instance.
      */
     public LeaveGameMessage() {
-        super(MessageType.LEAVE_GAME);
+        super(MessageType.LEAVE_GAME); // 0.5P Für Übergabe an Message
     }
 
     @Override

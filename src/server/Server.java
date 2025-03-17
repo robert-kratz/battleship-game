@@ -16,78 +16,183 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+/**
+ * Aufgabe 2 A: 13P
+ */
+
 public class Server {
 
     private static Server instance;
     private static int PORT = 12345;
     private ServerSocket serverSocket;
     private boolean running = false;
-
-    private final List<ServerPlayer> players = new ArrayList<>();
-    private final List<Thread> clientThreads = new ArrayList<>();
-
-    private final Map<UUID, GameContainer> games = new HashMap<>();
-
-    private final ArrayList<ServerPlayer> queue = new ArrayList<>();
     private final ServerGUI gui;
+    
+    /**
+     * Aufgabe 2a1: Implementiere die Listen und Maps: (2P)
+     */
+
+    private final List<ServerPlayer> players = new ArrayList<>(); //0.5P
+    private final List<Thread> clientThreads = new ArrayList<>(); //0.5P
+
+    private final Map<UUID, GameContainer> games = new HashMap<>(); //0.5P
+
+    private final ArrayList<ServerPlayer> queue = new ArrayList<>(); //0.5P
 
     /**
-     * Main method to start the server
-     * -p <port> to specify the port
-     * @param args command line arguments
+     * Aufgabe 2a2: Implementieren die Methode: (3P)
      */
-    public static void main(String[] args) {
-        for (int i = 0; i < args.length; i++) {
-            if (args[i].equals("--p")) {
-                PORT = Integer.parseInt(args[i + 1]);
-            }
-        }
-        printLocalAddress();
-
-        instance = new Server(); // Create a new instance of the server
-        instance.startServer();
-    }
-
-    /**
-     * Creates a new server instance and initializes the GUI.
-     */
-    public Server() {
-        this.gui = new ServerGUI(this);
-        instance = this;
-    }
-
-    /**
-     * Starts the server and listens for incoming connections.
-     */
+    
     public void startServer() {
         if (running) return;
 
-        new Thread(() -> {
+        new Thread(() -> { // 0.5P
+        	
             try {
-                serverSocket = new ServerSocket(PORT);
+            	
+                serverSocket = new ServerSocket(PORT); // Starte Socket 0.5P
+                
                 running = true;
+                
                 this.gui.updateServerOnlineStatus(true);
                 System.out.println("[Server] Starting server on port " + PORT);
 
-                while (running) {
-                    Socket clientSocket = serverSocket.accept();
+                while (running) { //0.5P
+                	
+                    Socket clientSocket = serverSocket.accept(); // 0.5P
                     System.out.println("[Server] New connection from " + clientSocket.getInetAddress().getHostAddress() + ":" + clientSocket.getPort() + " (" + clientSocket.getInetAddress().getHostName() + ");");
 
-                    ServerPlayer player = new ServerPlayer(clientSocket, this);
+                    ServerPlayer player = new ServerPlayer(clientSocket, this); //0.5P
                     players.add(player);
 
-                    Thread clientThread = new Thread(player);
+                    Thread clientThread = new Thread(player); //0.5P
                     clientThreads.add(clientThread);
                     clientThread.start();
 
                     updatePlayerList();
+                    
                 }
+                
             } catch (IOException e) {
                 if (running) e.printStackTrace();
             }
         }).start();
     }
 
+    /**
+     * Aufgabe 2a3: Implementieren die Methode: 2P
+     */
+    
+    public void registerGame(BattleShipGame game) {
+        Thread gameThread = new Thread(game); // 0.5P
+        GameContainer container = new GameContainer(game, gameThread); // 0.5P
+        games.put(game.getGameState().getId(), container); // 0.5P
+        gameThread.start(); // 0.5P
+        updateGameList();
+    }
+
+    /**
+     * Aufgabe 2a4: Implementieren die Methode: 1P
+     */
+    
+    public void unregisterGame(UUID id) {
+        GameContainer container = games.get(id); // 0.5P
+        if (container != null) {
+            container.getThread().interrupt();// 0.5P
+            games.remove(id);
+            System.out.println("[Server] Game " + id + " removed");
+            updateGameList();
+        }
+    }
+    
+    /**
+     * Aufgabe 2a4: Implementieren die Methode: 2P
+     */
+
+    public synchronized BattleShipGame getGame(ServerPlayer player) {
+        for (GameContainer container : games.values()) { //0.5P
+            BattleShipGame game = container.getGame();  //0.5P
+            if (game == null) continue;
+            if (game.getPlayerA() != null && game.getPlayerA().getId().equals(player.getId())) {  //0.5P
+                return game;
+            }
+            if (game.getPlayerB() != null && game.getPlayerB().getId().equals(player.getId())) {  //0.5P
+                return game;
+            }
+        }
+        return null;
+    }
+    
+    /**
+     * Aufgabe 2a5: Implementieren die Methode: 1.5P
+     */
+
+    public BattleShipGame getGameFromJoinCode(int joinCode) {
+        for (GameContainer container : games.values()) { // 0.5P
+            BattleShipGame game = container.getGame(); // 0.5P
+            if (game.getGameState().getSessionCode() == joinCode) { // 0.5P
+                return game;
+            }
+        }
+        return null;
+    }
+    
+    /**
+     * Aufgabe 2a6: Implementieren die Methode: 0.5P
+     */
+
+    public void addToQueue(ServerPlayer player) {
+        queue.add(player);
+        player.sendMessage(new QueueUpdateMessage(queue.size(), true)); // 0.5P
+    }
+    
+    /**
+     * Aufgabe 2a7: Implementieren die Methode: 1P
+     */
+
+    public void removeFromQueue(UUID id) {
+        queue.removeIf(player -> {
+            if (player.getId().equals(id)) {
+                player.sendMessage(new QueueUpdateMessage(queue.size(), false)); //1P
+                return true;
+            }
+            return false;
+        });
+    }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    /**
+     * ACHTUNG! AB HIER DÜRFEN KEINE ÄNDERUNGEN MEHR VORGENOMMEN WERDEN!
+     */
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     /**
      * Stops the server, closes all connections and unregisters all games.
      */
@@ -110,94 +215,13 @@ public class Server {
             }
             players.clear();
             clientThreads.clear();
+            
+            
             updatePlayerList();
             updateGameList();
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    /**
-     * Registers a new game. Der Server erstellt intern den Game-Thread und startet ihn.
-     * @param game the game to register
-     */
-    public void registerGame(BattleShipGame game) {
-        Thread gameThread = new Thread(game);
-        GameContainer container = new GameContainer(game, gameThread);
-        games.put(game.getGameState().getId(), container);
-        gameThread.start();
-        updateGameList();
-    }
-
-    /**
-     * Unregisters a game with the given id by interrupting its thread and removing it from the map.
-     * @param id id of the game to remove
-     */
-    public void unregisterGame(UUID id) {
-        GameContainer container = games.get(id);
-        if (container != null) {
-            container.getThread().interrupt();
-            games.remove(id);
-            System.out.println("[Server] Game " + id + " removed");
-            updateGameList();
-        }
-    }
-
-    /**
-     * Returns the game the player is currently in.
-     * @param player the player for whom to retrieve the game
-     * @return the game the player is in or null if none
-     */
-    public synchronized BattleShipGame getGame(ServerPlayer player) {
-        for (GameContainer container : games.values()) {
-            BattleShipGame game = container.getGame();
-            if (game == null) continue;
-            if (game.getPlayerA() != null && game.getPlayerA().getId().equals(player.getId())) {
-                return game;
-            }
-            if (game.getPlayerB() != null && game.getPlayerB().getId().equals(player.getId())) {
-                return game;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Returns the game with the given id.
-     * @param joinCode the join code of the game to retrieve
-     * @return the game with the given id or null if none
-     */
-    public BattleShipGame getGameFromJoinCode(int joinCode) {
-        for (GameContainer container : games.values()) {
-            BattleShipGame game = container.getGame();
-            if (game.getGameState().getSessionCode() == joinCode) {
-                return game;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Adds a player to the queue and sends an update message to the player.
-     * @param player the player to add to the queue
-     */
-    public void addToQueue(ServerPlayer player) {
-        queue.add(player);
-        player.sendMessage(new QueueUpdateMessage(queue.size(), true));
-    }
-
-    /**
-     * Removes a player from the queue and sends an update message to the player.
-     * @param id the id of the player to remove from the queue
-     */
-    public void removeFromQueue(UUID id) {
-        queue.removeIf(player -> {
-            if (player.getId().equals(id)) {
-                player.sendMessage(new QueueUpdateMessage(queue.size(), false));
-                return true;
-            }
-            return false;
-        });
     }
 
     /**
@@ -266,6 +290,31 @@ public class Server {
         players.remove(player);
         updatePlayerList();
         updateGameList();
+    }
+    
+    /**
+     * Main method to start the server
+     * -p <port> to specify the port
+     * @param args command line arguments
+     */
+    public static void main(String[] args) {
+        for (int i = 0; i < args.length; i++) {
+            if (args[i].equals("--p")) {
+                PORT = Integer.parseInt(args[i + 1]);
+            }
+        }
+        printLocalAddress();
+
+        instance = new Server(); // Create a new instance of the server
+        instance.startServer();
+    }
+
+    /**
+     * Creates a new server instance and initializes the GUI.
+     */
+    public Server() {
+        this.gui = new ServerGUI(this);
+        instance = this;
     }
 
     /**

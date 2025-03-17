@@ -9,15 +9,15 @@ import java.util.UUID;
  */
 
 public class RegisterMessage extends Message {
-    private final String username;
-    private final UUID userId;
+    private final String username; // 0.5P Für Deklaration + Initialisierung + Gettet Methode
+    private final UUID userId; // 0.5P Für Deklaration + Initialisierung + Gettet Methode
 
     /**
      * Constructor for RegisterMessage
      * @param username The username of the player
      * @param userId The UUID of the player
      */
-    public RegisterMessage(String username, UUID userId) {
+    public RegisterMessage(String username, UUID userId) {  // 1P
         super(MessageType.REGISTER);
         this.username = username;
         this.userId = userId;

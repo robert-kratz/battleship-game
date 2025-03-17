@@ -16,18 +16,18 @@ import java.util.UUID;
 public class PlayerHoverMessage extends Message {
 
     private static final long serialVersionUID = 1L;
-
-    private final UUID userId;
-    private final int x;
-    private final int y;
-    private ArrayList<Cell> affectedFields;
+    
+    private final UUID userId; // 1P Für Deklaration + Initialisierung (2x) + Gettet Methode
+    private final int x; // 1P Für Deklaration + Initialisierung (2x) + Gettet Methode
+    private final int y; // 1P Für Deklaration + Initialisierung (2x) + Gettet Methode
+    private ArrayList<Cell> affectedFields; // 1P Für Deklaration + Initialisierung (2x) + Gettet Methode
 
     /**
      * Creates a new PlayerHoverMessage instance.
      * @param message The PlayerHoverMessage to copy.
      */
     public PlayerHoverMessage(PlayerHoverMessage message) {
-        super(MessageType.PLAYER_HOVER);
+        super(MessageType.PLAYER_HOVER); // 0.5P Für Übergabe an Message
         this.userId = message.userId;
         this.x = message.x;
         this.y = message.y;
@@ -42,7 +42,7 @@ public class PlayerHoverMessage extends Message {
      * @param affectedFields the list of affected fields.
      */
     public PlayerHoverMessage(UUID userId, int x, int y, ArrayList<Cell> affectedFields) {
-        super(MessageType.PLAYER_HOVER);
+        super(MessageType.PLAYER_HOVER); // 0.5P Für Übergabe an Message
         this.userId = userId;
         this.x = x;
         this.y = y;

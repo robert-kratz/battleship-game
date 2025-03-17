@@ -12,12 +12,14 @@ import protocol.messages.MessageType;
  */
 
 public class JoinQueueMessage extends Message {
+	
+	private static final long serialVersionUID = 1L;
 
     /**
      * Creates a new JoinQueueMessage instance.
      */
     public JoinQueueMessage() {
-        super(MessageType.JOIN_QUEUE);
+        super(MessageType.JOIN_QUEUE); // 0.5P
     }
 
     @Override

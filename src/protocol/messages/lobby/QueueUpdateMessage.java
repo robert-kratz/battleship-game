@@ -11,8 +11,11 @@ import protocol.messages.MessageType;
 
 public class QueueUpdateMessage extends Message {
 
-    private final int queueSize;
-    private final boolean playerInQueue;
+	private static final long serialVersionUID = 1L;
+
+	
+    private final int queueSize; // 0.5P Für Deklaration + Initialisierung + Gettet Methode
+    private final boolean playerInQueue; // 0.5P Für Deklaration + Initialisierung + Gettet Methode
 
     /**
      * Creates a new QueueUpdateMessage instance.
@@ -20,7 +23,7 @@ public class QueueUpdateMessage extends Message {
      * @param playerInQueue True if the player is in the queue, false otherwise.
      */
     public QueueUpdateMessage(int queueSize, boolean playerInQueue) {
-        super(MessageType.QUEUE_UPDATE);
+        super(MessageType.QUEUE_UPDATE); // 0.5P Für Übergabe an Message
 
         this.queueSize = queueSize;
         this.playerInQueue = playerInQueue;

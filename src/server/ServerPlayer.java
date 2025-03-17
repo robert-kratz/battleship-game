@@ -20,6 +20,10 @@ import java.io.*;
 import java.net.Socket;
 import java.util.UUID;
 
+/**
+ * Aufgabe 2 B:
+ */
+
 public class ServerPlayer implements Runnable {
 
     private final Server server;
@@ -30,44 +34,33 @@ public class ServerPlayer implements Runnable {
     private final String username;
     private final String ip;
 
-    // Server internal player state
     private boolean isInGame = false;
 
-    public ServerPlayer(Socket socket, Server server) {
-        this.socket = socket;
-        this.id = UUID.randomUUID();
-        this.ip = socket.getInetAddress().getHostAddress();
-        this.username = Usernames.generate();
-        this.server = server;
-    }
-
-    public String getUsername() { return username; }
-    public String getIp() { return ip; }
-
     /**
-     * This method is called when the player is registered.
+     * Aufgabe 2b1: Implementieren das Server Protokoll
      */
+    
     @Override
     public void run() {
         try {
-            out = new ObjectOutputStream(socket.getOutputStream());
-            ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
+            out = new ObjectOutputStream(socket.getOutputStream()); //0.5P
+            ObjectInputStream in = new ObjectInputStream(socket.getInputStream()); //0.5P
 
-            sendMessage(new RegisterMessage(username, id));
-            sendMessage(new QueueUpdateMessage(server.getQueue().size(), false));
+            sendMessage(new RegisterMessage(username, id)); //0.5P
+            sendMessage(new QueueUpdateMessage(server.getQueue().size(), false)); //0.5P
 
             while (socket.isConnected()) {
-                Message received = (Message) in.readObject();
+                Message received = (Message) in.readObject(); //0.5P
 
                 BattleShipGame game = server.getGame(this);
 
-                if(!received.getClass().getSimpleName().equals("PlayerHoverMessage")) logToConsole("Received: " + received.getClass().getSimpleName());
+                logToConsole("Received: " + received.getClass().getSimpleName());
 
                 switch (received.getType()) {
-                    case MessageType.JOIN_QUEUE -> {
+                    case MessageType.JOIN_QUEUE -> { //0.5P
 
                         if(game != null) {
-                            sendMessage(new ErrorMessage(ErrorType.ALREADY_IN_GAME));
+                            sendMessage(new ErrorMessage(ErrorType.ALREADY_IN_GAME)); // 0.5
                             return;
                         }
 
@@ -76,16 +69,16 @@ public class ServerPlayer implements Runnable {
                             return;
                         }
 
-                        server.addToQueue(this);
+                        server.addToQueue(this); // 0.5
 
                         broadcastQueueStateUpdate();
 
                         checkQueueForPossibleGame();
                     }
-                    case MessageType.LEAVE_QUEUE -> {
+                    case MessageType.LEAVE_QUEUE -> { //0.5P
                         if(game != null) {
                             game.removePlayer(this);
-                            sendMessage(new ErrorMessage(ErrorType.ALREADY_IN_GAME));
+                            sendMessage(new ErrorMessage(ErrorType.ALREADY_IN_GAME)); // 0.5
                             return;
                         }
 
@@ -94,116 +87,173 @@ public class ServerPlayer implements Runnable {
                             return;
                         }
 
-                        server.removeFromQueue(this.getId());
+                        server.removeFromQueue(this.getId()); // 0.5
 
                         broadcastQueueStateUpdate();
                     }
-                    case MessageType.CREATE_GAME -> {
-                        CreateGameMessage createGameMessage = (CreateGameMessage) received;
+                    case MessageType.CREATE_GAME -> { //0.5P
+                        CreateGameMessage createGameMessage = (CreateGameMessage) received; // 0.5
 
-                        if(createGameMessage.getGameOptions().getBoardSize() < 5 || createGameMessage.getGameOptions().getBoardSize() > 20) {
+                        if(createGameMessage.getGameOptions().getBoardSize() < 5 || createGameMessage.getGameOptions().getBoardSize() > 20) { // 0.5
                             sendMessage(new ErrorMessage(ErrorType.INVALID_GAME_SIZE));
                             return;
                         }
 
-                        createGame(createGameMessage.getGameOptions());
+                        createGame(createGameMessage.getGameOptions()); // 0.5
 
                         server.getQueue().remove(this);
 
                         this.isInGame = true;
                     }
-                    case MessageType.JOIN_GAME_WITH_CODE -> {
-                        JoinGameWithCodeMessage joinGameWithCodeMessage = (JoinGameWithCodeMessage) received;
+                    case MessageType.JOIN_GAME_WITH_CODE -> { //0.5P
+                        JoinGameWithCodeMessage joinGameWithCodeMessage = (JoinGameWithCodeMessage) received; // 0.5
 
                         if(game != null) {
                             sendMessage(new ErrorMessage(ErrorType.ALREADY_IN_GAME));
                             return;
                         }
 
-                        BattleShipGame targetGame = server.getGameFromJoinCode(joinGameWithCodeMessage.getSessionCode());
+                        BattleShipGame targetGame = server.getGameFromJoinCode(joinGameWithCodeMessage.getSessionCode()); // 0.5
 
                         if (targetGame == null) {
-                            sendMessage(new ErrorMessage(ErrorType.INVALID_SESSION_CODE));
+                            sendMessage(new ErrorMessage(ErrorType.INVALID_SESSION_CODE)); // 0.5
                             return;
                         }
 
-                        if(!targetGame.getGameState().getStatus().equals(GameState.GameStatus.LOBBY_WAITING)) {
+                        if(!targetGame.getGameState().getStatus().equals(GameState.GameStatus.LOBBY_WAITING)) { // 0.5
                             sendMessage(new ErrorMessage(ErrorType.GAME_ALREADY_STARTED));
                             return;
                         }
+ 
+                        server.getQueue().remove(this); // 0.5
 
-                        server.getQueue().remove(this);
-
-                        targetGame.addPlayer(this);
+                        targetGame.addPlayer(this); // 0.5
 
                         this.isInGame = true;
                     }
-                    case MessageType.LEAVE_GAME -> {
-                        LeaveGameMessage leaveGameMessage = (LeaveGameMessage) received;
+                    case MessageType.LEAVE_GAME -> { //0.5P
+                        LeaveGameMessage leaveGameMessage = (LeaveGameMessage) received; // 0.5
 
                         if(game == null) {
                             sendMessage(new ErrorMessage(ErrorType.NO_GAME_IN_PROGRESS));
                             return;
                         }
 
-                        game.removePlayer(this);
+                        game.removePlayer(this); // 0.5
 
                         this.isInGame = false;
                     }
-                    case MessageType.PLAYER_UPDATE_SHIP_PLACEMENT -> {
-                        PlayerUpdateShipPlacement playerUpdateShipPlacement = (PlayerUpdateShipPlacement) received;
+                    case MessageType.PLAYER_UPDATE_SHIP_PLACEMENT -> { //0.5P
+                        PlayerUpdateShipPlacement playerUpdateShipPlacement = (PlayerUpdateShipPlacement) received; // 0.5
 
                         if(game == null) {
                             sendMessage(new ErrorMessage(ErrorType.NO_GAME_IN_PROGRESS));
                             return;
                         }
 
-                        game.onPlayerPlaceShips(this, playerUpdateShipPlacement.getShips());
+                        game.onPlayerPlaceShips(this, playerUpdateShipPlacement.getShips()); // 0.5
                     }
-                    case MessageType.PLAYER_READY -> {
-                        PlayerReadyMessage playerReadyMessage = (PlayerReadyMessage) received;
+                    case MessageType.PLAYER_READY -> { //0.5P
+                        PlayerReadyMessage playerReadyMessage = (PlayerReadyMessage) received; // 0.5
 
                         if(game == null) {
                             sendMessage(new ErrorMessage(ErrorType.NO_GAME_IN_PROGRESS));
                             return;
                         }
 
-                        game.onPlayerReadyStateChange(this, playerReadyMessage.ready);
+                        game.onPlayerReadyStateChange(this, playerReadyMessage.ready); // 0.5
                     }
-                    case MessageType.PLAYER_HOVER -> {
-                        PlayerHoverMessage playerHoverMessage = (PlayerHoverMessage) received;
+                    case MessageType.PLAYER_HOVER -> { //0.5P
+                        PlayerHoverMessage playerHoverMessage = (PlayerHoverMessage) received; // 0.5
 
                         if(game == null) {
                             sendMessage(new ErrorMessage(ErrorType.NO_GAME_IN_PROGRESS));
                             return;
                         }
 
-                        if(!game.getGameState().getStatus().equals(GameState.GameStatus.IN_GAME)) return;
+                        if(!game.getGameState().getStatus().equals(GameState.GameStatus.IN_GAME)) return; // 0.5
 
                         if(game.getPlayerA().getId().equals(this.getId())) {
-                            game.getPlayerB().sendMessage(new PlayerHoverMessage(playerHoverMessage));
+                            game.getPlayerB().sendMessage(new PlayerHoverMessage(playerHoverMessage)); // 0.5
                         } else if(game.getPlayerB().getId().equals(this.getId())) {
-                            game.getPlayerA().sendMessage(new PlayerHoverMessage(playerHoverMessage));
+                            game.getPlayerA().sendMessage(new PlayerHoverMessage(playerHoverMessage)); // 0.5
                         }
                     }
-                    case MessageType.PLAYER_MOVE -> {
-                        PlayerMoveMessage playerMoveMessage = (PlayerMoveMessage) received;
+                    case MessageType.PLAYER_MOVE -> { //0.5P
+                        PlayerMoveMessage playerMoveMessage = (PlayerMoveMessage) received; // 0.5
 
                         if(game == null) {
                             sendMessage(new ErrorMessage(ErrorType.NO_GAME_IN_PROGRESS));
                             return;
                         }
 
-                        game.onPlayerAttemptMove(this, playerMoveMessage.getMove());
+                        game.onPlayerAttemptMove(this, playerMoveMessage.getMove()); // 0.5
                     }
                 }
             }
         } catch (IOException | ClassNotFoundException e) {
-            server.removePlayer(this);
-            server.removeFromQueue(this.getId());
+            server.removePlayer(this); // 0.5
+            server.removeFromQueue(this.getId()); // 0.5
         }
     }
+    
+    /**
+     * Aufgabe 2b2: Implementieren Sie die Methode sendMessage 1P
+     */
+    
+    /**
+     * Sends a message to the player.
+     * @param message the message to send
+     */
+    public void sendMessage(Message message) {
+        try {
+            if(!message.getClass().getSimpleName().equals("PlayerHoverMessage")) logToConsole("Sending " + message.toString());
+            out.writeObject(message); // 0.5
+            out.flush(); // 0.5
+        } catch (IOException e) {
+            logToConsole("Failed to send message to player " + username + " (" + message.getType().toString() + ")");
+            e.printStackTrace();
+        }
+    }
+    
+    
+    
+    
+    
+    /**
+     * ACHTUNG! AB HIER DÜRFEN KEINE ÄNDERUNGEN MEHR VORGENOMMEN WERDEN
+     */
 
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    public ServerPlayer(Socket socket, Server server) {
+        this.socket = socket;
+        this.id = UUID.randomUUID();
+        this.ip = socket.getInetAddress().getHostAddress();
+        this.username = Usernames.generate();
+        this.server = server;
+    }
+    
     /**
      * Broadcasts the current queue state to all players.
      */
@@ -257,21 +307,6 @@ public class ServerPlayer implements Runnable {
     }
 
     /**
-     * Sends a message to the player.
-     * @param message the message to send
-     */
-    public void sendMessage(Message message) {
-        try {
-            if(!message.getClass().getSimpleName().equals("PlayerHoverMessage")) logToConsole("Sending " + message.toString());
-            out.writeObject(message);
-            out.flush();
-        } catch (IOException e) {
-            logToConsole("Failed to send message to player " + username + " (" + message.getType().toString() + ")");
-            e.printStackTrace();
-        }
-    }
-
-    /**
      * Logs a message to the console.
      * @param message the message to log
      */
@@ -282,7 +317,10 @@ public class ServerPlayer implements Runnable {
             System.out.println("[Player " + username + "] " + message);
         }
     }
-
+    
+    public String getUsername() { return username; }
+    public String getIp() { return ip; }
+    
     public void setInGame(boolean inGame) {
         isInGame = inGame;
     }

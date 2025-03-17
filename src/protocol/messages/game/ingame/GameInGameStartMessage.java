@@ -17,16 +17,16 @@ public class GameInGameStartMessage extends Message {
 
     private static final long serialVersionUID = 1L;
 
-    private GameState gameState;
-    private ArrayList<Ship> yourShips;
+    private GameState gameState; // 0.5P Für Deklaration + Initialisierung + Gettet Methode
+    private ArrayList<Ship> yourShips; // 0.5P Für Deklaration + Initialisierung + Gettet Methode
 
     /**
      * Creates a new GameInGameStartMessage instance.
      * @param gameState The game state of the game that has started.
      * @param yourShips The ships of the player in the game.
      */
-    public GameInGameStartMessage(GameState gameState, ArrayList<Ship> yourShips) {
-        super(MessageType.GAME_IN_GAME_START);
+    public GameInGameStartMessage(GameState gameState, ArrayList<Ship> yourShips) { 
+        super(MessageType.GAME_IN_GAME_START); // 0.5P Für Übergabe an Message
         this.gameState = gameState;
         this.yourShips = new ArrayList<>(yourShips);
     }

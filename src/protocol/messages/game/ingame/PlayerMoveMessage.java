@@ -18,14 +18,14 @@ public class PlayerMoveMessage extends Message {
 
     private static final long serialVersionUID = 1L;
 
-    private final Move move;
+    private final Move move; // 0.5P Für Deklaration + Initialisierung + Gettet Methode
 
     /**
      * Creates a new PlayerMoveMessage instance.
      * @param move The move made by the player.
      */
     public PlayerMoveMessage(Move move) {
-        super(MessageType.PLAYER_MOVE);
+        super(MessageType.PLAYER_MOVE); // 0.5P Für Übergabe an Message
         this.move = move;
     }
 

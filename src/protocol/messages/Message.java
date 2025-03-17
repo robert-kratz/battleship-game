@@ -2,10 +2,10 @@ package protocol.messages;
 
 import java.io.Serializable;
 
-public abstract class Message implements Serializable {
+public abstract class Message implements Serializable { // 0.5P abstract + Serializable Interface
 
     private static final long serialVersionUID = 1L;
-    private final MessageType type;
+    private final MessageType type; // 0.5P Für Deklaration + Initialisierung + Gettet Methode
 
     /**
      * Creates a new Message instance.
