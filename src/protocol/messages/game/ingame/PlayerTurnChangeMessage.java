@@ -5,38 +5,22 @@ import protocol.messages.Message;
 import protocol.messages.MessageType;
 
 /**
- * This is the PlayerTurnChangeMessage which is sent from the server to the client when the player turn changes.
- * It contains the game state of the game that the player is a part of.
- * This message is broadcast to all players in the game in response to:
- * - PlayerMoveMessage; A Player miss;
- * OR
- * - The turn Timer expired; And a force move was made.
+ * Aufgabe 1
  */
 
-public class PlayerTurnChangeMessage extends Message {
+public class PlayerTurnChangeMessage  { // TODO
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L; // Sie können diese Zeile ignorieren. Nicht Löschen!
 
-    private final GameState gameState; // 0.5P Für Deklaration + Initialisierung + Gettet Methode
+    // TODO
 
     /**
      * Creates a new PlayerTurnChangeMessage instance.
      * @param gameState The game state of the game that has started.
      */
     public PlayerTurnChangeMessage(GameState gameState) {
-        super(MessageType.TURN_CHANGE); // 0.5P Für Übergabe an Message
-
-        this.gameState = gameState;
+        // TODO
     }
 
-    public GameState getGameState() {
-        return gameState;
-    }
-
-    @Override
-    public String toString() {
-        return "PlayerTurnChangeMessage{" +
-                "gameState=" + gameState +
-                '}';
-    }
+    // TODO
 }

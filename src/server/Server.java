@@ -17,7 +17,7 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Aufgabe 2 A: 13P
+ * Aufgabe 2
  */
 
 public class Server {
@@ -29,135 +29,70 @@ public class Server {
     private final ServerGUI gui;
     
     /**
-     * Aufgabe 2a1: Implementiere die Listen und Maps: (2P)
+     * Aufgabe 2: Implementiere die Listen und Maps
      */
 
-    private final List<ServerPlayer> players = new ArrayList<>(); //0.5P
-    private final List<Thread> clientThreads = new ArrayList<>(); //0.5P
+    private final List<ServerPlayer> players = // TODO;
+    private final List<Thread> clientThreads = // TODO;
 
-    private final Map<UUID, GameContainer> games = new HashMap<>(); //0.5P
+    private final Map<UUID, GameContainer> games = // TODO;
 
-    private final ArrayList<ServerPlayer> queue = new ArrayList<>(); //0.5P
+    private final List<ServerPlayer> queue = // TODO;
 
     /**
-     * Aufgabe 2a2: Implementieren die Methode: (3P)
+     * Aufgabe 2: Implementieren die Methode
      */
     
     public void startServer() {
-        if (running) return;
-
-        new Thread(() -> { // 0.5P
-        	
-            try {
-            	
-                serverSocket = new ServerSocket(PORT); // Starte Socket 0.5P
-                
-                running = true;
-                
-                this.gui.updateServerOnlineStatus(true);
-                System.out.println("[Server] Starting server on port " + PORT);
-
-                while (running) { //0.5P
-                	
-                    Socket clientSocket = serverSocket.accept(); // 0.5P
-                    System.out.println("[Server] New connection from " + clientSocket.getInetAddress().getHostAddress() + ":" + clientSocket.getPort() + " (" + clientSocket.getInetAddress().getHostName() + ");");
-
-                    ServerPlayer player = new ServerPlayer(clientSocket, this); //0.5P
-                    players.add(player);
-
-                    Thread clientThread = new Thread(player); //0.5P
-                    clientThreads.add(clientThread);
-                    clientThread.start();
-
-                    updatePlayerList();
-                    
-                }
-                
-            } catch (IOException e) {
-                if (running) e.printStackTrace();
-            }
-        }).start();
+        // TODO
     }
 
     /**
-     * Aufgabe 2a3: Implementieren die Methode: 2P
+     * Aufgabe 2: Implementieren die Methode
      */
     
     public void registerGame(BattleShipGame game) {
-        Thread gameThread = new Thread(game); // 0.5P
-        GameContainer container = new GameContainer(game, gameThread); // 0.5P
-        games.put(game.getGameState().getId(), container); // 0.5P
-        gameThread.start(); // 0.5P
-        updateGameList();
+        // TODO
     }
 
     /**
-     * Aufgabe 2a4: Implementieren die Methode: 1P
+     * Aufgabe 2: Implementieren die Methode:
      */
     
     public void unregisterGame(UUID id) {
-        GameContainer container = games.get(id); // 0.5P
-        if (container != null) {
-            container.getThread().interrupt();// 0.5P
-            games.remove(id);
-            System.out.println("[Server] Game " + id + " removed");
-            updateGameList();
-        }
+        // TODO
     }
     
     /**
-     * Aufgabe 2a4: Implementieren die Methode: 2P
+     * Aufgabe 2: Implementieren die Methode:
      */
 
     public synchronized BattleShipGame getGame(ServerPlayer player) {
-        for (GameContainer container : games.values()) { //0.5P
-            BattleShipGame game = container.getGame();  //0.5P
-            if (game == null) continue;
-            if (game.getPlayerA() != null && game.getPlayerA().getId().equals(player.getId())) {  //0.5P
-                return game;
-            }
-            if (game.getPlayerB() != null && game.getPlayerB().getId().equals(player.getId())) {  //0.5P
-                return game;
-            }
-        }
-        return null;
+        // TODO
     }
     
     /**
-     * Aufgabe 2a5: Implementieren die Methode: 1.5P
+     * Aufgabe 2: Implementieren die Methode:
      */
 
     public BattleShipGame getGameFromJoinCode(int joinCode) {
-        for (GameContainer container : games.values()) { // 0.5P
-            BattleShipGame game = container.getGame(); // 0.5P
-            if (game.getGameState().getSessionCode() == joinCode) { // 0.5P
-                return game;
-            }
-        }
-        return null;
+        // TODO
     }
     
     /**
-     * Aufgabe 2a6: Implementieren die Methode: 0.5P
+     * Aufgabe 2: Implementieren die Methode:
      */
 
     public void addToQueue(ServerPlayer player) {
-        queue.add(player);
-        player.sendMessage(new QueueUpdateMessage(queue.size(), true)); // 0.5P
+        // TODO
     }
     
     /**
-     * Aufgabe 2a7: Implementieren die Methode: 1P
+     * Aufgabe 2: Implementieren die Methode:
      */
 
     public void removeFromQueue(UUID id) {
-        queue.removeIf(player -> {
-            if (player.getId().equals(id)) {
-                player.sendMessage(new QueueUpdateMessage(queue.size(), false)); //1P
-                return true;
-            }
-            return false;
-        });
+        // TODO
     }
     
     

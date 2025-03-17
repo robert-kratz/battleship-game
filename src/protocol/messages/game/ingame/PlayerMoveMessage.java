@@ -5,38 +5,22 @@ import protocol.messages.Message;
 import protocol.messages.MessageType;
 
 /**
- * This message is sent from the client to the server when a player makes a move.
- * A response to this message from the server will be a:
- * - MoveMadeMessage; which contains the game state of the game that has started.
- * or
- * - ErrorMessage(ErrorType.NO_GAME_IN_PROGRESS); if the player is not in a game.
- * - ErrorMessage(ErrorType.INVALID_MOVE); if the move is invalid.
- * - ErrorMessage(ErrorType.NOT_ENOUGH_ENERGY); if the player does not have enough energy to make the move.
+ * Aufgabe 1
  */
 
-public class PlayerMoveMessage extends Message {
+public class PlayerMoveMessage { // TODO
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L; // Sie können diese Zeile ignorieren. Nicht Löschen!
 
-    private final Move move; // 0.5P Für Deklaration + Initialisierung + Gettet Methode
+    // TODO
 
     /**
      * Creates a new PlayerMoveMessage instance.
      * @param move The move made by the player.
      */
     public PlayerMoveMessage(Move move) {
-        super(MessageType.PLAYER_MOVE); // 0.5P Für Übergabe an Message
-        this.move = move;
+        // TODO
     }
 
-    public Move getMove() {
-        return move;
-    }
-
-    @Override
-    public String toString() {
-        return "PlayerMoveMessage{" +
-                "move=" + move +
-                '}';
-    }
+    // TODO
 }

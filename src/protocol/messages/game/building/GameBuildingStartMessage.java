@@ -5,34 +5,22 @@ import protocol.messages.Message;
 import protocol.messages.MessageType;
 
 /**
- * This is the GameBuildingStartMessage which is sent from the server to the client when the building phase starts.
- * It contains the game state of the game that has started.
- * It will be sent from the server to the client to confirm that the building phase has started.
+ * Aufgabe 1
  */
 
-public class GameBuildingStartMessage extends Message {
+public class GameBuildingStartMessage { // TODO
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L; // Sie können diese Zeile ignorieren. Nicht Löschen!
 
-    private final GameState gameState; // 0.5P Für Deklaration + Initialisierung + Gettet Methode
+    // TODO
 
     /**
      * Creates a new GameBuildingStartMessage instance.
      * @param gameState The game state of the game that has started.
      */
     public GameBuildingStartMessage(GameState gameState) {
-        super(MessageType.BUILDING_PHASE_STARTS); // 0.5P Für Übergabe an Message
-        this.gameState = gameState;
+        // TODO
     }
 
-    public GameState getGameState() {
-        return gameState;
-    }
-
-    @Override
-    public String toString() {
-        return "GameBuildingStartMessage{" +
-                "gameState=" + gameState +
-                '}';
-    }
+    // TODO
 }

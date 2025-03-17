@@ -4,18 +4,14 @@ import protocol.messages.Message;
 import protocol.messages.MessageType;
 
 /**
- * This class represents a message that updates the player about the queue size and their status in the queue.
- * It contains the size of the queue and whether the player is in the queue or not.
- * It will be sent from the server to the client to inform the player about their queue status and a queue change.
+ * Aufgabe 1
  */
 
-public class QueueUpdateMessage extends Message {
+public class QueueUpdateMessage { // TODO
 
-	private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L; // Sie können diese Zeile ignorieren. Nicht Löschen!
 
-	
-    private final int queueSize; // 0.5P Für Deklaration + Initialisierung + Gettet Methode
-    private final boolean playerInQueue; // 0.5P Für Deklaration + Initialisierung + Gettet Methode
+    // TODO
 
     /**
      * Creates a new QueueUpdateMessage instance.
@@ -23,25 +19,8 @@ public class QueueUpdateMessage extends Message {
      * @param playerInQueue True if the player is in the queue, false otherwise.
      */
     public QueueUpdateMessage(int queueSize, boolean playerInQueue) {
-        super(MessageType.QUEUE_UPDATE); // 0.5P Für Übergabe an Message
-
-        this.queueSize = queueSize;
-        this.playerInQueue = playerInQueue;
+        // TODO
     }
 
-    public int getQueueSize() {
-        return queueSize;
-    }
-
-    public boolean isPlayerInQueue() {
-        return playerInQueue;
-    }
-
-    @Override
-    public String toString() {
-        return "QueueUpdateMessage{" +
-                "queueSize=" + queueSize +
-                ", playerInQueue=" + playerInQueue +
-                '}';
-    }
+    // TODO
 }

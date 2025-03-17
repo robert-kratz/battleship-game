@@ -4,27 +4,21 @@ import protocol.messages.Message;
 import protocol.messages.MessageType;
 
 /**
- * This message is sent from the client to the server when a player wants to leave the queue.
- * A response to this message from the server will be a
- * - QueueUpdateMessage; which contains the size of the queue and whether the player is in the queue or not.
- * or
- * - ErrorMessage(ErrorType.ALREADY_IN_GAME); if the player is already in a game.
+ * Aufgabe 1
  */
 
-public class LeaveQueueMessage extends Message {
+public class LeaveQueueMessage { // TODO
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L; // Sie können diese Zeile ignorieren. Nicht Löschen!
 
-	
+    // TODO
+
     /**
      * Creates a new LeaveQueueMessage instance.
      */
     public LeaveQueueMessage() {
-        super(MessageType.LEAVE_QUEUE);  // 0.5P Für Übergabe an Message
+        // TODO
     }
 
-    @Override
-    public String toString() {
-        return super.toString();
-    }
+    // TODO
 }

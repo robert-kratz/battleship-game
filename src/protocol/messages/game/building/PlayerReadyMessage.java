@@ -4,36 +4,22 @@ import protocol.messages.Message;
 import protocol.messages.MessageType;
 
 /**
- * This message is sent from the client to the server when a player is ready.
- * A response to this message from the server will be:
- * - PlayerReadyStateChangeMessage
- * or
- * - ErrorMessage(ErrorType.NO_GAME_IN_PROGRESS); if the player is not in a game.
+ * Aufgabe 1
  */
 
-public class PlayerReadyMessage extends Message {
+public class PlayerReadyMessage { // TODO
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L; // Sie können diese Zeile ignorieren. Nicht Löschen!
 
-    public final boolean ready; // 0.5P Für Deklaration + Initialisierung + Gettet Methode
+    // TODO
 
     /**
      * Creates a new PlayerReadyMessage instance.
      * @param ready True if the player is ready, false otherwise.
      */
     public PlayerReadyMessage(boolean ready) {
-        super(MessageType.PLAYER_READY); // 0.5P Für Übergabe an Message
-        this.ready = ready;
+        // TODO
     }
 
-    public boolean isReady() {
-        return ready;
-    }
-
-    @Override
-    public String toString() {
-        return "PlayerReadyMessage{" +
-                "ready=" + ready +
-                '}';
-    }
+    // TODO
 }

@@ -5,38 +5,22 @@ import protocol.messages.Message;
 import protocol.messages.MessageType;
 
 /**
- * This is the GameOverMessage which is sent from the server to the client when the game is over.
- * Either because:
- * - A player has won the game
- * - The game has ended in a draw
- * - A player has left / disconnected from the game
- *
- * This message is broadcast to all players in the game.
+ * Aufgabe 1
  */
 
-public class GameOverMessage extends Message {
+public class GameOverMessage { // TODO
 
-    public static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L; // Sie können diese Zeile ignorieren. Nicht Löschen!
 
-    private final GameState gameState; // 0.5P Für Deklaration + Initialisierung + Gettet Methode
+    // TODO
 
     /**
      * Creates a new GameOverMessage instance.
      * @param gameState The game state of the game that has ended.
      */
-    public GameOverMessage(GameState gameState) { // 0.5P
-        super(MessageType.GAME_OVER); // 0.5P Für Übergabe an Message
-        this.gameState = gameState;
+    public GameOverMessage(GameState gameState) {
+        // TODO
     }
 
-    public GameState getGameState() {
-        return gameState;
-    }
-
-    @Override
-    public String toString() {
-        return "GameOverMessage{" +
-                "gameState=" + gameState +
-                '}';
-    }
+    // TODO
 }
